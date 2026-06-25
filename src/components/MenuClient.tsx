@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface Props {
   categories: Category[];
@@ -15,6 +19,8 @@ export function MenuClient({ categories, products }: Props) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>("es");
   const pillsRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("plenty-lang") as Lang | null;
@@ -62,6 +68,52 @@ export function MenuClient({ categories, products }: Props) {
     return () => observer.disconnect();
   }, [categoryIds]); // eslint-disable-line
 
+  // Hero entrance animation — runs once on mount
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.timeline({ defaults: { ease: "power2.out" } })
+        .from(".hero-location", { autoAlpha: 0, y: 10, duration: 0.7 })
+        .from(".hero-title",    { autoAlpha: 0, y: 20, duration: 0.9 }, "-=0.4")
+        .from(".hero-divider",  { autoAlpha: 0, scaleX: 0, duration: 0.5, transformOrigin: "center center" }, "-=0.35")
+        .from(".hero-subtitle", { autoAlpha: 0, y: 8,  duration: 0.6 }, "-=0.2");
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Scroll-triggered animations — re-runs when visible menu content changes
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Category headings slide in from left
+      gsap.utils.toArray<HTMLElement>(".cat-heading").forEach((el) => {
+        gsap.from(el, {
+          autoAlpha: 0,
+          x: -14,
+          duration: 0.55,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 88%", once: true },
+        });
+      });
+
+      // Product cards fade up in batches
+      gsap.set(".product-card", { autoAlpha: 0, y: 18 });
+      ScrollTrigger.batch(".product-card", {
+        onEnter: (elements) => {
+          gsap.to(elements, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out",
+            stagger: 0.07,
+            overwrite: true,
+          });
+        },
+        start: "top 92%",
+        once: true,
+      });
+    }, mainRef);
+    return () => ctx.revert();
+  }, [categoryIds]); // eslint-disable-line
+
   const scrollToCategory = (id: number) => {
     setActiveId(id);
     document.getElementById(`cat-${id}`)?.scrollIntoView({ behavior: "smooth" });
@@ -82,7 +134,7 @@ export function MenuClient({ categories, products }: Props) {
     <div className="min-h-dvh bg-brand-parchment">
 
       {/* ── HERO ── */}
-      <header className="relative grain overflow-hidden bg-brand-espresso">
+      <header ref={heroRef} className="relative grain overflow-hidden bg-brand-espresso">
         <div
           className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"
           aria-hidden="true"
@@ -108,21 +160,21 @@ export function MenuClient({ categories, products }: Props) {
 
         <div className="relative z-10 max-w-lg mx-auto px-6 pt-16 pb-14 text-center">
 
-          <p className="font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/40 mb-8">
+          <p className="hero-location font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/40 mb-8">
             Platja d&apos;Aro &middot; Costa Brava
           </p>
 
-          <h1 className="font-serif font-light text-[76px] sm:text-[92px] leading-none tracking-[-0.02em] text-brand-cream">
+          <h1 className="hero-title font-serif font-light text-[76px] sm:text-[92px] leading-none tracking-[-0.02em] text-brand-cream">
             Plenty.
           </h1>
 
-          <div className="mt-7 mb-5 flex items-center justify-center gap-3 max-w-[160px] mx-auto">
+          <div className="hero-divider mt-7 mb-5 flex items-center justify-center gap-3 max-w-[160px] mx-auto">
             <div className="flex-1 h-px bg-brand-caramel/25" />
             <div className="w-1 h-1 rounded-full bg-brand-caramel/50" />
             <div className="flex-1 h-px bg-brand-caramel/25" />
           </div>
 
-          <p className="font-sans text-[11px] font-medium tracking-[0.38em] uppercase text-brand-honey/45">
+          <p className="hero-subtitle font-sans text-[11px] font-medium tracking-[0.38em] uppercase text-brand-honey/45">
             {ui[lang].brunchCafe}
           </p>
         </div>
@@ -181,14 +233,14 @@ export function MenuClient({ categories, products }: Props) {
       </div>
 
       {/* ── MENU CONTENT ── */}
-      <main className="max-w-2xl mx-auto px-4 py-10 space-y-14">
+      <main ref={mainRef} className="max-w-2xl mx-auto px-4 py-10 space-y-14">
         {visibleCategories.map((cat) => {
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
           return (
             <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
 
-              <div className="flex items-center gap-3 mb-6">
+              <div className="cat-heading flex items-center gap-3 mb-6">
                 <span className="text-lg leading-none" aria-hidden="true">
                   {cat.emoji}
                 </span>

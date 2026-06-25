@@ -15,7 +15,7 @@ export function ProductCard({ product, lang }: Props) {
   if (product.imageUrl) {
     return (
       <div
-        className={`group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
+        className={`product-card group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
           unavailable ? "opacity-50" : ""
         }`}
       >
@@ -57,7 +57,7 @@ export function ProductCard({ product, lang }: Props) {
 
   return (
     <div
-      className={`group bg-white rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 p-5 ${
+      className={`product-card group bg-white rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 p-5 ${
         unavailable ? "opacity-50" : ""
       }`}
     >
