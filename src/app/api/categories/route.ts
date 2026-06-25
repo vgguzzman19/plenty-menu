@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const { name, emoji, order } = await req.json();
+  const { name, emoji, order, menu } = await req.json();
   if (!name) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
-  const cat = await createCategory({ name, emoji: emoji || "🍽️", order: order ?? 0 });
+  const cat = await createCategory({ name, emoji: emoji || "🍽️", order: order ?? 0, menu: menu ?? "food" });
   return NextResponse.json(cat, { status: 201 });
 }

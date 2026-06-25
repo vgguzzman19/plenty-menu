@@ -25,6 +25,7 @@ export interface Category {
   name_fr?: string;
   emoji: string;
   order: number;
+  menu: "food" | "drinks";
 }
 
 export interface Product {
@@ -51,6 +52,7 @@ function mapCategory(row: any): Category {
     name_fr: row.name_fr ?? undefined,
     emoji: row.emoji,
     order: row.order,
+    menu: row.menu ?? "food",
   };
 }
 
@@ -133,6 +135,7 @@ export async function createCategory(data: Omit<Category, "id">): Promise<Catego
       name_fr: data.name_fr,
       emoji: data.emoji,
       order: data.order,
+      menu: data.menu ?? "food",
     })
     .select()
     .single();
@@ -147,6 +150,7 @@ export async function updateCategory(id: number, data: Partial<Omit<Category, "i
   if (data.name_fr !== undefined) update.name_fr = data.name_fr;
   if (data.emoji !== undefined) update.emoji = data.emoji;
   if (data.order !== undefined) update.order = data.order;
+  if (data.menu !== undefined) update.menu = data.menu;
 
   const { data: row, error } = await supabase
     .from("categories")

@@ -26,20 +26,26 @@ export function prodDesc(p: Product, lang: Lang): string {
   return p.description;
 }
 
-export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: string }> = {
+export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: string; food: string; drinks: string }> = {
   es: {
     unavailable: "No disponible",
     empty: "Carta en preparación. Vuelve pronto.",
     brunchCafe: "Brunch & Café",
+    food: "Carta",
+    drinks: "Bebidas",
   },
   en: {
     unavailable: "Not available",
     empty: "Menu in preparation. Come back soon.",
     brunchCafe: "Brunch & Café",
+    food: "Menu",
+    drinks: "Drinks",
   },
   fr: {
     unavailable: "Non disponible",
     empty: "Menu en préparation. Revenez bientôt.",
     brunchCafe: "Brunch & Café",
+    food: "Carte",
+    drinks: "Boissons",
   },
 };

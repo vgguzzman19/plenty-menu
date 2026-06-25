@@ -11,7 +11,8 @@ interface Props {
 }
 
 export function MenuClient({ categories, products }: Props) {
-  const [activeId, setActiveId] = useState<number | null>(categories[0]?.id ?? null);
+  const [menuType, setMenuType] = useState<"food" | "drinks">("food");
+  const [activeId, setActiveId] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>("es");
   const pillsRef = useRef<HTMLDivElement>(null);
 
@@ -29,9 +30,17 @@ export function MenuClient({ categories, products }: Props) {
     products.filter((p) => p.categoryId === catId);
 
   const visibleCategories = categories.filter(
-    (c) => allProductsByCategory(c.id).length > 0
+    (c) => c.menu === menuType && allProductsByCategory(c.id).length > 0
   );
 
+  const categoryIds = visibleCategories.map((c) => c.id).join(",");
+
+  // Reset active pill when switching between food / drinks
+  useEffect(() => {
+    setActiveId(visibleCategories[0]?.id ?? null);
+  }, [menuType]); // eslint-disable-line
+
+  // IntersectionObserver: highlight active category pill while scrolling
   useEffect(() => {
     const sections = visibleCategories.map((c) =>
       document.getElementById(`cat-${c.id}`)
@@ -51,12 +60,23 @@ export function MenuClient({ categories, products }: Props) {
     );
     sections.forEach((s) => s && observer.observe(s));
     return () => observer.disconnect();
-  }, [visibleCategories.length]); // eslint-disable-line
+  }, [categoryIds]); // eslint-disable-line
 
   const scrollToCategory = (id: number) => {
     setActiveId(id);
     document.getElementById(`cat-${id}`)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const switchMenu = (type: "food" | "drinks") => {
+    if (type === menuType) return;
+    setMenuType(type);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const menuTabs: { type: "food" | "drinks"; icon: string }[] = [
+    { type: "food", icon: "🍽️" },
+    { type: "drinks", icon: "☕" },
+  ];
 
   return (
     <div className="min-h-dvh bg-brand-parchment">
@@ -109,16 +129,33 @@ export function MenuClient({ categories, products }: Props) {
       </header>
 
       {/* ── STICKY NAV ── */}
-      {visibleCategories.length > 0 && (
-        <div className="sticky top-0 z-20 bg-brand-parchment/95 backdrop-blur-md border-b border-brand-stone shadow-[0_1px_8px_rgba(28,13,4,0.07)]">
-          <div className="relative max-w-2xl mx-auto">
+      <div className="sticky top-0 z-20 bg-brand-parchment/95 backdrop-blur-md border-b border-brand-stone shadow-[0_1px_8px_rgba(28,13,4,0.07)]">
 
-            {/* Fade derecha — indica que hay más pills al hacer scroll */}
+        {/* Menu type switcher */}
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 grid grid-cols-2 gap-2">
+          {menuTabs.map(({ type, icon }) => (
+            <button
+              key={type}
+              onClick={() => switchMenu(type)}
+              className={`flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all ${
+                menuType === type
+                  ? "bg-brand-espresso text-brand-cream"
+                  : "border border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50"
+              }`}
+            >
+              <span>{icon}</span>
+              <span>{ui[lang][type]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Category pills */}
+        {visibleCategories.length > 0 && (
+          <div className="relative max-w-2xl mx-auto">
             <div
               className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 to-transparent pointer-events-none z-10"
               aria-hidden="true"
             />
-
             <div
               ref={pillsRef}
               className="flex gap-2 overflow-x-auto no-scrollbar pl-4 pr-10 py-2.5"
@@ -139,10 +176,9 @@ export function MenuClient({ categories, products }: Props) {
                 </button>
               ))}
             </div>
-
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── MENU CONTENT ── */}
       <main className="max-w-2xl mx-auto px-4 py-10 space-y-14">
@@ -150,7 +186,7 @@ export function MenuClient({ categories, products }: Props) {
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
           return (
-            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-16">
+            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
 
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-lg leading-none" aria-hidden="true">

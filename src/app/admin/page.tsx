@@ -21,13 +21,14 @@ interface CategoryForm {
   name: string;
   emoji: string;
   order: string;
+  menu: "food" | "drinks";
 }
 
 const EMPTY_PRODUCT: ProductForm = {
   name: "", description: "", price: "", categoryId: "",
   imageUrl: "", available: true, order: "0",
 };
-const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0" };
+const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0", menu: "food" };
 
 /* ── Inline SVG icons ── */
 function IconMenu() {
@@ -205,14 +206,14 @@ export default function AdminPage() {
     setCategoryModal("add");
   }
   function openEditCategory(c: Category) {
-    setCategoryForm({ name: c.name, emoji: c.emoji, order: c.order.toString() });
+    setCategoryForm({ name: c.name, emoji: c.emoji, order: c.order.toString(), menu: c.menu });
     setEditingCategoryId(c.id);
     setCategoryModal("edit");
   }
   async function saveCategory() {
     if (!categoryForm.name) return;
     setCategorySaving(true);
-    const body = { name: categoryForm.name, emoji: categoryForm.emoji || "🍽️", order: parseInt(categoryForm.order) || 0 };
+    const body = { name: categoryForm.name, emoji: categoryForm.emoji || "🍽️", order: parseInt(categoryForm.order) || 0, menu: categoryForm.menu };
     const res = categoryModal === "add"
       ? await fetch("/api/categories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       : await fetch(`/api/categories/${editingCategoryId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -655,6 +656,19 @@ export default function AdminPage() {
               </button>
             </div>
             <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                {([["food", "🍽️ Carta"], ["drinks", "☕ Bebidas"]] as const).map(([val, lbl]) => (
+                  <button key={val} type="button"
+                    onClick={() => setCategoryForm({ ...categoryForm, menu: val })}
+                    className={`py-2 rounded-xl text-sm font-sans font-medium transition-all border ${
+                      categoryForm.menu === val
+                        ? "bg-brand-espresso text-brand-cream border-brand-espresso"
+                        : "border-brand-stone text-brand-muted hover:text-brand-espresso"
+                    }`}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className={labelCls}>Emoji</label>
