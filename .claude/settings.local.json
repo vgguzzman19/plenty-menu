@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Skill(run)"
+      "Skill(run)",
+      "Skill(claude-api)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }
