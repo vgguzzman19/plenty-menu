@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía Completa — Plenty Carta Digital</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1a1a2e;
+      background: #f8f8f6;
+    }
+
+    /* ── PORTADA ── */
+    .cover {
+      background: #1c0d04;
+      color: #f5efe6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .cover-logo {
+      font-size: 80px;
+      font-weight: 300;
+      letter-spacing: -2px;
+      color: #f5efe6;
+      margin-bottom: 8px;
+    }
+    .cover-sub {
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: #c9a96e;
+      margin-bottom: 60px;
+    }
+    .cover-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #f5efe6;
+      margin-bottom: 12px;
+    }
+    .cover-desc {
+      font-size: 15px;
+      color: #c9a96e;
+      max-width: 500px;
+      line-height: 1.8;
+      margin-bottom: 60px;
+    }
+    .cover-tags {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cover-tag {
+      background: rgba(201,169,110,0.15);
+      border: 1px solid rgba(201,169,110,0.3);
+      color: #c9a96e;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    .cover-date {
+      position: absolute;
+      bottom: 40px;
+      font-size: 12px;
+      color: rgba(245,239,230,0.3);
+      letter-spacing: 2px;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 60px 50px;
+    }
+
+    /* ── ÍNDICE ── */
+    .toc {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 60px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+      page-break-after: always;
+    }
+    .toc h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1c0d04;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f0e8d8;
+    }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px dashed #f0e8d8;
+      color: #444;
+      font-size: 14px;
+    }
+    .toc-item:last-child { border-bottom: none; }
+    .toc-num {
+      background: #1c0d04;
+      color: #c9a96e;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .toc-label { font-weight: 600; flex: 1; }
+    .toc-dots { flex: 1; border-bottom: 1px dashed #ddd; margin: 0 8px; }
+
+    /* ── SECCIONES ── */
+    .section {
+      margin-bottom: 60px;
+      page-break-inside: avoid;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f0e8d8;
+    }
+    .section-num {
+      background: #1c0d04;
+      color: #c9a96e;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1c0d04;
+    }
+    .section-subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      border-left: 4px solid #c9a96e;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1c0d04;
+      margin-bottom: 8px;
+    }
+    .card p { color: #555; font-size: 13.5px; }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step; }
+    .step {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    .step-num {
+      counter-increment: step;
+      background: #1c0d04;
+      color: #c9a96e;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-body { flex: 1; }
+    .step-body strong { color: #1c0d04; font-size: 14px; display: block; margin-bottom: 4px; }
+    .step-body p { color: #555; font-size: 13px; }
+
+    /* ── CODE ── */
+    pre, code {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #1c0d04;
+      color: #f0e8d8;
+      padding: 20px 24px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      line-height: 1.8;
+    }
+    code {
+      background: #f0e8d8;
+      color: #8b4513;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* ── TABLES ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+    th {
+      background: #1c0d04;
+      color: #c9a96e;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+    }
+    th:first-child { border-radius: 8px 0 0 8px; }
+    th:last-child { border-radius: 0 8px 8px 0; }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0e8d8;
+      color: #444;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafaf8; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge-green { background: #d4f0d4; color: #1a6b1a; }
+    .badge-blue { background: #d4e8f8; color: #1a4a8b; }
+    .badge-orange { background: #fde8cc; color: #8b4500; }
+    .badge-purple { background: #ead4f8; color: #5a1a8b; }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    .callout-info { background: #e8f4fd; border-left: 4px solid #4a90d9; color: #1a3a6b; }
+    .callout-warn { background: #fef8e8; border-left: 4px solid #e8a020; color: #6b4a00; }
+    .callout-success { background: #eafaf0; border-left: 4px solid #28a745; color: #1a5c2a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* ── FILE TREE ── */
+    .filetree {
+      background: #fafaf8;
+      border: 1px solid #f0e8d8;
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12.5px;
+      line-height: 2;
+      color: #444;
+      margin: 12px 0 20px;
+    }
+    .filetree .dir { color: #1c0d04; font-weight: 600; }
+    .filetree .file { color: #666; }
+    .filetree .comment { color: #c9a96e; font-style: italic; }
+
+    /* ── TECH GRID ── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 16px 0 24px;
+    }
+    .tech-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px 20px;
+      border: 1px solid #f0e8d8;
+      text-align: center;
+    }
+    .tech-icon { font-size: 28px; margin-bottom: 8px; }
+    .tech-name { font-weight: 700; font-size: 14px; color: #1c0d04; }
+    .tech-role { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; margin: 12px 0; }
+    .checklist li {
+      padding: 6px 0;
+      padding-left: 28px;
+      position: relative;
+      color: #444;
+      font-size: 13.5px;
+    }
+    .checklist li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #28a745;
+      font-weight: 700;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 2px solid #f0e8d8;
+      margin: 40px 0;
+    }
+
+    /* ── ENV VARS ── */
+    .env-var {
+      background: #1c0d04;
+      color: #f0e8d8;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin: 8px 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+    .env-key { color: #c9a96e; }
+    .env-val { color: #88d8b0; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; font-size: 12px; }
+      .cover { min-height: auto; padding: 80px 40px; }
+      .page { padding: 40px 40px; }
+      .section { page-break-inside: avoid; }
+      pre { page-break-inside: avoid; }
+    }
+
+    @page {
+      margin: 0;
+      size: A4;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     PORTADA
+════════════════════════════════════════════ -->
+<div class="cover" style="position:relative;">
+  <div class="cover-logo">Plenty.</div>
+  <div class="cover-sub">Healthy Brunch &amp; Lunch · Platja d'Aro</div>
+
+  <div class="cover-title">Guía Completa del Proyecto</div>
+  <div class="cover-desc">
+    Documentación técnica paso a paso de cómo se construyó la carta digital de Plenty:
+    arquitectura, base de datos, sistema multilingüe y despliegue en producción.
+  </div>
+
+  <div class="cover-tags">
+    <span class="cover-tag">Next.js 14</span>
+    <span class="cover-tag">TypeScript</span>
+    <span class="cover-tag">Tailwind CSS</span>
+    <span class="cover-tag">Supabase</span>
+    <span class="cover-tag">Vercel</span>
+    <span class="cover-tag">ES · EN · FR</span>
+  </div>
+
+  <div class="cover-date">Junio 2026</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     CONTENIDO
+════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- ÍNDICE -->
+  <div class="toc">
+    <h2>Índice</h2>
+    <div class="toc-item">
+      <div class="toc-num">1</div>
+      <span class="toc-label">Descripción del Proyecto</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">2</div>
+      <span class="toc-label">Stack Tecnológico</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">3</div>
+      <span class="toc-label">Estructura del Proyecto</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">4</div>
+      <span class="toc-label">Base de Datos — Supabase</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">5</div>
+      <span class="toc-label">Sistema Multilingüe (ES / EN / FR)</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">6</div>
+      <span class="toc-label">Panel de Administración</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">7</div>
+      <span class="toc-label">Despliegue en Vercel</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">8</div>
+      <span class="toc-label">Flujo para Futuros Proyectos</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">9</div>
+      <span class="toc-label">Variables de Entorno</span>
+      <span class="toc-dots"></span>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">10</div>
+      <span class="toc-label">Checklist de Lanzamiento</span>
+      <span class="toc-dots"></span>
+    </div>
+  </div>
+
+
+  <!-- ── 1. DESCRIPCIÓN ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">Descripción del Proyecto</div>
+        <div class="section-subtitle">Qué es y para qué sirve</div>
+      </div>
+    </div>
+
+    <p style="color:#555; margin-bottom:20px;">
+      <strong>Plenty</strong> es una carta digital con panel de administración para un restaurante de brunch en Platja d'Aro (Costa Brava). Los clientes escanean un código QR en la mesa y acceden a la carta desde su móvil, sin necesidad de instalar nada.
+    </p>
+
+    <div class="card">
+      <div class="card-title">Funcionalidades principales</div>
+      <ul class="checklist">
+        <li>Carta digital pública — 29 productos en 7 categorías</li>
+        <li>Navegación por categorías con scroll suave (optimizada para móvil)</li>
+        <li>Selector de idioma: Español, English, Français — guardado en el navegador</li>
+        <li>Panel de administración protegido con contraseña</li>
+        <li>Gestión de productos y categorías desde el panel (crear, editar, eliminar)</li>
+        <li>Marcar productos como no disponibles en tiempo real</li>
+        <li>Base de datos en la nube (Supabase) — los cambios se ven al instante</li>
+        <li>Código QR generado automáticamente con la URL del restaurante</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>URL de producción</strong>
+      La app está desplegada en Vercel y es accesible públicamente desde cualquier dispositivo con internet. Los clientes del restaurante acceden escaneando el QR de la mesa.
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 2. STACK ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">Stack Tecnológico</div>
+        <div class="section-subtitle">Herramientas y por qué se eligieron</div>
+      </div>
+    </div>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon">▲</div>
+        <div class="tech-name">Next.js 14</div>
+        <div class="tech-role">Framework principal</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🔷</div>
+        <div class="tech-name">TypeScript</div>
+        <div class="tech-role">Tipado estático</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🎨</div>
+        <div class="tech-name">Tailwind CSS</div>
+        <div class="tech-role">Estilos</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🟢</div>
+        <div class="tech-name">Supabase</div>
+        <div class="tech-role">Base de datos PostgreSQL</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">▲</div>
+        <div class="tech-name">Vercel</div>
+        <div class="tech-role">Hosting y despliegue</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🐙</div>
+        <div class="tech-name">GitHub</div>
+        <div class="tech-role">Control de versiones</div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>Herramienta</th><th>Uso</th><th>Coste</th></tr>
+      <tr><td><strong>Next.js 14</strong></td><td>App React con rutas, API y SSR</td><td><span class="badge badge-green">Gratis</span></td></tr>
+      <tr><td><strong>TypeScript</strong></td><td>Tipado para evitar errores</td><td><span class="badge badge-green">Gratis</span></td></tr>
+      <tr><td><strong>Tailwind CSS</strong></td><td>Sistema de diseño por clases CSS</td><td><span class="badge badge-green">Gratis</span></td></tr>
+      <tr><td><strong>Supabase</strong></td><td>PostgreSQL en la nube, interfaz web</td><td><span class="badge badge-green">Gratis (tier gratuito)</span></td></tr>
+      <tr><td><strong>Vercel</strong></td><td>Hosting, CDN y deploys automáticos</td><td><span class="badge badge-green">Gratis (plan hobby)</span></td></tr>
+      <tr><td><strong>GitHub</strong></td><td>Repositorio de código fuente</td><td><span class="badge badge-green">Gratis</span></td></tr>
+    </table>
+
+    <div class="callout callout-success">
+      <strong>Coste total mensual: 0 €</strong>
+      Todo el stack es gratuito para proyectos pequeños/medianos como este. El tier gratuito de Supabase permite 500 MB de datos y 2 GB de transferencia al mes, más que suficiente para una carta digital de restaurante.
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 3. ESTRUCTURA ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">Estructura del Proyecto</div>
+        <div class="section-subtitle">Organización de carpetas y archivos clave</div>
+      </div>
+    </div>
+
+    <div class="filetree">
+<span class="dir">plenty-menu/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">app/</span>
+│   │   ├── <span class="file">page.tsx</span>            <span class="comment">← Carta pública (página principal)</span>
+│   │   ├── <span class="file">layout.tsx</span>          <span class="comment">← Layout global (fuentes, meta)</span>
+│   │   ├── <span class="dir">admin/</span>
+│   │   │   └── <span class="file">page.tsx</span>         <span class="comment">← Panel de administración</span>
+│   │   ├── <span class="dir">login/</span>
+│   │   │   └── <span class="file">page.tsx</span>         <span class="comment">← Página de login admin</span>
+│   │   ├── <span class="dir">setup/</span>
+│   │   │   └── <span class="file">page.tsx</span>         <span class="comment">← Primera configuración</span>
+│   │   └── <span class="dir">api/</span>
+│   │       ├── <span class="dir">auth/</span>             <span class="comment">← Login / logout / sesión</span>
+│   │       ├── <span class="dir">categories/</span>       <span class="comment">← CRUD categorías</span>
+│   │       └── <span class="dir">products/</span>         <span class="comment">← CRUD productos</span>
+│   ├── <span class="dir">components/</span>
+│   │   ├── <span class="file">MenuClient.tsx</span>      <span class="comment">← Carta completa + idiomas</span>
+│   │   └── <span class="file">ProductCard.tsx</span>     <span class="comment">← Tarjeta de cada producto</span>
+│   ├── <span class="dir">lib/</span>
+│   │   ├── <span class="file">storage.ts</span>          <span class="comment">← Todas las queries a Supabase</span>
+│   │   ├── <span class="file">auth.ts</span>             <span class="comment">← JWT, hash de contraseñas</span>
+│   │   └── <span class="file">i18n.ts</span>             <span class="comment">← Sistema multilingüe</span>
+│   └── <span class="file">middleware.ts</span>           <span class="comment">← Protección de rutas admin</span>
+├── <span class="file">.env.local</span>               <span class="comment">← Variables secretas (NO subir a GitHub)</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tailwind.config.ts</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Flujo de datos</div>
+      <p>El usuario visita la web → <code>page.tsx</code> (servidor) llama a <code>storage.ts</code> → <code>storage.ts</code> consulta Supabase → los datos llegan al componente <code>MenuClient.tsx</code> (cliente) → el usuario ve la carta. El idioma se gestiona 100% en el cliente con <code>localStorage</code>.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 4. SUPABASE ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">Base de Datos — Supabase</div>
+        <div class="section-subtitle">Configuración de PostgreSQL en la nube</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Paso 1 — Crear cuenta y proyecto</div>
+      <p>Ve a <strong>supabase.com</strong> → "New project" → elige nombre, región <strong>Europe (Frankfurt)</strong> y contraseña. Espera ~2 minutos.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Paso 2 — Crear las tablas (SQL Editor)</div>
+      <p>En el panel de Supabase: <strong>SQL Editor → New query</strong>. Pega y ejecuta:</p>
+    </div>
+
+<pre><code>-- TABLA DE USUARIOS ADMIN
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'admin'
+);
+
+-- TABLA DE CATEGORÍAS
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  name_en TEXT,
+  name_fr TEXT,
+  emoji TEXT NOT NULL DEFAULT '🍽️',
+  "order" INTEGER NOT NULL DEFAULT 0
+);
+
+-- TABLA DE PRODUCTOS
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  name_en TEXT,
+  description_en TEXT,
+  name_fr TEXT,
+  description_fr TEXT,
+  price DECIMAL(10,2) NOT NULL DEFAULT 0,
+  image_url TEXT NOT NULL DEFAULT '',
+  available BOOLEAN NOT NULL DEFAULT true,
+  "order" INTEGER NOT NULL DEFAULT 0
+);</code></pre>
+
+    <table>
+      <tr><th>Tabla</th><th>Descripción</th><th>Columnas clave</th></tr>
+      <tr><td><code>users</code></td><td>Administradores del sistema</td><td>username, password_hash</td></tr>
+      <tr><td><code>categories</code></td><td>Secciones de la carta</td><td>name, name_en, name_fr, emoji, order</td></tr>
+      <tr><td><code>products</code></td><td>Platos y bebidas</td><td>name, description, price, available, traducciones</td></tr>
+    </table>
+
+    <div class="card">
+      <div class="card-title">Paso 3 — Obtener credenciales</div>
+      <p>En Supabase: <strong>Settings → API</strong>. Necesitas dos valores:</p>
+      <ul style="margin-top:8px; padding-left:20px; color:#555; font-size:13px;">
+        <li><strong>Project URL</strong> — algo como <code>https://abcdef.supabase.co</code></li>
+        <li><strong>service_role key</strong> — la clave secreta (NO la anon/public)</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠️ Importante sobre la service_role key</strong>
+      Esta clave tiene acceso total a tu base de datos. Nunca la pongas en código del frontend ni la subas a GitHub. Solo va en el archivo <code>.env.local</code> (local) y en las variables de entorno de Vercel.
+    </div>
+
+    <div class="card">
+      <div class="card-title">Cómo se conecta el código a Supabase</div>
+      <p>El archivo <code>src/lib/storage.ts</code> crea un cliente de Supabase y exporta funciones para cada operación:</p>
+    </div>
+
+<pre><code>import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Ejemplo: obtener todas las categorías ordenadas
+export async function getCategories(): Promise&lt;Category[]&gt; {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("order");
+  if (error) throw error;
+  return data.map(mapCategory);
+}</code></pre>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 5. I18N ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <div class="section-title">Sistema Multilingüe</div>
+        <div class="section-subtitle">Español · English · Français</div>
+      </div>
+    </div>
+
+    <p style="color:#555; margin-bottom:20px;">Cada producto y categoría tiene sus traducciones guardadas en la base de datos como columnas extra. El idioma activo se gestiona en el cliente y se guarda en <code>localStorage</code>.</p>
+
+    <table>
+      <tr><th>Columna en BD</th><th>Idioma</th><th>Ejemplo</th></tr>
+      <tr><td><code>name</code></td><td>Español (por defecto)</td><td>Granola Classique</td></tr>
+      <tr><td><code>name_en</code></td><td>Inglés</td><td>Granola Classic</td></tr>
+      <tr><td><code>name_fr</code></td><td>Francés</td><td>Granola Classique</td></tr>
+      <tr><td><code>description</code></td><td>Español</td><td>Yogur, granola, frutos rojos...</td></tr>
+      <tr><td><code>description_en</code></td><td>Inglés</td><td>Yogurt, granola, berries...</td></tr>
+      <tr><td><code>description_fr</code></td><td>Francés</td><td>Yaourt, granola, fruits rouges...</td></tr>
+    </table>
+
+    <div class="card">
+      <div class="card-title">Archivo clave: src/lib/i18n.ts</div>
+      <p>Contiene el tipo <code>Lang</code>, los helpers para obtener el texto correcto y los textos de UI traducidos.</p>
+    </div>
+
+<pre><code>export type Lang = "es" | "en" | "fr";
+
+// Devuelve el nombre del producto en el idioma activo
+export function prodName(p: Product, lang: Lang): string {
+  if (lang === "en" && p.name_en) return p.name_en;
+  if (lang === "fr" && p.name_fr) return p.name_fr;
+  return p.name; // español por defecto
+}
+
+// Textos de interfaz traducidos
+export const ui = {
+  es: { unavailable: "No disponible", empty: "Carta en preparación..." },
+  en: { unavailable: "Not available", empty: "Menu in preparation..." },
+  fr: { unavailable: "Non disponible", empty: "Menu en préparation..." },
+};</code></pre>
+
+    <div class="callout callout-info">
+      <strong>Selector de idioma</strong>
+      Aparece en la esquina superior derecha del hero (ES · EN · FR) en color dorado. Al cambiar de idioma, toda la carta se actualiza instantáneamente sin recargar la página.
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 6. ADMIN ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <div class="section-title">Panel de Administración</div>
+        <div class="section-subtitle">Gestión de la carta en tiempo real</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Acceso</div>
+      <p>URL: <code>tudominio.com/admin</code> → login con usuario y contraseña → sesión con JWT guardado en cookie httpOnly segura.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Qué puedes hacer desde el panel</div>
+      <ul class="checklist">
+        <li>Ver todos los productos y categorías</li>
+        <li>Crear nuevas categorías con emoji y orden</li>
+        <li>Añadir productos con nombre, descripción, precio e imagen</li>
+        <li>Editar cualquier producto o categoría</li>
+        <li>Marcar un producto como "No disponible" (se ve en la carta al instante)</li>
+        <li>Eliminar productos o categorías</li>
+        <li>Generar y descargar el código QR de la carta</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Seguridad</div>
+      <p>El middleware de Next.js (<code>middleware.ts</code>) protege todas las rutas <code>/admin/*</code> y <code>/api/*</code> (excepto login). Sin token válido, redirige al login automáticamente.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 7. VERCEL ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div>
+        <div class="section-title">Despliegue en Vercel</div>
+        <div class="section-subtitle">Cómo subir la app a producción</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Subir código a GitHub</strong>
+          <p>Crear repo en github.com, hacer <code>git init</code>, <code>git add .</code>, <code>git commit</code> y <code>git push</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Conectar con Vercel</strong>
+          <p>Ir a vercel.com → "New Project" → importar repo de GitHub → Vercel detecta Next.js automáticamente.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Añadir variables de entorno</strong>
+          <p>Antes de hacer Deploy, en la sección "Environment Variables" añadir las 3 variables secretas (ver sección 9).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Deploy</strong>
+          <p>Clic en "Deploy". En ~2 minutos la app está en producción con una URL pública.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Deploys automáticos</strong>
+          <p>Cada vez que hagas <code>git push</code> a la rama <code>main</code>, Vercel redeploya automáticamente sin hacer nada más.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>Deploy automático en cada push</strong>
+      Una vez configurado, para actualizar la web basta con guardar los cambios en el código y hacer <code>git push</code>. Vercel lo detecta y publica la nueva versión en minutos.
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 8. FLUJO FUTURO ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div>
+        <div class="section-title">Flujo para Futuros Proyectos</div>
+        <div class="section-subtitle">Cómo replicar esta arquitectura en otros proyectos</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Crear el proyecto Next.js</strong>
+          <p>Ejecutar <code>npx create-next-app@latest nombre-proyecto --typescript --tailwind --app</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Instalar Supabase</strong>
+          <p>Ejecutar <code>npm install @supabase/supabase-js</code> en la carpeta del proyecto.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Crear proyecto en Supabase</strong>
+          <p>supabase.com → New project → crear las tablas con SQL Editor → copiar URL y service_role key.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Crear .env.local</strong>
+          <p>Poner las credenciales de Supabase y cualquier otro secreto en este archivo. <strong>Nunca subir a GitHub</strong> (añadir al .gitignore).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Crear src/lib/storage.ts</strong>
+          <p>Inicializar el cliente de Supabase y exportar funciones async para cada operación (get, create, update, delete).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Construir la UI</strong>
+          <p>Crear los componentes y páginas. Las páginas del servidor usan <code>await</code> para llamar a las funciones de <code>storage.ts</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Subir a GitHub</strong>
+          <p>Crear repo → <code>git init</code> → <code>git add .</code> → <code>git commit -m "inicial"</code> → <code>git push</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <strong>Desplegar en Vercel</strong>
+          <p>vercel.com → Import → añadir variables de entorno → Deploy. ¡Listo!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠️ .gitignore — archivos que NO deben subirse a GitHub</strong>
+      Asegúrate de que el archivo <code>.gitignore</code> incluya: <code>.env.local</code>, <code>node_modules/</code>, <code>.next/</code>, <code>data/</code>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 9. ENV VARS ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <div>
+        <div class="section-title">Variables de Entorno</div>
+        <div class="section-subtitle">Secretos necesarios para que la app funcione</div>
+      </div>
+    </div>
+
+    <p style="color:#555; margin-bottom:16px;">Estas variables van en <code>.env.local</code> en local y en la configuración de Vercel en producción:</p>
+
+    <div class="env-var"><span class="env-key">SUPABASE_URL</span>=<span class="env-val">https://xxxxxxxxxxxx.supabase.co</span></div>
+    <div class="env-var"><span class="env-key">SUPABASE_SERVICE_ROLE_KEY</span>=<span class="env-val">eyJhbGci... (clave larga de Supabase)</span></div>
+    <div class="env-var"><span class="env-key">JWT_SECRET</span>=<span class="env-val">cualquier-cadena-larga-y-aleatoria-aqui</span></div>
+
+    <table style="margin-top:20px;">
+      <tr><th>Variable</th><th>Dónde se obtiene</th><th>Para qué sirve</th></tr>
+      <tr><td><code>SUPABASE_URL</code></td><td>Supabase → Settings → API → Project URL</td><td>Dirección de tu base de datos</td></tr>
+      <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Supabase → Settings → API → Secret keys</td><td>Acceso total a la BD desde el servidor</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td>Lo inventas tú (mín. 20 caracteres)</td><td>Firma los tokens de sesión del admin</td></tr>
+    </table>
+
+    <div class="callout callout-warn">
+      <strong>En Vercel</strong> estas variables se añaden en: Project Settings → Environment Variables. Sin ellas la app no puede conectarse a la base de datos y fallará.
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── 10. CHECKLIST ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div>
+        <div class="section-title">Checklist de Lanzamiento</div>
+        <div class="section-subtitle">Verificar antes de dar la URL a los clientes</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Supabase</div>
+      <ul class="checklist">
+        <li>Tablas <code>users</code>, <code>categories</code> y <code>products</code> creadas</li>
+        <li>Datos insertados (categorías y productos)</li>
+        <li>Usuario admin creado en la tabla <code>users</code></li>
+        <li>URL y service_role key copiadas</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Código y GitHub</div>
+      <ul class="checklist">
+        <li><code>.env.local</code> creado con las 3 variables</li>
+        <li><code>.env.local</code> está en <code>.gitignore</code> (no se sube)</li>
+        <li>Código probado en local (<code>npm run dev</code>)</li>
+        <li>Código subido a GitHub (<code>git push</code>)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Vercel</div>
+      <ul class="checklist">
+        <li>Proyecto importado desde GitHub</li>
+        <li>Las 3 variables de entorno añadidas en Vercel</li>
+        <li>Deploy completado sin errores</li>
+        <li>URL pública funciona en móvil</li>
+        <li>Login de admin funciona en <code>/admin</code></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">QR y Restaurante</div>
+      <ul class="checklist">
+        <li>QR generado con la URL de Vercel</li>
+        <li>QR probado con móvil real</li>
+        <li>Carta se ve correctamente en pantalla pequeña</li>
+        <li>Cambio de idioma funciona (ES / EN / FR)</li>
+        <li>QR impreso y colocado en las mesas</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>🎉 ¡Proyecto en producción!</strong>
+      Si todos los puntos están marcados, la carta digital está lista para los clientes del restaurante. Cualquier cambio en el panel admin (<code>/admin</code>) se refleja en la carta en tiempo real.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="text-align:center; padding: 40px 0 20px; color:#aaa; font-size:12px;">
+    <div style="font-size:24px; color:#1c0d04; font-weight:300; margin-bottom:4px;">Plenty.</div>
+    Guía técnica del proyecto · Junio 2026
+  </div>
+
+</div>
+</body>
+</html>
