@@ -10,6 +10,10 @@ type Tab = "products" | "categories" | "qr";
 interface ProductForm {
   name: string;
   description: string;
+  name_en: string;
+  description_en: string;
+  name_fr: string;
+  description_fr: string;
   price: string;
   categoryId: string;
   imageUrl: string;
@@ -25,7 +29,9 @@ interface CategoryForm {
 }
 
 const EMPTY_PRODUCT: ProductForm = {
-  name: "", description: "", price: "", categoryId: "",
+  name: "", description: "",
+  name_en: "", description_en: "", name_fr: "", description_fr: "",
+  price: "", categoryId: "",
   imageUrl: "", available: true, order: "0",
 };
 const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0", menu: "food" };
@@ -117,6 +123,7 @@ export default function AdminPage() {
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [productSaving, setProductSaving] = useState(false);
   const [productError, setProductError] = useState("");
+  const [translating, setTranslating] = useState(false);
 
   const [adminMenuType, setAdminMenuType] = useState<"food" | "drinks">("food");
 
@@ -160,7 +167,10 @@ export default function AdminPage() {
   }
   function openEditProduct(p: Product) {
     setProductForm({
-      name: p.name, description: p.description, price: p.price.toString(),
+      name: p.name, description: p.description,
+      name_en: p.name_en ?? "", description_en: p.description_en ?? "",
+      name_fr: p.name_fr ?? "", description_fr: p.description_fr ?? "",
+      price: p.price.toString(),
       categoryId: p.categoryId.toString(), imageUrl: p.imageUrl,
       available: p.available, order: p.order.toString(),
     });
@@ -177,6 +187,10 @@ export default function AdminPage() {
     setProductError("");
     const body = {
       name: productForm.name, description: productForm.description,
+      name_en: productForm.name_en || undefined,
+      description_en: productForm.description_en || undefined,
+      name_fr: productForm.name_fr || undefined,
+      description_fr: productForm.description_fr || undefined,
       price: parseFloat(productForm.price), categoryId: parseInt(productForm.categoryId),
       imageUrl: productForm.imageUrl, available: productForm.available,
       order: parseInt(productForm.order) || 0,
@@ -188,6 +202,33 @@ export default function AdminPage() {
     else { const d = await res.json(); setProductError(d.error || "Error al guardar"); }
     setProductSaving(false);
   }
+  async function autoTranslate() {
+    if (!productForm.name) {
+      setProductError("Escribe el nombre antes de traducir");
+      return;
+    }
+    setTranslating(true);
+    setProductError("");
+    const res = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: productForm.name, description: productForm.description }),
+    });
+    if (res.ok) {
+      const t = await res.json();
+      setProductForm((f) => ({
+        ...f,
+        name_en: t.name_en ?? f.name_en,
+        description_en: t.description_en ?? f.description_en,
+        name_fr: t.name_fr ?? f.name_fr,
+        description_fr: t.description_fr ?? f.description_fr,
+      }));
+    } else {
+      setProductError("Error al traducir. Inténtalo de nuevo.");
+    }
+    setTranslating(false);
+  }
+
   async function deleteProduct(id: number) {
     if (!confirm("¿Eliminar este producto?")) return;
     await fetch(`/api/products/${id}`, { method: "DELETE" });
@@ -630,6 +671,61 @@ export default function AdminPage() {
                 <input type="url" value={productForm.imageUrl}
                   onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
                   className={inputCls} placeholder="https://..." />
+              </div>
+
+              {/* Traducciones */}
+              <div className="border border-brand-stone rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-brand-parchment">
+                  <span className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">
+                    Traducciones
+                  </span>
+                  <button
+                    type="button"
+                    onClick={autoTranslate}
+                    disabled={translating || !productForm.name}
+                    className="flex items-center gap-1.5 text-xs font-sans font-medium bg-brand-caramel hover:bg-brand-brown disabled:opacity-40 text-white px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {translating ? (
+                      <>
+                        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                        </svg>
+                        Traduciendo...
+                      </>
+                    ) : (
+                      <>✨ Auto-traducir</>
+                    )}
+                  </button>
+                </div>
+                <div className="px-4 pb-4 pt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>🇬🇧 Nombre EN</label>
+                      <input type="text" value={productForm.name_en}
+                        onChange={(e) => setProductForm({ ...productForm, name_en: e.target.value })}
+                        className={inputCls} placeholder="Avocado toast" />
+                    </div>
+                    <div>
+                      <label className={labelCls}>🇫🇷 Nombre FR</label>
+                      <input type="text" value={productForm.name_fr}
+                        onChange={(e) => setProductForm({ ...productForm, name_fr: e.target.value })}
+                        className={inputCls} placeholder="Toast à l'avocat" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>🇬🇧 Descripción EN</label>
+                    <textarea value={productForm.description_en}
+                      onChange={(e) => setProductForm({ ...productForm, description_en: e.target.value })}
+                      rows={2} className={`${inputCls} resize-none`} placeholder="English description..." />
+                  </div>
+                  <div>
+                    <label className={labelCls}>🇫🇷 Descripción FR</label>
+                    <textarea value={productForm.description_fr}
+                      onChange={(e) => setProductForm({ ...productForm, description_fr: e.target.value })}
+                      rows={2} className={`${inputCls} resize-none`} placeholder="Description en français..." />
+                  </div>
+                </div>
               </div>
 
               {/* Toggle */}
