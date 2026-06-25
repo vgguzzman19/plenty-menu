@@ -15,8 +15,8 @@ export function ProductCard({ product, lang }: Props) {
   if (product.imageUrl) {
     return (
       <div
-        className={`product-card group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
-          unavailable ? "opacity-50" : ""
+        className={`product-card group rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
+          unavailable ? "bg-brand-stone/40 opacity-70" : "bg-white"
         }`}
       >
         <div className="relative w-full h-44 overflow-hidden">
@@ -57,8 +57,8 @@ export function ProductCard({ product, lang }: Props) {
 
   return (
     <div
-      className={`product-card group bg-white rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 p-5 ${
-        unavailable ? "opacity-50" : ""
+      className={`product-card group rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 p-5 ${
+        unavailable ? "bg-brand-stone/40 opacity-70" : "bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
