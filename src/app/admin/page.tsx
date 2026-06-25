@@ -118,6 +118,8 @@ export default function AdminPage() {
   const [productSaving, setProductSaving] = useState(false);
   const [productError, setProductError] = useState("");
 
+  const [adminMenuType, setAdminMenuType] = useState<"food" | "drinks">("food");
+
   const [categoryModal, setCategoryModal] = useState<"add" | "edit" | null>(null);
   const [categoryForm, setCategoryForm] = useState<CategoryForm>(EMPTY_CATEGORY);
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
@@ -150,7 +152,8 @@ export default function AdminPage() {
 
   /* Products CRUD */
   function openAddProduct() {
-    setProductForm({ ...EMPTY_PRODUCT, categoryId: categories[0]?.id?.toString() ?? "" });
+    const firstCat = categories.find((c) => c.menu === adminMenuType);
+    setProductForm({ ...EMPTY_PRODUCT, categoryId: firstCat?.id?.toString() ?? "" });
     setEditingProductId(null);
     setProductError("");
     setProductModal("add");
@@ -226,10 +229,12 @@ export default function AdminPage() {
     fetchData();
   }
 
-  const productsByCategory = categories.map((cat) => ({
-    cat,
-    items: products.filter((p) => p.categoryId === cat.id).sort((a, b) => a.order - b.order),
-  }));
+  const productsByCategory = categories
+    .filter((cat) => cat.menu === adminMenuType)
+    .map((cat) => ({
+      cat,
+      items: products.filter((p) => p.categoryId === cat.id).sort((a, b) => a.order - b.order),
+    }));
 
   /* Shared field styles */
   const inputCls = "w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-white text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel text-sm font-sans";
@@ -292,8 +297,28 @@ export default function AdminPage() {
         {/* ── PRODUCTS TAB ── */}
         {tab === "products" && (
           <div>
+            {/* Carta / Bebidas switcher */}
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              {([["food", "🍽️", "Carta"] as const, ["drinks", "☕", "Bebidas"] as const]).map(([type, icon, label]) => (
+                <button
+                  key={type}
+                  onClick={() => setAdminMenuType(type)}
+                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-sans font-semibold transition-all border ${
+                    adminMenuType === type
+                      ? "bg-brand-espresso text-brand-cream border-brand-espresso"
+                      : "border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50"
+                  }`}
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-serif text-xl font-semibold text-brand-espresso">Carta</h2>
+              <h2 className="font-serif text-xl font-semibold text-brand-espresso">
+                {adminMenuType === "food" ? "Carta" : "Bebidas"}
+              </h2>
               <button
                 onClick={openAddProduct}
                 className="flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
@@ -594,7 +619,7 @@ export default function AdminPage() {
                     onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
                     className={inputCls}>
                     <option value="">Selecciona</option>
-                    {categories.map((c) => (
+                    {categories.filter((c) => c.menu === adminMenuType).map((c) => (
                       <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
                     ))}
                   </select>
