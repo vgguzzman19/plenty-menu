@@ -15,29 +15,66 @@ interface Props {
   products: Product[];
 }
 
-export function MenuClient({ categories, products: initialProducts }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToProduct(row: any): Product {
+  return {
+    id: row.id,
+    categoryId: row.category_id,
+    name: row.name,
+    description: row.description,
+    name_en: row.name_en ?? undefined,
+    description_en: row.description_en ?? undefined,
+    name_fr: row.name_fr ?? undefined,
+    description_fr: row.description_fr ?? undefined,
+    price: Number(row.price),
+    imageUrl: row.image_url,
+    available: row.available,
+    order: row.order,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToCategory(row: any): Category {
+  return {
+    id: row.id,
+    name: row.name,
+    name_en: row.name_en ?? undefined,
+    name_fr: row.name_fr ?? undefined,
+    emoji: row.emoji,
+    order: row.order,
+    menu: row.menu ?? "food",
+  };
+}
+
+export function MenuClient({ categories: initialCategories, products: initialProducts }: Props) {
   const [menuType, setMenuType] = useState<"food" | "drinks">("food");
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>("es");
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
 
-  // Supabase Realtime — actualiza productos en tiempo real
+  // Supabase Realtime — sincronización completa en tiempo real
   useEffect(() => {
     const channel = supabaseClient
-      .channel("products-realtime")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "products" },
-        (payload) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const row = payload.new as any;
-          setProducts((prev) =>
-            prev.map((p) =>
-              p.id === row.id ? { ...p, available: row.available } : p
-            )
-          );
-        }
-      )
+      .channel("menu-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "products" }, ({ new: row }) => {
+        setProducts((prev) => [...prev, rowToProduct(row)].sort((a, b) => a.order - b.order));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "products" }, ({ new: row }) => {
+        setProducts((prev) => prev.map((p) => p.id === row.id ? rowToProduct(row) : p));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "products" }, ({ old: row }) => {
+        setProducts((prev) => prev.filter((p) => p.id !== row.id));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "categories" }, ({ new: row }) => {
+        setCategories((prev) => [...prev, rowToCategory(row)].sort((a, b) => a.order - b.order));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "categories" }, ({ new: row }) => {
+        setCategories((prev) => prev.map((c) => c.id === row.id ? rowToCategory(row) : c));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "categories" }, ({ old: row }) => {
+        setCategories((prev) => prev.filter((c) => c.id !== row.id));
+      })
       .subscribe();
 
     return () => { supabaseClient.removeChannel(channel); };
