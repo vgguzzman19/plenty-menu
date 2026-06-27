@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Category, Product } from "@/lib/storage";
+import { ALLERGENS } from "@/lib/allergens";
 
 type Tab = "products" | "categories" | "qr";
 
@@ -19,6 +20,7 @@ interface ProductForm {
   imageUrl: string;
   available: boolean;
   order: string;
+  allergens: string[];
 }
 
 interface CategoryForm {
@@ -32,7 +34,7 @@ const EMPTY_PRODUCT: ProductForm = {
   name: "", description: "",
   name_en: "", description_en: "", name_fr: "", description_fr: "",
   price: "", categoryId: "",
-  imageUrl: "", available: true, order: "0",
+  imageUrl: "", available: true, order: "0", allergens: [],
 };
 const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0", menu: "food" };
 
@@ -173,6 +175,7 @@ export default function AdminPage() {
       price: p.price.toString(),
       categoryId: p.categoryId.toString(), imageUrl: p.imageUrl,
       available: p.available, order: p.order.toString(),
+      allergens: p.allergens ?? [],
     });
     setEditingProductId(p.id);
     setProductError("");
@@ -194,6 +197,7 @@ export default function AdminPage() {
       price: parseFloat(productForm.price), categoryId: parseInt(productForm.categoryId),
       imageUrl: productForm.imageUrl, available: productForm.available,
       order: parseInt(productForm.order) || 0,
+      allergens: productForm.allergens,
     };
     const res = productModal === "add"
       ? await fetch("/api/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -725,6 +729,38 @@ export default function AdminPage() {
                       onChange={(e) => setProductForm({ ...productForm, description_fr: e.target.value })}
                       rows={2} className={`${inputCls} resize-none`} placeholder="Description en français..." />
                   </div>
+                </div>
+              </div>
+
+              {/* Alérgenos */}
+              <div>
+                <label className={labelCls}>Alérgenos</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALLERGENS.map((a) => {
+                    const active = productForm.allergens.includes(a.id);
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() =>
+                          setProductForm((f) => ({
+                            ...f,
+                            allergens: active
+                              ? f.allergens.filter((x) => x !== a.id)
+                              : [...f.allergens, a.id],
+                          }))
+                        }
+                        className={`flex items-center gap-1 text-xs font-sans px-2.5 py-1 rounded-full border transition-all ${
+                          active
+                            ? "bg-brand-caramel/15 border-brand-caramel text-brand-brown"
+                            : "bg-white border-brand-stone text-brand-muted hover:border-brand-caramel/50"
+                        }`}
+                      >
+                        <span>{a.icon}</span>
+                        <span>{a.label.es}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

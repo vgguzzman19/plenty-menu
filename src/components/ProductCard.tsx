@@ -1,10 +1,31 @@
 import { Product } from "@/lib/storage";
 import { Lang, prodName, prodDesc, ui } from "@/lib/i18n";
+import { ALLERGENS } from "@/lib/allergens";
 import Image from "next/image";
 
 interface Props {
   product: Product;
   lang: Lang;
+}
+
+function AllergenBadges({ allergens, lang }: { allergens: string[]; lang: Lang }) {
+  if (!allergens || allergens.length === 0) return null;
+  const active = ALLERGENS.filter((a) => allergens.includes(a.id));
+  if (active.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-2">
+      {active.map((a) => (
+        <span
+          key={a.id}
+          title={a.label[lang]}
+          className="inline-flex items-center gap-0.5 text-[11px] font-sans text-brand-muted/70 bg-brand-parchment border border-brand-stone/60 rounded-full px-1.5 py-0.5 leading-none"
+        >
+          <span>{a.icon}</span>
+          <span className="hidden sm:inline">{a.label[lang]}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function ProductCard({ product, lang }: Props) {
@@ -50,6 +71,7 @@ export function ProductCard({ product, lang }: Props) {
               {desc}
             </p>
           )}
+          <AllergenBadges allergens={product.allergens} lang={lang} />
         </div>
       </div>
     );
@@ -76,6 +98,7 @@ export function ProductCard({ product, lang }: Props) {
               {desc}
             </p>
           )}
+          <AllergenBadges allergens={product.allergens} lang={lang} />
         </div>
 
         <div className="flex-none text-right">
