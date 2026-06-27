@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
+import { supabaseClient } from "@/lib/supabase-client";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,10 +15,33 @@ interface Props {
   products: Product[];
 }
 
-export function MenuClient({ categories, products }: Props) {
+export function MenuClient({ categories, products: initialProducts }: Props) {
   const [menuType, setMenuType] = useState<"food" | "drinks">("food");
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>("es");
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  // Supabase Realtime — actualiza productos en tiempo real
+  useEffect(() => {
+    const channel = supabaseClient
+      .channel("products-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "products" },
+        (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const row = payload.new as any;
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.id === row.id ? { ...p, available: row.available } : p
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => { supabaseClient.removeChannel(channel); };
+  }, []);
   const pillsRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
