@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const { name, description, price, categoryId, imageUrl, available, order, name_en, description_en, name_fr, description_fr, allergens } = await req.json();
+  const { name, description, price, categoryId, imageUrl, available, order, name_en, description_en, name_fr, description_fr, name_ca, description_ca, allergens } = await req.json();
   if (!name || price === undefined || !categoryId) {
     return NextResponse.json({ error: "Campos requeridos: nombre, precio, categoría" }, { status: 400 });
   }
@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
     description_en: description_en ?? undefined,
     name_fr: name_fr ?? undefined,
     description_fr: description_fr ?? undefined,
+    name_ca: name_ca ?? undefined,
+    description_ca: description_ca ?? undefined,
     price: Number(price),
     categoryId: Number(categoryId),
     imageUrl: imageUrl ?? "",

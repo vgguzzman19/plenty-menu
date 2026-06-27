@@ -23,6 +23,7 @@ export interface Category {
   name: string;
   name_en?: string;
   name_fr?: string;
+  name_ca?: string;
   emoji: string;
   order: number;
   menu: "food" | "drinks";
@@ -37,6 +38,8 @@ export interface Product {
   description_en?: string;
   name_fr?: string;
   description_fr?: string;
+  name_ca?: string;
+  description_ca?: string;
   price: number;
   imageUrl: string;
   available: boolean;
@@ -51,6 +54,7 @@ function mapCategory(row: any): Category {
     name: row.name,
     name_en: row.name_en ?? undefined,
     name_fr: row.name_fr ?? undefined,
+    name_ca: row.name_ca ?? undefined,
     emoji: row.emoji,
     order: row.order,
     menu: row.menu ?? "food",
@@ -68,6 +72,8 @@ function mapProduct(row: any): Product {
     description_en: row.description_en ?? undefined,
     name_fr: row.name_fr ?? undefined,
     description_fr: row.description_fr ?? undefined,
+    name_ca: row.name_ca ?? undefined,
+    description_ca: row.description_ca ?? undefined,
     price: Number(row.price),
     imageUrl: row.image_url,
     available: row.available,
@@ -135,6 +141,7 @@ export async function createCategory(data: Omit<Category, "id">): Promise<Catego
       name: data.name,
       name_en: data.name_en,
       name_fr: data.name_fr,
+      name_ca: data.name_ca,
       emoji: data.emoji,
       order: data.order,
       menu: data.menu ?? "food",
@@ -150,6 +157,7 @@ export async function updateCategory(id: number, data: Partial<Omit<Category, "i
   if (data.name !== undefined) update.name = data.name;
   if (data.name_en !== undefined) update.name_en = data.name_en;
   if (data.name_fr !== undefined) update.name_fr = data.name_fr;
+  if (data.name_ca !== undefined) update.name_ca = data.name_ca;
   if (data.emoji !== undefined) update.emoji = data.emoji;
   if (data.order !== undefined) update.order = data.order;
   if (data.menu !== undefined) update.menu = data.menu;
@@ -180,6 +188,8 @@ export async function createProduct(data: Omit<Product, "id">): Promise<Product>
       description_en: data.description_en,
       name_fr: data.name_fr,
       description_fr: data.description_fr,
+      name_ca: data.name_ca,
+      description_ca: data.description_ca,
       price: data.price,
       image_url: data.imageUrl,
       available: data.available,
@@ -201,6 +211,8 @@ export async function updateProduct(id: number, data: Partial<Omit<Product, "id"
   if (data.description_en !== undefined) update.description_en = data.description_en;
   if (data.name_fr !== undefined) update.name_fr = data.name_fr;
   if (data.description_fr !== undefined) update.description_fr = data.description_fr;
+  if (data.name_ca !== undefined) update.name_ca = data.name_ca;
+  if (data.description_ca !== undefined) update.description_ca = data.description_ca;
   if (data.price !== undefined) update.price = data.price;
   if (data.imageUrl !== undefined) update.image_url = data.imageUrl;
   if (data.available !== undefined) update.available = data.available;

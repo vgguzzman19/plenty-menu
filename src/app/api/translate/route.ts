@@ -15,11 +15,11 @@ export async function POST(req: NextRequest) {
 
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 512,
+    max_tokens: 768,
     messages: [
       {
         role: "user",
-        content: `You are a translator for a brunch restaurant menu. Translate the following Spanish product info into English and French. Return ONLY a valid JSON object with exactly these keys: name_en, description_en, name_fr, description_fr. If there is no description, use an empty string for description fields. Keep translations natural and appetizing for a restaurant menu.\n\n${input}`,
+        content: `You are a translator for a brunch restaurant menu. Translate the following Spanish product info into English, French and Catalan. Return ONLY a valid JSON object with exactly these keys: name_en, description_en, name_fr, description_fr, name_ca, description_ca. If there is no description, use an empty string for description fields. Keep translations natural and appetizing for a restaurant menu.\n\n${input}`,
       },
     ],
   });

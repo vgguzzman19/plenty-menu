@@ -15,6 +15,8 @@ interface ProductForm {
   description_en: string;
   name_fr: string;
   description_fr: string;
+  name_ca: string;
+  description_ca: string;
   price: string;
   categoryId: string;
   imageUrl: string;
@@ -33,6 +35,7 @@ interface CategoryForm {
 const EMPTY_PRODUCT: ProductForm = {
   name: "", description: "",
   name_en: "", description_en: "", name_fr: "", description_fr: "",
+  name_ca: "", description_ca: "",
   price: "", categoryId: "",
   imageUrl: "", available: true, order: "0", allergens: [],
 };
@@ -176,6 +179,7 @@ export default function AdminPage() {
       categoryId: p.categoryId.toString(), imageUrl: p.imageUrl,
       available: p.available, order: p.order.toString(),
       allergens: p.allergens ?? [],
+      name_ca: p.name_ca ?? "", description_ca: p.description_ca ?? "",
     });
     setEditingProductId(p.id);
     setProductError("");
@@ -198,6 +202,8 @@ export default function AdminPage() {
       imageUrl: productForm.imageUrl, available: productForm.available,
       order: parseInt(productForm.order) || 0,
       allergens: productForm.allergens,
+      name_ca: productForm.name_ca || undefined,
+      description_ca: productForm.description_ca || undefined,
     };
     const res = productModal === "add"
       ? await fetch("/api/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -226,6 +232,8 @@ export default function AdminPage() {
         description_en: t.description_en ?? f.description_en,
         name_fr: t.name_fr ?? f.name_fr,
         description_fr: t.description_fr ?? f.description_fr,
+        name_ca: t.name_ca ?? f.name_ca,
+        description_ca: t.description_ca ?? f.description_ca,
       }));
     } else {
       setProductError("Error al traducir. Inténtalo de nuevo.");
@@ -717,6 +725,15 @@ export default function AdminPage() {
                         className={inputCls} placeholder="Toast à l'avocat" />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>🏴 Nombre CA</label>
+                      <input type="text" value={productForm.name_ca}
+                        onChange={(e) => setProductForm({ ...productForm, name_ca: e.target.value })}
+                        className={inputCls} placeholder="Toast d'alvocat" />
+                    </div>
+                    <div className="col-span-1" />
+                  </div>
                   <div>
                     <label className={labelCls}>🇬🇧 Descripción EN</label>
                     <textarea value={productForm.description_en}
@@ -728,6 +745,12 @@ export default function AdminPage() {
                     <textarea value={productForm.description_fr}
                       onChange={(e) => setProductForm({ ...productForm, description_fr: e.target.value })}
                       rows={2} className={`${inputCls} resize-none`} placeholder="Description en français..." />
+                  </div>
+                  <div>
+                    <label className={labelCls}>🏴 Descripción CA</label>
+                    <textarea value={productForm.description_ca}
+                      onChange={(e) => setProductForm({ ...productForm, description_ca: e.target.value })}
+                      rows={2} className={`${inputCls} resize-none`} placeholder="Descripció en català..." />
                   </div>
                 </div>
               </div>
