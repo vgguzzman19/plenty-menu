@@ -33,6 +33,7 @@ function rowToProduct(row: any): Product {
     available: row.available,
     order: row.order,
     allergens: Array.isArray(row.allergens) ? row.allergens : [],
+    badge: row.badge ?? null,
   };
 }
 

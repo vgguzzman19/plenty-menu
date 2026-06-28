@@ -45,6 +45,7 @@ export interface Product {
   available: boolean;
   order: number;
   allergens: string[];
+  badge?: string | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,6 +80,7 @@ function mapProduct(row: any): Product {
     available: row.available,
     order: row.order,
     allergens: Array.isArray(row.allergens) ? row.allergens : [],
+    badge: row.badge ?? null,
   };
 }
 
@@ -195,6 +197,7 @@ export async function createProduct(data: Omit<Product, "id">): Promise<Product>
       available: data.available,
       order: data.order,
       allergens: data.allergens ?? [],
+      badge: data.badge ?? null,
     })
     .select()
     .single();
@@ -218,6 +221,7 @@ export async function updateProduct(id: number, data: Partial<Omit<Product, "id"
   if (data.available !== undefined) update.available = data.available;
   if (data.order !== undefined) update.order = data.order;
   if (data.allergens !== undefined) update.allergens = data.allergens;
+  if (data.badge !== undefined) update.badge = data.badge;
 
   const { data: row, error } = await supabase
     .from("products")

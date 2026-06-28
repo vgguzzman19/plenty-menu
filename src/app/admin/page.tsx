@@ -23,6 +23,7 @@ interface ProductForm {
   available: boolean;
   order: string;
   allergens: string[];
+  badge: string;
 }
 
 interface CategoryForm {
@@ -37,7 +38,7 @@ const EMPTY_PRODUCT: ProductForm = {
   name_en: "", description_en: "", name_fr: "", description_fr: "",
   name_ca: "", description_ca: "",
   price: "", categoryId: "",
-  imageUrl: "", available: true, order: "0", allergens: [],
+  imageUrl: "", available: true, order: "0", allergens: [], badge: "",
 };
 const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0", menu: "food" };
 
@@ -180,6 +181,7 @@ export default function AdminPage() {
       available: p.available, order: p.order.toString(),
       allergens: p.allergens ?? [],
       name_ca: p.name_ca ?? "", description_ca: p.description_ca ?? "",
+      badge: p.badge ?? "",
     });
     setEditingProductId(p.id);
     setProductError("");
@@ -204,6 +206,7 @@ export default function AdminPage() {
       allergens: productForm.allergens,
       name_ca: productForm.name_ca || undefined,
       description_ca: productForm.description_ca || undefined,
+      badge: productForm.badge || null,
     };
     const res = productModal === "add"
       ? await fetch("/api/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -752,6 +755,27 @@ export default function AdminPage() {
                       onChange={(e) => setProductForm({ ...productForm, description_ca: e.target.value })}
                       rows={2} className={`${inputCls} resize-none`} placeholder="Descripció en català..." />
                   </div>
+                </div>
+              </div>
+
+              {/* Badge */}
+              <div>
+                <label className={labelCls}>Badge destacado</label>
+                <div className="flex flex-wrap gap-2">
+                  {["", "Especial del día", "Nuevo", "Temporada", "Recomendado"].map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setProductForm((f) => ({ ...f, badge: b }))}
+                      className={`text-xs font-sans px-3 py-1.5 rounded-full border transition-all ${
+                        productForm.badge === b
+                          ? "bg-brand-caramel/15 border-brand-caramel text-brand-brown font-semibold"
+                          : "bg-white border-brand-stone text-brand-muted hover:border-brand-caramel/50"
+                      }`}
+                    >
+                      {b === "" ? "Sin badge" : b}
+                    </button>
+                  ))}
                 </div>
               </div>
 

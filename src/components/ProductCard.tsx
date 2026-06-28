@@ -28,6 +28,23 @@ function AllergenBadges({ allergens, lang }: { allergens: string[]; lang: Lang }
   );
 }
 
+const BADGE_STYLES: Record<string, string> = {
+  "Especial del día": "bg-amber-50 text-amber-700 border-amber-300",
+  "Nuevo":            "bg-emerald-50 text-emerald-700 border-emerald-300",
+  "Temporada":        "bg-sky-50 text-sky-700 border-sky-300",
+  "Recomendado":      "bg-rose-50 text-rose-700 border-rose-300",
+};
+
+function ProductBadge({ badge }: { badge?: string | null }) {
+  if (!badge) return null;
+  const style = BADGE_STYLES[badge] ?? "bg-brand-parchment text-brand-espresso border-brand-stone/60";
+  return (
+    <span className={`inline-block font-sans text-[10px] font-semibold tracking-wide uppercase border rounded-full px-2.5 py-0.5 ${style}`}>
+      {badge}
+    </span>
+  );
+}
+
 export function ProductCard({ product, lang }: Props) {
   const unavailable = !product.available;
   const name = prodName(product, lang);
@@ -48,6 +65,11 @@ export function ProductCard({ product, lang }: Props) {
             className="object-cover group-hover:scale-105 transition-transform duration-400"
             unoptimized
           />
+          {product.badge && !unavailable && (
+            <div className="absolute top-2.5 left-2.5">
+              <ProductBadge badge={product.badge} />
+            </div>
+          )}
           {unavailable && (
             <div className="absolute inset-0 bg-white/55 backdrop-blur-[2px] flex items-center justify-center">
               <span className="font-sans text-xs font-medium text-brand-muted tracking-widest uppercase bg-white/90 px-3 py-1.5 rounded-full border border-brand-stone">
@@ -85,9 +107,12 @@ export function ProductCard({ product, lang }: Props) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-serif font-semibold text-brand-espresso text-[17px] leading-tight">
-            {name}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-serif font-semibold text-brand-espresso text-[17px] leading-tight">
+              {name}
+            </h3>
+            {!unavailable && <ProductBadge badge={product.badge} />}
+          </div>
           {unavailable && (
             <span className="inline-block mt-1.5 font-sans text-[10px] font-medium text-brand-muted/70 tracking-widest uppercase border border-brand-stone/80 rounded-full px-2 py-0.5">
               {ui[lang].unavailable}
