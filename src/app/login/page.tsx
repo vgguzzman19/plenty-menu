@@ -78,7 +78,7 @@ export default function LoginPage() {
                 autoComplete="username"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-brand-parchment/60 text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel font-sans text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-brand-parchment/60 text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel font-sans text-[16px]"
                 placeholder="admin"
                 required
                 autoFocus

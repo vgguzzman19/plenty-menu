@@ -384,7 +384,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && closeSearch()}
               placeholder={ui[lang].searchPlaceholder}
-              className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
+              className="flex-1 bg-transparent font-sans text-[16px] text-brand-espresso placeholder:text-brand-muted/50 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
             />
             <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
