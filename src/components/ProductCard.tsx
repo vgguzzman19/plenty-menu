@@ -1,7 +1,6 @@
 import { Product } from "@/lib/storage";
 import { Lang, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ALLERGENS } from "@/lib/allergens";
-import Image from "next/image";
 
 interface Props {
   product: Product;
@@ -59,56 +58,6 @@ export function ProductCard({ product, lang, onClick }: Props) {
     );
   }
   const desc = prodDesc(product, lang);
-
-  if (product.imageUrl) {
-    return (
-      <div
-        onClick={onClick}
-        className={`product-card group rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
-          unavailable ? "bg-brand-stone/40 opacity-70" : "bg-white"
-        } ${onClick ? "cursor-pointer" : ""}`}
-      >
-        <div className="relative w-full h-44 overflow-hidden">
-          <Image
-            src={product.imageUrl}
-            alt={name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-400"
-            unoptimized
-          />
-          {product.badge && !unavailable && (
-            <div className="absolute top-2.5 left-2.5">
-              <ProductBadge badge={product.badge} />
-            </div>
-          )}
-          {unavailable && (
-            <div className="absolute inset-0 bg-white/55 backdrop-blur-[2px] flex items-center justify-center">
-              <span className="font-sans text-xs font-medium text-brand-muted tracking-widest uppercase bg-white/90 px-3 py-1.5 rounded-full border border-brand-stone">
-                {ui[lang].unavailable}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 pt-3.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-serif font-semibold text-brand-espresso text-[17px] leading-tight flex-1">
-              {name}
-            </h3>
-            <span className="font-serif font-semibold text-brand-caramel text-[17px] whitespace-nowrap flex-none">
-              {product.price.toFixed(2).replace(".", ",")}€
-            </span>
-          </div>
-          {desc && (
-            <p className="font-sans text-brand-muted text-[13px] leading-relaxed mt-1.5 line-clamp-2">
-              {desc}
-            </p>
-          )}
-          <AllergenBadges allergens={product.allergens} lang={lang} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
