@@ -93,6 +93,13 @@ export function ProductCard({ product, lang, onClick }: Props) {
           </span>
         </div>
       </div>
+      {onClick && (
+        <div className="flex justify-end mt-3">
+          <span className="font-sans text-[11px] text-brand-muted/50 tracking-wide">
+            {ui[lang].clickMore} →
+          </span>
+        </div>
+      )}
     </div>
   );
 }
