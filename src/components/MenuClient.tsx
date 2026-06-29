@@ -201,13 +201,13 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
   const openSearch = () => {
     setSearchOpen(true);
+    gsap.to(pillsWrapRef.current, { autoAlpha: 0, y: -6, duration: 0.18, ease: "power2.in" });
     gsap.fromTo(
       searchBarRef.current,
       { autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center" },
-      { autoAlpha: 1, scaleX: 1, duration: 0.38, ease: "back.out(1.6)",
+      { autoAlpha: 1, scaleX: 1, duration: 0.38, ease: "back.out(1.6)", delay: 0.1,
         onComplete: () => searchInputRef.current?.focus() }
     );
-    gsap.to(pillsWrapRef.current, { autoAlpha: 0, y: -6, duration: 0.18, ease: "power2.in" });
   };
 
   const closeSearch = () => {
@@ -347,34 +347,32 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           </button>
         </div>
 
-        {/* Search bar — animada con GSAP */}
-        {searchOpen && (
-          <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3" style={{ opacity: 0 }}>
-            <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm">
-              <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
-                <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
+        {/* Search bar — siempre en DOM, GSAP controla visibilidad */}
+        <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3" style={{ opacity: 0, visibility: "hidden" }}>
+          <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm">
+            <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
+              <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Escape" && closeSearch()}
+              placeholder={ui[lang].searchPlaceholder}
+              className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none"
+            />
+            <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Escape" && closeSearch()}
-                placeholder={ui[lang].searchPlaceholder}
-                className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none"
-              />
-              <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Category pills */}
-        {visibleCategories.length > 0 && !searchOpen && (
+        {/* Category pills — siempre en DOM, GSAP controla visibilidad */}
+        {visibleCategories.length > 0 && (
           <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
             <div
               className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 to-transparent pointer-events-none z-10"
