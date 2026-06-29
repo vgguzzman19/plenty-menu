@@ -774,28 +774,23 @@ export default function AdminPage() {
                   </button>
                 </div>
                 <div className="px-4 pb-4 pt-3 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={labelCls}>🇬🇧 Nombre EN</label>
-                      <input type="text" value={productForm.name_en}
-                        onChange={(e) => setProductForm({ ...productForm, name_en: e.target.value })}
-                        className={inputCls} placeholder="Avocado toast" />
-                    </div>
-                    <div>
-                      <label className={labelCls}>🇫🇷 Nombre FR</label>
-                      <input type="text" value={productForm.name_fr}
-                        onChange={(e) => setProductForm({ ...productForm, name_fr: e.target.value })}
-                        className={inputCls} placeholder="Toast à l'avocat" />
-                    </div>
+                  <div>
+                    <label className={labelCls}>🇬🇧 Nombre EN</label>
+                    <input type="text" value={productForm.name_en}
+                      onChange={(e) => setProductForm({ ...productForm, name_en: e.target.value })}
+                      className={inputCls} placeholder="Avocado toast" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={labelCls}>🏴 Nombre CA</label>
-                      <input type="text" value={productForm.name_ca}
-                        onChange={(e) => setProductForm({ ...productForm, name_ca: e.target.value })}
-                        className={inputCls} placeholder="Toast d'alvocat" />
-                    </div>
-                    <div className="col-span-1" />
+                  <div>
+                    <label className={labelCls}>🇫🇷 Nombre FR</label>
+                    <input type="text" value={productForm.name_fr}
+                      onChange={(e) => setProductForm({ ...productForm, name_fr: e.target.value })}
+                      className={inputCls} placeholder="Toast à l'avocat" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>🏴 Nombre CA</label>
+                    <input type="text" value={productForm.name_ca}
+                      onChange={(e) => setProductForm({ ...productForm, name_ca: e.target.value })}
+                      className={inputCls} placeholder="Toast d'alvocat" />
                   </div>
                   <div>
                     <label className={labelCls}>🇬🇧 Descripción EN</label>
