@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
+import { ProductDetailModal } from "./ProductDetailModal";
 import { supabaseClient } from "@/lib/supabase-client";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -62,6 +63,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
@@ -432,7 +434,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             {searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {searchResults.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} />
+                  <ProductCard key={product.id} product={product} lang={lang} onClick={() => setDetailProduct(product)} />
                 ))}
               </div>
             ) : (
@@ -466,7 +468,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
               <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
                 {catProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} />
+                  <ProductCard key={product.id} product={product} lang={lang} onClick={product.price > 0 ? () => setDetailProduct(product) : undefined} />
                 ))}
               </div>
             </section>
@@ -485,6 +487,15 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         )}
         </div>
       </main>
+
+      {/* ── PRODUCT DETAIL MODAL ── */}
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          lang={lang}
+          onClose={() => setDetailProduct(null)}
+        />
+      )}
 
       {/* ── FOOTER ── */}
       <footer className="relative grain overflow-hidden bg-brand-espresso mt-16">

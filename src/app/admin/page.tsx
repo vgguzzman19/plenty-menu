@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Category, Product } from "@/lib/storage";
@@ -130,6 +130,8 @@ export default function AdminPage() {
   const [productSaving, setProductSaving] = useState(false);
   const [productError, setProductError] = useState("");
   const [translating, setTranslating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [adminMenuType, setAdminMenuType] = useState<"food" | "drinks">("food");
 
@@ -242,6 +244,21 @@ export default function AdminPage() {
       setProductError("Error al traducir. Inténtalo de nuevo.");
     }
     setTranslating(false);
+  }
+
+  async function uploadImage(file: File) {
+    setUploading(true);
+    setProductError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      setProductForm((f) => ({ ...f, imageUrl: url }));
+    } else {
+      setProductError("Error al subir la imagen. Inténtalo de nuevo.");
+    }
+    setUploading(false);
   }
 
   async function deleteProduct(id: number) {
@@ -682,10 +699,41 @@ export default function AdminPage() {
                 </div>
               </div>
               <div>
-                <label className={labelCls}>URL de imagen (opcional)</label>
-                <input type="url" value={productForm.imageUrl}
-                  onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                  className={inputCls} placeholder="https://..." />
+                <label className={labelCls}>Imagen (opcional)</label>
+                <div className="flex gap-2">
+                  <input type="url" value={productForm.imageUrl}
+                    onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
+                    className={`${inputCls} flex-1`} placeholder="https://... o sube una foto" />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-stone text-brand-muted text-sm font-sans hover:border-brand-caramel/50 hover:text-brand-espresso transition-all disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                    <span>{uploading ? "Subiendo..." : "Subir"}</span>
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }}
+                />
+                {productForm.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={productForm.imageUrl} alt="preview" className="mt-2 h-24 w-full object-cover rounded-xl border border-brand-stone" />
+                )}
               </div>
 
               {/* Traducciones */}

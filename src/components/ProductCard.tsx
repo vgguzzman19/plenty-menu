@@ -6,6 +6,7 @@ import Image from "next/image";
 interface Props {
   product: Product;
   lang: Lang;
+  onClick?: () => void;
 }
 
 function AllergenBadges({ allergens, lang }: { allergens: string[]; lang: Lang }) {
@@ -45,7 +46,7 @@ function ProductBadge({ badge }: { badge?: string | null }) {
   );
 }
 
-export function ProductCard({ product, lang }: Props) {
+export function ProductCard({ product, lang, onClick }: Props) {
   const unavailable = !product.available;
   const name = prodName(product, lang);
 
@@ -62,9 +63,10 @@ export function ProductCard({ product, lang }: Props) {
   if (product.imageUrl) {
     return (
       <div
+        onClick={onClick}
         className={`product-card group rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 ${
           unavailable ? "bg-brand-stone/40 opacity-70" : "bg-white"
-        }`}
+        } ${onClick ? "cursor-pointer" : ""}`}
       >
         <div className="relative w-full h-44 overflow-hidden">
           <Image
@@ -110,9 +112,10 @@ export function ProductCard({ product, lang }: Props) {
 
   return (
     <div
+      onClick={onClick}
       className={`product-card group rounded-2xl shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 p-5 ${
         unavailable ? "bg-brand-stone/40 opacity-70" : "bg-white"
-      }`}
+      } ${onClick ? "cursor-pointer" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
