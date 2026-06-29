@@ -30,6 +30,11 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
   const badgeStyle = product.badge ? (BADGE_STYLES[product.badge] ?? "bg-brand-parchment text-brand-espresso border-brand-stone/60") : null;
   const [imgLoaded, setImgLoaded] = useState(false);
 
+  // Supabase image transform: sirve WebP redimensionado desde CDN (mucho más rápido)
+  const imgSrc = product.imageUrl?.includes("supabase.co/storage/v1/object/public")
+    ? product.imageUrl.replace("/storage/v1/object/public", "/storage/v1/render/image/public") + "?width=900&quality=80&format=webp"
+    : product.imageUrl;
+
   // Entrada con GSAP timeline
   useEffect(() => {
     const tl = gsap.timeline();
@@ -72,13 +77,14 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
             )}
             <Image
-              src={product.imageUrl}
+              src={imgSrc!}
               alt={name}
               fill
               sizes="(max-width: 640px) 100vw, 448px"
               className={`object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setImgLoaded(true)}
               priority
+              unoptimized
             />
             <button
               onClick={handleClose}
