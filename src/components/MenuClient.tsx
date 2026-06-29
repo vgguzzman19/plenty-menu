@@ -203,8 +203,6 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
   const openSearch = () => {
     setSearchOpen(true);
-    gsap.to(pillsWrapRef.current, { autoAlpha: 0, y: -6, duration: 0.18, ease: "power2.in" });
-    // requestAnimationFrame da un frame a React para renderizar el elemento antes de animarlo
     requestAnimationFrame(() => {
       gsap.from(searchBarRef.current, {
         autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center",
@@ -220,11 +218,6 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       onComplete: () => {
         setSearchOpen(false);
         setSearchQuery("");
-        gsap.fromTo(
-          pillsWrapRef.current,
-          { autoAlpha: 0, y: -6 },
-          { autoAlpha: 1, y: 0, duration: 0.28, ease: "power2.out" }
-        );
       },
     });
   };
@@ -400,7 +393,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         </div>}
 
         {/* Category pills */}
-        {visibleCategories.length > 0 && (
+        {!searchOpen && visibleCategories.length > 0 && (
           <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
             <div
               className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 to-transparent pointer-events-none z-10"
