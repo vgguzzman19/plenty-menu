@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { Product } from "@/lib/storage";
@@ -28,6 +28,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
   const desc = prodDesc(product, lang);
   const activeAllergens = ALLERGENS.filter((a) => product.allergens?.includes(a.id));
   const badgeStyle = product.badge ? (BADGE_STYLES[product.badge] ?? "bg-brand-parchment text-brand-espresso border-brand-stone/60") : null;
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   // Entrada con GSAP timeline
   useEffect(() => {
@@ -66,13 +67,18 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
       >
         {/* Imagen */}
         {product.imageUrl ? (
-          <div className="relative w-full h-56 sm:h-64">
+          <div className="relative w-full h-56 sm:h-64 bg-brand-stone/30">
+            {!imgLoaded && (
+              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
+            )}
             <Image
               src={product.imageUrl}
               alt={name}
               fill
-              className="object-cover"
-              unoptimized
+              sizes="(max-width: 640px) 100vw, 448px"
+              className={`object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              onLoad={() => setImgLoaded(true)}
+              priority
             />
             <button
               onClick={handleClose}
