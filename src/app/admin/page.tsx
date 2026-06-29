@@ -731,8 +731,20 @@ export default function AdminPage() {
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }}
                 />
                 {productForm.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={productForm.imageUrl} alt="preview" className="mt-2 h-24 w-full object-cover rounded-xl border border-brand-stone" />
+                  <div className="relative mt-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={productForm.imageUrl} alt="preview" className="h-24 w-full object-cover rounded-xl border border-brand-stone" />
+                    <button
+                      type="button"
+                      onClick={() => setProductForm((f) => ({ ...f, imageUrl: "" }))}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-colors"
+                      title="Eliminar imagen"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 )}
               </div>
 
