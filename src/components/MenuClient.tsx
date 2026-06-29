@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Category, Product } from "@/lib/storage";
-import { Lang, LANGS, catName, ui } from "@/lib/i18n";
+import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { supabaseClient } from "@/lib/supabase-client";
 
@@ -60,6 +60,11 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [lang, setLang] = useState<Lang>("es");
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pillsWrapRef = useRef<HTMLDivElement>(null);
 
   // Supabase Realtime — sincronización completa en tiempo real
   useEffect(() => {
@@ -194,6 +199,42 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const openSearch = () => {
+    setSearchOpen(true);
+    gsap.fromTo(
+      searchBarRef.current,
+      { autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center" },
+      { autoAlpha: 1, scaleX: 1, duration: 0.38, ease: "back.out(1.6)",
+        onComplete: () => searchInputRef.current?.focus() }
+    );
+    gsap.to(pillsWrapRef.current, { autoAlpha: 0, y: -6, duration: 0.18, ease: "power2.in" });
+  };
+
+  const closeSearch = () => {
+    gsap.to(searchBarRef.current, {
+      autoAlpha: 0, scaleX: 0.85, duration: 0.22, ease: "power2.in",
+      onComplete: () => {
+        setSearchOpen(false);
+        setSearchQuery("");
+        gsap.fromTo(
+          pillsWrapRef.current,
+          { autoAlpha: 0, y: -6 },
+          { autoAlpha: 1, y: 0, duration: 0.28, ease: "power2.out" }
+        );
+      },
+    });
+  };
+
+  const searchResults = searchQuery.trim()
+    ? products.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          prodName(p, lang).toLowerCase().includes(q) ||
+          prodDesc(p, lang).toLowerCase().includes(q)
+        );
+      })
+    : [];
+
   const menuTabs: { type: "food" | "drinks"; icon: string }[] = [
     { type: "food", icon: "🍽️" },
     { type: "drinks", icon: "☕" },
@@ -278,13 +319,13 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       {/* ── STICKY NAV ── */}
       <div className="sticky top-0 z-20 bg-brand-parchment/95 backdrop-blur-md border-b border-brand-stone shadow-[0_1px_8px_rgba(28,13,4,0.07)]">
 
-        {/* Menu type switcher */}
-        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 grid grid-cols-2 gap-2">
+        {/* Menu type switcher + search icon */}
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
           {menuTabs.map(({ type, icon }) => (
             <button
               key={type}
               onClick={() => switchMenu(type)}
-              className={`flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all ${
                 menuType === type
                   ? "bg-brand-espresso text-brand-cream"
                   : "border border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50"
@@ -294,11 +335,47 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               <span>{ui[lang][type]}</span>
             </button>
           ))}
+          <button
+            onClick={openSearch}
+            aria-label="Buscar"
+            className="flex-none w-10 h-10 flex items-center justify-center rounded-full border border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
+              <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
+            </svg>
+          </button>
         </div>
 
+        {/* Search bar — animada con GSAP */}
+        {searchOpen && (
+          <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3" style={{ opacity: 0 }}>
+            <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm">
+              <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
+                <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && closeSearch()}
+                placeholder={ui[lang].searchPlaceholder}
+                className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none"
+              />
+              <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Category pills */}
-        {visibleCategories.length > 0 && (
-          <div className="relative max-w-2xl mx-auto">
+        {visibleCategories.length > 0 && !searchOpen && (
+          <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
             <div
               className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 to-transparent pointer-events-none z-10"
               aria-hidden="true"
@@ -329,7 +406,29 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
       {/* ── MENU CONTENT ── */}
       <main ref={mainRef} className="max-w-2xl mx-auto px-4 py-10 space-y-14">
-        {visibleCategories.map((cat) => {
+
+        {/* Resultados de búsqueda */}
+        {searchOpen && searchQuery.trim() && (
+          <section>
+            {searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {searchResults.map((product) => (
+                  <ProductCard key={product.id} product={product} lang={lang} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="font-serif font-light text-4xl text-brand-espresso/10 mb-3">?</p>
+                <p className="font-sans text-sm text-brand-muted/60">
+                  {ui[lang].searchEmpty} &ldquo;{searchQuery}&rdquo;
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Carta normal — se oculta cuando hay búsqueda activa */}
+        {(!searchOpen || !searchQuery.trim()) && visibleCategories.map((cat) => {
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
           return (

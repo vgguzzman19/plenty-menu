@@ -30,13 +30,15 @@ export function prodDesc(p: Product, lang: Lang): string {
   return p.description;
 }
 
-export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: string; food: string; drinks: string }> = {
+export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: string; food: string; drinks: string; searchPlaceholder: string; searchEmpty: string }> = {
   es: {
     unavailable: "No disponible",
     empty: "Carta en preparación. Vuelve pronto.",
     brunchCafe: "Healthy Brunch & Lunch.",
     food: "Carta",
     drinks: "Bebidas",
+    searchPlaceholder: "Buscar plato o bebida...",
+    searchEmpty: "No se encontraron resultados para",
   },
   ca: {
     unavailable: "No disponible",
@@ -44,6 +46,8 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     brunchCafe: "Healthy Brunch & Lunch.",
     food: "Carta",
     drinks: "Begudes",
+    searchPlaceholder: "Cercar plat o beguda...",
+    searchEmpty: "No s'han trobat resultats per a",
   },
   en: {
     unavailable: "Not available",
@@ -51,6 +55,8 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     brunchCafe: "Healthy Brunch & Lunch.",
     food: "Menu",
     drinks: "Drinks",
+    searchPlaceholder: "Search dish or drink...",
+    searchEmpty: "No results found for",
   },
   fr: {
     unavailable: "Non disponible",
@@ -58,5 +64,7 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     brunchCafe: "Healthy Brunch & Lunch.",
     food: "Carte",
     drinks: "Boissons",
+    searchPlaceholder: "Chercher un plat ou boisson...",
+    searchEmpty: "Aucun résultat pour",
   },
 };
