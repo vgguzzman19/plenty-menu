@@ -204,12 +204,14 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const openSearch = () => {
     setSearchOpen(true);
     gsap.to(pillsWrapRef.current, { autoAlpha: 0, y: -6, duration: 0.18, ease: "power2.in" });
-    gsap.fromTo(
-      searchBarRef.current,
-      { autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center" },
-      { autoAlpha: 1, scaleX: 1, duration: 0.38, ease: "back.out(1.6)", delay: 0.1,
-        onComplete: () => searchInputRef.current?.focus() }
-    );
+    // requestAnimationFrame da un frame a React para renderizar el elemento antes de animarlo
+    requestAnimationFrame(() => {
+      gsap.from(searchBarRef.current, {
+        autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center",
+        duration: 0.38, ease: "back.out(1.6)",
+        onComplete: () => searchInputRef.current?.focus(),
+      });
+    });
   };
 
   const closeSearch = () => {
@@ -373,8 +375,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           </button>
         </div>
 
-        {/* Search bar — siempre en DOM, GSAP controla visibilidad */}
-        <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3" style={{ opacity: 0, visibility: "hidden" }}>
+        {/* Search bar — renderizado condicional, GSAP anima la entrada */}
+        {searchOpen && <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3">
           <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm focus-within:border-brand-stone focus-within:outline-none">
             <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
@@ -395,9 +397,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               </svg>
             </button>
           </div>
-        </div>
+        </div>}
 
-        {/* Category pills — siempre en DOM, GSAP controla visibilidad */}
+        {/* Category pills */}
         {visibleCategories.length > 0 && (
           <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
             <div
