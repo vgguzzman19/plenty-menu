@@ -424,7 +424,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       </div>
 
       {/* ── MENU CONTENT ── */}
-      <main ref={mainRef} className="max-w-2xl mx-auto px-4 py-10 space-y-14">
+      <main ref={mainRef} className="max-w-2xl mx-auto px-4 py-10 space-y-16">
 
         {/* Resultados de búsqueda */}
         {searchOpen && searchQuery.trim() && (
@@ -452,7 +452,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
           return (
-            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
+            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28 pt-4">
 
               <div className="cat-heading flex items-center gap-3 mb-8">
                 <span className="text-lg leading-none" aria-hidden="true">
