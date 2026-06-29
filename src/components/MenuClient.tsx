@@ -454,7 +454,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           return (
             <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
 
-              <div className="cat-heading flex items-center gap-3 mb-6">
+              <div className="cat-heading flex items-center gap-3 mb-8">
                 <span className="text-lg leading-none" aria-hidden="true">
                   {cat.emoji}
                 </span>
