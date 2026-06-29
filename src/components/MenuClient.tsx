@@ -464,7 +464,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                 <div className="flex-1 h-px bg-brand-stone" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
                 {catProducts.map((product) => (
                   <ProductCard key={product.id} product={product} lang={lang} />
                 ))}

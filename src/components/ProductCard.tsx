@@ -48,6 +48,15 @@ function ProductBadge({ badge }: { badge?: string | null }) {
 export function ProductCard({ product, lang }: Props) {
   const unavailable = !product.available;
   const name = prodName(product, lang);
+
+  // Precio 0 → etiqueta informativa, no card de producto
+  if (product.price === 0) {
+    return (
+      <div className="product-card flex items-center gap-2 bg-white border border-brand-stone/50 rounded-full px-4 py-2.5 w-fit">
+        <span className="font-sans text-sm font-medium text-brand-espresso">{name}</span>
+      </div>
+    );
+  }
   const desc = prodDesc(product, lang);
 
   if (product.imageUrl) {
