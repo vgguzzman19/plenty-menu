@@ -349,7 +349,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         {/* Search bar — siempre en DOM, GSAP controla visibilidad */}
         <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3" style={{ opacity: 0, visibility: "hidden" }}>
-          <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm">
+          <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm focus-within:border-brand-stone focus-within:outline-none"
             <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
               <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
@@ -361,7 +361,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && closeSearch()}
               placeholder={ui[lang].searchPlaceholder}
-              className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none"
+              className="flex-1 bg-transparent font-sans text-sm text-brand-espresso placeholder:text-brand-muted/50 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
             />
             <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
