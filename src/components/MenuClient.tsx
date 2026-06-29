@@ -65,6 +65,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const searchBarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
+  const normalMenuRef = useRef<HTMLDivElement>(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
 
   // Supabase Realtime — sincronización completa en tiempo real
   useEffect(() => {
@@ -224,6 +226,30 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       },
     });
   };
+
+  // Anima los resultados de búsqueda cada vez que cambia la query
+  useEffect(() => {
+    if (!searchOpen || !searchQuery.trim()) return;
+    const cards = searchResultsRef.current?.querySelectorAll(".product-card");
+    if (!cards || cards.length === 0) return;
+    gsap.fromTo(
+      Array.from(cards),
+      { autoAlpha: 0, y: 20 },
+      { autoAlpha: 1, y: 0, duration: 0.38, ease: "power2.out", stagger: 0.07, overwrite: true }
+    );
+  }, [searchResults, searchOpen]); // eslint-disable-line
+
+  // Anima la carta normal al volver de la búsqueda
+  useEffect(() => {
+    if (searchOpen || !normalMenuRef.current) return;
+    const cards = normalMenuRef.current.querySelectorAll(".product-card");
+    if (!cards || cards.length === 0) return;
+    gsap.fromTo(
+      Array.from(cards),
+      { autoAlpha: 0, y: 14 },
+      { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.04, overwrite: true }
+    );
+  }, [searchOpen]); // eslint-disable-line
 
   const searchResults = searchQuery.trim()
     ? products.filter((p) => {
@@ -407,7 +433,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         {/* Resultados de búsqueda */}
         {searchOpen && searchQuery.trim() && (
-          <section>
+          <section ref={searchResultsRef}>
             {searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {searchResults.map((product) => (
@@ -426,6 +452,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         )}
 
         {/* Carta normal — se oculta cuando hay búsqueda activa */}
+        <div ref={normalMenuRef}>
         {(!searchOpen || !searchQuery.trim()) && visibleCategories.map((cat) => {
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
@@ -451,7 +478,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           );
         })}
 
-        {visibleCategories.length === 0 && (
+        {visibleCategories.length === 0 && !searchOpen && (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <p className="font-serif font-light text-4xl text-brand-espresso/15 mb-3">
               Plenty.
@@ -461,6 +488,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             </p>
           </div>
         )}
+        </div>
       </main>
 
       {/* ── FOOTER ── */}
