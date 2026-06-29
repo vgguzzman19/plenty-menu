@@ -227,6 +227,16 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     });
   };
 
+  const searchResults = searchQuery.trim()
+    ? products.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          prodName(p, lang).toLowerCase().includes(q) ||
+          prodDesc(p, lang).toLowerCase().includes(q)
+        );
+      })
+    : [];
+
   // Anima los resultados de búsqueda cada vez que cambia la query
   useEffect(() => {
     if (!searchOpen || !searchQuery.trim()) return;
@@ -237,7 +247,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       { autoAlpha: 0, y: 20 },
       { autoAlpha: 1, y: 0, duration: 0.38, ease: "power2.out", stagger: 0.07, overwrite: true }
     );
-  }, [searchResults, searchOpen]); // eslint-disable-line
+  }, [searchQuery, searchOpen]); // eslint-disable-line
 
   // Anima la carta normal al volver de la búsqueda
   useEffect(() => {
@@ -250,16 +260,6 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.04, overwrite: true }
     );
   }, [searchOpen]); // eslint-disable-line
-
-  const searchResults = searchQuery.trim()
-    ? products.filter((p) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          prodName(p, lang).toLowerCase().includes(q) ||
-          prodDesc(p, lang).toLowerCase().includes(q)
-        );
-      })
-    : [];
 
   const menuTabs: { type: "food" | "drinks"; icon: string }[] = [
     { type: "food", icon: "🍽️" },
