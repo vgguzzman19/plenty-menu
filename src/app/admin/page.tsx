@@ -120,13 +120,23 @@ function IconExternalLink() {
   );
 }
 
-function IconDrag() {
+function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-      <circle cx="5.5" cy="4" r="1.2"/><circle cx="10.5" cy="4" r="1.2"/>
-      <circle cx="5.5" cy="8" r="1.2"/><circle cx="10.5" cy="8" r="1.2"/>
-      <circle cx="5.5" cy="12" r="1.2"/><circle cx="10.5" cy="12" r="1.2"/>
-    </svg>
+    <button
+      {...props}
+      className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment cursor-grab active:cursor-grabbing touch-none flex-none transition-colors select-none"
+      tabIndex={-1}
+      aria-label="Arrastrar para reordenar"
+    >
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+        <circle cx="5" cy="3.5" r="1.4"/><circle cx="11" cy="3.5" r="1.4"/>
+        <circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/>
+        <circle cx="5" cy="12.5" r="1.4"/><circle cx="11" cy="12.5" r="1.4"/>
+      </svg>
+      <span className="font-sans text-[9px] tracking-wide uppercase font-semibold leading-none opacity-60">
+        Mover
+      </span>
+    </button>
   );
 }
 
@@ -144,14 +154,7 @@ function SortableProductRow({ product: p, onToggle, onEdit, onDelete }: Sortable
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       className={`bg-white rounded-xl border border-brand-stone hover:border-brand-caramel/40 px-3 py-3.5 flex items-center gap-2 transition-colors ${!p.available ? "opacity-55" : ""}`}
     >
-      <button
-        {...attributes} {...listeners}
-        className="p-1 text-brand-stone/50 hover:text-brand-muted cursor-grab active:cursor-grabbing touch-none flex-none"
-        tabIndex={-1}
-        aria-label="Arrastrar para reordenar"
-      >
-        <IconDrag />
-      </button>
+      <DragHandle {...attributes} {...listeners} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-sans font-medium text-brand-espresso text-sm truncate">{p.name}</span>
@@ -195,14 +198,7 @@ function SortableCategoryRow({ category: cat, count, onEdit, onDelete }: Sortabl
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       className="bg-white rounded-xl border border-brand-stone px-4 py-4 flex items-center gap-3"
     >
-      <button
-        {...attributes} {...listeners}
-        className="p-1 text-brand-stone/50 hover:text-brand-muted cursor-grab active:cursor-grabbing touch-none flex-none"
-        tabIndex={-1}
-        aria-label="Arrastrar para reordenar"
-      >
-        <IconDrag />
-      </button>
+      <DragHandle {...attributes} {...listeners} />
       <span className="text-2xl leading-none w-8 text-center flex-none">{cat.emoji}</span>
       <div className="flex-1 min-w-0">
         <p className="font-sans font-medium text-brand-espresso">{cat.name}</p>
