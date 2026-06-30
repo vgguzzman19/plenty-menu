@@ -6,6 +6,14 @@ import { QRCodeSVG } from "qrcode.react";
 import { Category, Product } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import {
+  DndContext, DragEndEvent, PointerSensor, TouchSensor,
+  useSensor, useSensors, closestCenter,
+} from "@dnd-kit/core";
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Tab = "products" | "categories" | "qr";
 
@@ -109,6 +117,106 @@ function IconExternalLink() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
     </svg>
+  );
+}
+
+function IconDrag() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+      <circle cx="5.5" cy="4" r="1.2"/><circle cx="10.5" cy="4" r="1.2"/>
+      <circle cx="5.5" cy="8" r="1.2"/><circle cx="10.5" cy="8" r="1.2"/>
+      <circle cx="5.5" cy="12" r="1.2"/><circle cx="10.5" cy="12" r="1.2"/>
+    </svg>
+  );
+}
+
+interface SortableProductRowProps {
+  product: Product;
+  onToggle: (p: Product) => void;
+  onEdit: (p: Product) => void;
+  onDelete: (id: number) => void;
+}
+function SortableProductRow({ product: p, onToggle, onEdit, onDelete }: SortableProductRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      className={`bg-white rounded-xl border border-brand-stone hover:border-brand-caramel/40 px-3 py-3.5 flex items-center gap-2 transition-colors ${!p.available ? "opacity-55" : ""}`}
+    >
+      <button
+        {...attributes} {...listeners}
+        className="p-1 text-brand-stone/50 hover:text-brand-muted cursor-grab active:cursor-grabbing touch-none flex-none"
+        tabIndex={-1}
+        aria-label="Arrastrar para reordenar"
+      >
+        <IconDrag />
+      </button>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-sans font-medium text-brand-espresso text-sm truncate">{p.name}</span>
+          {!p.available && (
+            <span className="font-sans text-[10px] bg-brand-parchment text-brand-muted px-2 py-0.5 rounded-full border border-brand-stone flex-none tracking-wider uppercase">
+              No disponible
+            </span>
+          )}
+        </div>
+        <span className="font-serif font-semibold text-brand-caramel text-sm">
+          {p.price.toFixed(2).replace(".", ",")} €
+        </span>
+      </div>
+      <div className="flex items-center gap-0.5 flex-none">
+        <button onClick={() => onToggle(p)} title={p.available ? "Ocultar" : "Mostrar"}
+          className={`p-2 rounded-lg transition-colors ${p.available ? "text-emerald-500 hover:bg-emerald-50" : "text-brand-muted hover:bg-brand-parchment"}`}>
+          {p.available ? <IconCheck /> : <IconCross />}
+        </button>
+        <button onClick={() => onEdit(p)} className="p-2 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment" title="Editar">
+          <IconEdit />
+        </button>
+        <button onClick={() => onDelete(p.id)} className="p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50" title="Eliminar">
+          <IconTrash />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface SortableCategoryRowProps {
+  category: Category;
+  count: number;
+  onEdit: (c: Category) => void;
+  onDelete: (id: number) => void;
+}
+function SortableCategoryRow({ category: cat, count, onEdit, onDelete }: SortableCategoryRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      className="bg-white rounded-xl border border-brand-stone px-4 py-4 flex items-center gap-3"
+    >
+      <button
+        {...attributes} {...listeners}
+        className="p-1 text-brand-stone/50 hover:text-brand-muted cursor-grab active:cursor-grabbing touch-none flex-none"
+        tabIndex={-1}
+        aria-label="Arrastrar para reordenar"
+      >
+        <IconDrag />
+      </button>
+      <span className="text-2xl leading-none w-8 text-center flex-none">{cat.emoji}</span>
+      <div className="flex-1 min-w-0">
+        <p className="font-sans font-medium text-brand-espresso">{cat.name}</p>
+        <p className="font-sans text-xs text-brand-muted mt-0.5">{count} producto{count !== 1 ? "s" : ""}</p>
+      </div>
+      <div className="flex gap-0.5">
+        <button onClick={() => onEdit(cat)} className="p-2 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment" title="Editar">
+          <IconEdit />
+        </button>
+        <button onClick={() => onDelete(cat.id)} className="p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50" title="Eliminar">
+          <IconTrash />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -273,6 +381,54 @@ export default function AdminPage() {
     await fetch(`/api/products/${id}`, { method: "DELETE" });
     fetchData();
   }
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 5 } }),
+  );
+
+  async function handleProductDragEnd(event: DragEndEvent, catId: number) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const catProds = products.filter(p => p.categoryId === catId).sort((a, b) => a.order - b.order);
+    const oldIdx = catProds.findIndex(p => p.id === Number(active.id));
+    const newIdx = catProds.findIndex(p => p.id === Number(over.id));
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(catProds, oldIdx, newIdx);
+    setProducts(prev => [...prev.filter(p => p.categoryId !== catId), ...reordered.map((p, i) => ({ ...p, order: i }))]);
+    await Promise.all(reordered.map((p, i) =>
+      fetch(`/api/products/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: p.name, description: p.description,
+          name_en: p.name_en, description_en: p.description_en,
+          name_fr: p.name_fr, description_fr: p.description_fr,
+          name_ca: p.name_ca, description_ca: p.description_ca,
+          price: p.price, categoryId: p.categoryId, imageUrl: p.imageUrl,
+          available: p.available, order: i, allergens: p.allergens, badge: p.badge,
+        }),
+      })
+    ));
+  }
+
+  async function handleCategoryDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const sorted = [...categories].sort((a, b) => a.order - b.order);
+    const oldIdx = sorted.findIndex(c => c.id === Number(active.id));
+    const newIdx = sorted.findIndex(c => c.id === Number(over.id));
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(sorted, oldIdx, newIdx);
+    setCategories(reordered.map((c, i) => ({ ...c, order: i })));
+    await Promise.all(reordered.map((c, i) =>
+      fetch(`/api/categories/${c.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: c.name, emoji: c.emoji, order: i, menu: c.menu }),
+      })
+    ));
+  }
+
   async function toggleAvailability(p: Product) {
     await fetch(`/api/products/${p.id}`, {
       method: "PUT",
@@ -436,61 +592,21 @@ export default function AdminPage() {
                         Sin productos en esta categoría
                       </p>
                     ) : (
-                      <div className="space-y-2">
-                        {items.map((p) => (
-                          <div
-                            key={p.id}
-                            className={`bg-white rounded-xl border border-brand-stone hover:border-brand-caramel/40 px-4 py-3.5 flex items-center gap-3 transition-colors ${
-                              !p.available ? "opacity-55" : ""
-                            }`}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-sans font-medium text-brand-espresso text-sm truncate">
-                                  {p.name}
-                                </span>
-                                {!p.available && (
-                                  <span className="font-sans text-[10px] bg-brand-parchment text-brand-muted px-2 py-0.5 rounded-full border border-brand-stone flex-none tracking-wider uppercase">
-                                    No disponible
-                                  </span>
-                                )}
-                              </div>
-                              <span className="font-serif font-semibold text-brand-caramel text-sm">
-                                {p.price.toFixed(2).replace(".", ",")} €
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-0.5 flex-none">
-                              {/* Toggle availability */}
-                              <button
-                                onClick={() => toggleAvailability(p)}
-                                title={p.available ? "Ocultar de carta" : "Mostrar en carta"}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  p.available
-                                    ? "text-emerald-500 hover:bg-emerald-50"
-                                    : "text-brand-muted hover:bg-brand-parchment"
-                                }`}
-                              >
-                                {p.available ? <IconCheck /> : <IconCross />}
-                              </button>
-                              <button
-                                onClick={() => openEditProduct(p)}
-                                className="p-2 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment"
-                                title="Editar"
-                              >
-                                <IconEdit />
-                              </button>
-                              <button
-                                onClick={() => deleteProduct(p.id)}
-                                className="p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50"
-                                title="Eliminar"
-                              >
-                                <IconTrash />
-                              </button>
-                            </div>
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleProductDragEnd(e, cat.id)}>
+                        <SortableContext items={items.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-2">
+                            {items.map((p) => (
+                              <SortableProductRow
+                                key={p.id}
+                                product={p}
+                                onToggle={toggleAvailability}
+                                onEdit={openEditProduct}
+                                onDelete={deleteProduct}
+                              />
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </SortableContext>
+                      </DndContext>
                     )}
                   </div>
                 ))}
@@ -532,49 +648,30 @@ export default function AdminPage() {
               </button>
             </div>
 
-            <div className="space-y-2">
-              {[...categories].sort((a, b) => a.order - b.order).map((cat) => {
-                const count = products.filter((p) => p.categoryId === cat.id).length;
-                return (
-                  <div
-                    key={cat.id}
-                    className="bg-white rounded-xl border border-brand-stone px-4 py-4 flex items-center gap-3"
-                  >
-                    <span className="text-2xl leading-none w-8 text-center flex-none">
-                      {cat.emoji}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-sans font-medium text-brand-espresso">{cat.name}</p>
-                      <p className="font-sans text-xs text-brand-muted mt-0.5">
-                        {count} producto{count !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-0.5">
-                      <button
-                        onClick={() => openEditCategory(cat)}
-                        className="p-2 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment"
-                        title="Editar"
-                      >
-                        <IconEdit />
-                      </button>
-                      <button
-                        onClick={() => deleteCategory(cat.id)}
-                        className="p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50"
-                        title="Eliminar"
-                      >
-                        <IconTrash />
-                      </button>
-                    </div>
+            {categories.length === 0 ? (
+              <p className="text-center font-sans text-sm text-brand-muted py-16">
+                Ninguna categoría creada todavía
+              </p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+                <SortableContext
+                  items={[...categories].sort((a, b) => a.order - b.order).map(c => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {[...categories].sort((a, b) => a.order - b.order).map((cat) => (
+                      <SortableCategoryRow
+                        key={cat.id}
+                        category={cat}
+                        count={products.filter(p => p.categoryId === cat.id).length}
+                        onEdit={openEditCategory}
+                        onDelete={deleteCategory}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-
-              {categories.length === 0 && (
-                <p className="text-center font-sans text-sm text-brand-muted py-16">
-                  Ninguna categoría creada todavía
-                </p>
-              )}
-            </div>
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
         )}
 
