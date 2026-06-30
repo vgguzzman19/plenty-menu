@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Category, Product } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
+import { ImageCropModal } from "@/components/ImageCropModal";
 
 type Tab = "products" | "categories" | "qr";
 
@@ -131,6 +132,7 @@ export default function AdminPage() {
   const [productError, setProductError] = useState("");
   const [translating, setTranslating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [adminMenuType, setAdminMenuType] = useState<"food" | "drinks">("food");
@@ -246,11 +248,11 @@ export default function AdminPage() {
     setTranslating(false);
   }
 
-  async function uploadImage(file: File) {
+  async function uploadImage(blob: Blob) {
     setUploading(true);
     setProductError("");
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", new File([blob], "crop.jpg", { type: "image/jpeg" }));
     const res = await fetch("/api/upload", { method: "POST", body: fd });
     if (res.ok) {
       const { url } = await res.json();
@@ -259,6 +261,11 @@ export default function AdminPage() {
       setProductError("Error al subir la imagen. Inténtalo de nuevo.");
     }
     setUploading(false);
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    setCropFile(null);
+    await uploadImage(blob);
   }
 
   async function deleteProduct(id: number) {
@@ -728,7 +735,7 @@ export default function AdminPage() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = ""; }}
                 />
                 {productForm.imageUrl && (
                   <div className="relative mt-2">
@@ -896,6 +903,15 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── IMAGE CROP MODAL ── */}
+      {cropFile && (
+        <ImageCropModal
+          file={cropFile}
+          onConfirm={handleCropConfirm}
+          onCancel={() => setCropFile(null)}
+        />
       )}
 
       {/* ── CATEGORY MODAL ── */}
