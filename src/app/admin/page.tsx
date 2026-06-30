@@ -754,7 +754,7 @@ export default function AdminPage() {
       {/* ── PRODUCT MODAL ── */}
       {productModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/50 backdrop-blur-sm px-0 sm:px-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto shadow-elevated">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[92vh] overflow-hidden flex flex-col shadow-elevated"><div className="overflow-y-auto flex-1">
             <div className="px-6 py-5 border-b border-brand-stone flex items-center justify-between">
               <h3 className="font-serif text-lg font-semibold text-brand-espresso">
                 {productModal === "add" ? "Nuevo producto" : "Editar producto"}
@@ -986,7 +986,8 @@ export default function AdminPage() {
               )}
             </div>
 
-            <div className="px-6 pb-6 flex gap-3">
+          </div>
+          <div className="px-6 pb-6 pt-4 flex gap-3 border-t border-brand-stone">
               <button onClick={() => setProductModal(null)}
                 className="flex-1 border border-brand-stone text-brand-muted font-sans py-2.5 rounded-xl text-sm font-medium hover:bg-brand-parchment">
                 Cancelar
