@@ -72,7 +72,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
       >
         {/* Imagen */}
         {product.imageUrl ? (
-          <div className="relative w-full h-64 sm:h-72 bg-brand-stone/30">
+          <div className="relative w-full aspect-[4/3] sm:aspect-square bg-brand-stone/30">
             {!imgLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
             )}
