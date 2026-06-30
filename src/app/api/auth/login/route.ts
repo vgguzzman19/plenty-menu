@@ -8,7 +8,7 @@ const DUMMY_HASH = "$2b$10$dummyhashfornonexistentuserthatwillneverevermatches12
 // In-memory rate limiter — sufficient for a single-admin restaurant app
 const attempts = new Map<string, { count: number; resetAt: number; lockedUntil?: number }>();
 
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 10;
 const WINDOW_MS  = 15 * 60 * 1000;  // 15 min window
 const LOCKOUT_MS = 30 * 60 * 1000;  // 30 min lockout after MAX_ATTEMPTS
 const MIN_RESPONSE_MS = 800;         // minimum response time, slows down automated tools
