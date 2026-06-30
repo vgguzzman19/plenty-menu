@@ -72,16 +72,16 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
       >
         {/* Imagen */}
         {product.imageUrl ? (
-          <div className="relative w-full h-56 sm:h-64 bg-brand-stone/30">
+          <div className="relative w-full overflow-hidden">
             {!imgLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
             )}
             <Image
               src={imgSrc!}
               alt={name}
-              fill
-              sizes="(max-width: 640px) 100vw, 448px"
-              className={`object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              width={900}
+              height={900}
+              className={`w-full h-auto transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setImgLoaded(true)}
               priority
               unoptimized
