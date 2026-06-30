@@ -135,7 +135,7 @@ export function ImageCropModal({ file, onConfirm, onCancel }: Props) {
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
             <h3 className="font-serif text-base font-semibold text-white">Encuadrar imagen</h3>
-            <p className="font-sans text-[11px] text-white/35 mt-0.5">Lo que ves es lo que se mostrará en la carta</p>
+            <p className="font-sans text-[11px] text-white/35 mt-0.5">Encuadra para móvil y PC a la vez</p>
           </div>
           <button onClick={onCancel} className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,11 +176,31 @@ export function ImageCropModal({ file, onConfirm, onCancel }: Props) {
             />
           )}
 
-          {/* Corner brackets */}
-          <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-white/70 pointer-events-none rounded-tl-sm" />
-          <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-white/70 pointer-events-none rounded-tr-sm" />
-          <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-white/70 pointer-events-none rounded-bl-sm" />
-          <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-white/70 pointer-events-none rounded-br-sm" />
+          {/* ── Zona móvil: franja central 4:3 (75% alto del cuadrado) ── */}
+          {/* Franja oscura superior — solo visible en PC */}
+          <div className="absolute inset-x-0 top-0 pointer-events-none flex items-center justify-end pr-3" style={{ height: "12.5%", background: "rgba(0,0,0,0.55)" }}>
+            <span className="font-sans text-[10px] font-medium text-white/50 tracking-widest uppercase">Solo 🖥️</span>
+          </div>
+
+          {/* Borde superior de la zona móvil */}
+          <div className="absolute inset-x-0 border-t border-dashed border-white/40 pointer-events-none" style={{ top: "12.5%" }}>
+            <span className="absolute left-2 -top-5 font-sans text-[10px] font-semibold text-white/60 tracking-wider">📱 Móvil</span>
+          </div>
+
+          {/* Borde inferior de la zona móvil */}
+          <div className="absolute inset-x-0 border-b border-dashed border-white/40 pointer-events-none" style={{ bottom: "12.5%" }} />
+
+          {/* Franja oscura inferior — solo visible en PC */}
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none flex items-center justify-end pr-3" style={{ height: "12.5%", background: "rgba(0,0,0,0.55)" }}>
+            <span className="font-sans text-[10px] font-medium text-white/50 tracking-widest uppercase">Solo 🖥️</span>
+          </div>
+
+          {/* Esquinas del recorte PC (cuadrado completo) */}
+          <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-white/60 pointer-events-none" />
+          <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-white/60 pointer-events-none" />
+          <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-white/60 pointer-events-none" />
+          <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-white/60 pointer-events-none" />
+          <span className="absolute top-3 right-10 font-sans text-[10px] font-semibold text-white/60 tracking-wider pointer-events-none">🖥️ PC</span>
         </div>
 
         <p className="text-center font-sans text-[11px] text-white/25 py-2.5">
