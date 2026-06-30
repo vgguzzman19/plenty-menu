@@ -72,7 +72,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
       >
         {/* Imagen */}
         {product.imageUrl ? (
-          <div className="relative w-full h-64 sm:h-72 bg-brand-parchment/60">
+          <div className="relative w-full h-56 sm:h-64 bg-brand-stone/30">
             {!imgLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
             )}
@@ -81,7 +81,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
               alt={name}
               fill
               sizes="(max-width: 640px) 100vw, 448px"
-              className={`object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              className={`object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setImgLoaded(true)}
               priority
               unoptimized
