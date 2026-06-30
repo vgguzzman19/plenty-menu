@@ -78,7 +78,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         setProducts((prev) => [...prev, rowToProduct(row)].sort((a, b) => a.order - b.order));
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "products" }, ({ new: row }) => {
-        setProducts((prev) => prev.map((p) => p.id === row.id ? rowToProduct(row) : p));
+        setProducts((prev) => prev.map((p) => p.id === row.id ? rowToProduct(row) : p).sort((a, b) => a.order - b.order));
       })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "products" }, ({ old: row }) => {
         setProducts((prev) => prev.filter((p) => p.id !== row.id));
@@ -87,7 +87,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         setCategories((prev) => [...prev, rowToCategory(row)].sort((a, b) => a.order - b.order));
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "categories" }, ({ new: row }) => {
-        setCategories((prev) => prev.map((c) => c.id === row.id ? rowToCategory(row) : c));
+        setCategories((prev) => prev.map((c) => c.id === row.id ? rowToCategory(row) : c).sort((a, b) => a.order - b.order));
       })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "categories" }, ({ old: row }) => {
         setCategories((prev) => prev.filter((c) => c.id !== row.id));
@@ -111,11 +111,11 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   };
 
   const allProductsByCategory = (catId: number) =>
-    products.filter((p) => p.categoryId === catId);
+    products.filter((p) => p.categoryId === catId).sort((a, b) => a.order - b.order);
 
-  const visibleCategories = categories.filter(
-    (c) => c.menu === menuType && allProductsByCategory(c.id).length > 0
-  );
+  const visibleCategories = categories
+    .filter((c) => c.menu === menuType && allProductsByCategory(c.id).length > 0)
+    .sort((a, b) => a.order - b.order);
 
   const categoryIds = visibleCategories.map((c) => c.id).join(",");
 

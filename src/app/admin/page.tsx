@@ -124,7 +124,7 @@ function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       {...props}
-      className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment cursor-grab active:cursor-grabbing touch-none flex-none transition-colors select-none"
+      className="flex flex-col items-center gap-1.5 px-2 py-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment cursor-grab active:cursor-grabbing touch-none flex-none transition-colors select-none"
       tabIndex={-1}
       aria-label="Arrastrar para reordenar"
     >
@@ -405,6 +405,7 @@ export default function AdminPage() {
         }),
       })
     ));
+    fetchData();
   }
 
   async function handleCategoryDragEnd(event: DragEndEvent) {
@@ -423,6 +424,7 @@ export default function AdminPage() {
         body: JSON.stringify({ name: c.name, emoji: c.emoji, order: i, menu: c.menu }),
       })
     ));
+    fetchData();
   }
 
   async function toggleAvailability(p: Product) {
