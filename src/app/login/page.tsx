@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { gsap } from "gsap";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +11,25 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.timeline({ defaults: { ease: "power3.out" } })
+        .from(containerRef.current, { autoAlpha: 0, duration: 0.4 })
+        .from(".login-label",  { autoAlpha: 0, y: 8,  duration: 0.5 }, "-=0.1")
+        .from(".login-title",  { autoAlpha: 0, y: 24, duration: 0.7 }, "-=0.3")
+        .from(".login-divider",{ autoAlpha: 0, scaleX: 0, transformOrigin: "center", duration: 0.45 }, "-=0.3")
+        .from(".login-sub",    { autoAlpha: 0, y: 8,  duration: 0.45 }, "-=0.2")
+        .from(cardRef.current, { autoAlpha: 0, y: 32, duration: 0.55, ease: "power2.out" }, "-=0.2")
+        .from(footerRef.current, { autoAlpha: 0, y: 10, duration: 0.4 }, "-=0.2");
+    });
+    return () => ctx.revert();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,9 +44,12 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Credenciales incorrectas");
+        gsap.fromTo(cardRef.current, { x: -8 }, { x: 0, duration: 0.4, ease: "elastic.out(1, 0.4)" });
       } else {
-        router.push("/admin");
-        router.refresh();
+        gsap.to(containerRef.current, {
+          autoAlpha: 0, y: -16, duration: 0.35, ease: "power2.in",
+          onComplete: () => { router.push("/admin"); router.refresh(); },
+        });
       }
     } catch {
       setError("Error de conexión. Inténtalo de nuevo.");
@@ -36,8 +59,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh grain relative bg-brand-espresso flex flex-col items-center justify-center px-4 overflow-hidden">
-      {/* Subtle radial glow */}
+    <div ref={containerRef} className="min-h-dvh grain relative bg-brand-espresso flex flex-col items-center justify-center px-4 overflow-hidden">
       <div
         className="absolute inset-0 bg-gradient-to-b from-brand-roast/30 via-transparent to-black/20"
         aria-hidden="true"
@@ -45,25 +67,25 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-sm">
         {/* Header */}
-        <div className="text-center mb-8">
-          <p className="font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/35 mb-6">
+        <div ref={headerRef} className="text-center mb-8">
+          <p className="login-label font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/35 mb-6">
             Acceso privado
           </p>
-          <h1 className="font-serif font-light text-[64px] leading-none tracking-[-0.02em] text-brand-cream">
+          <h1 className="login-title font-serif font-light text-[64px] leading-none tracking-[-0.02em] text-brand-cream">
             Plenty.
           </h1>
-          <div className="mt-5 mb-4 flex items-center justify-center gap-3 max-w-[120px] mx-auto">
+          <div className="login-divider mt-5 mb-4 flex items-center justify-center gap-3 max-w-[120px] mx-auto">
             <div className="flex-1 h-px bg-brand-caramel/20" />
             <div className="w-1 h-1 rounded-full bg-brand-caramel/40" />
             <div className="flex-1 h-px bg-brand-caramel/20" />
           </div>
-          <p className="font-sans text-[11px] font-medium tracking-[0.35em] uppercase text-brand-honey/38">
+          <p className="login-sub font-sans text-[11px] font-medium tracking-[0.35em] uppercase text-brand-honey/38">
             Panel de gestión
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-elevated p-7">
+        <div ref={cardRef} className="bg-white rounded-2xl shadow-elevated p-7">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
               <label
@@ -145,7 +167,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer links */}
-        <div className="mt-6 text-center space-y-2.5">
+        <div ref={footerRef} className="mt-6 text-center space-y-2.5">
           <Link
             href="/"
             className="block font-sans text-sm text-brand-honey/50 hover:text-brand-cream transition-colors"

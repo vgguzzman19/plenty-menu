@@ -8,6 +8,7 @@ import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { supabaseClient } from "@/lib/supabase-client";
+import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -337,6 +338,18 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             {ui[lang].brunchCafe}
           </p>
         </div>
+
+        {/* Admin access — discreet lock icon, bottom-right of hero */}
+        <Link
+          href="/login"
+          aria-label="Acceso administración"
+          className="absolute bottom-3 right-4 z-20 p-1.5 text-brand-honey/20 hover:text-brand-honey/50 transition-colors duration-300"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={1.75} />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 11V7a4 4 0 018 0v4" />
+          </svg>
+        </Link>
       </header>
 
       {/* ── STICKY NAV ── */}
