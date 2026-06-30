@@ -4,3 +4,4 @@ node_modules/
 data/db.json
 *.tsbuildinfo
 .eslintcache
+upload_product.mjs
