@@ -95,6 +95,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "categories" }, ({ old: row }) => {
         setCategories((prev) => prev.filter((c) => c.id !== row.id));
       })
+      .on("broadcast", { event: "stats_reset" }, () => {
+        viewedRef.current.clear();
+      })
       .subscribe();
 
     return () => { supabaseClient.removeChannel(channel); };
@@ -195,13 +198,13 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     return () => ctx.revert();
   }, [categoryIds]); // eslint-disable-line
 
+  // Productos ya vistos en esta carga de página (se limpia al resetear stats o al recargar)
+  const viewedRef = useRef<Set<number>>(new Set());
+
   function trackView(productId: number) {
-    try {
-      const key = `pv_${productId}`;
-      if (sessionStorage.getItem(key)) return;
-      sessionStorage.setItem(key, "1");
-      fetch(`/api/products/${productId}/view`, { method: "POST" }).catch(() => {});
-    } catch {}
+    if (viewedRef.current.has(productId)) return;
+    viewedRef.current.add(productId);
+    fetch(`/api/products/${productId}/view`, { method: "POST" }).catch(() => {});
   }
 
   const scrollToCategory = (id: number) => {
