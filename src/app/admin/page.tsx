@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type Tab = "products" | "categories" | "qr";
+type Tab = "products" | "categories" | "analytics" | "qr";
 
 interface ProductForm {
   name: string;
@@ -66,6 +66,13 @@ function IconGrid() {
       <rect x="14" y="3" width="7" height="7" rx="1" strokeWidth={1.75} />
       <rect x="3" y="14" width="7" height="7" rx="1" strokeWidth={1.75} />
       <rect x="14" y="14" width="7" height="7" rx="1" strokeWidth={1.75} />
+    </svg>
+  );
+}
+function IconChart() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     </svg>
   );
 }
@@ -227,9 +234,10 @@ function SortableCategoryRow({ category: cat, count, onEdit, onDelete }: Sortabl
 }
 
 const TABS: { id: Tab; label: string; Icon: () => JSX.Element }[] = [
-  { id: "products",    label: "Carta",       Icon: IconMenu },
-  { id: "categories", label: "Categorías",   Icon: IconGrid },
-  { id: "qr",         label: "Código QR",    Icon: IconQr },
+  { id: "products",   label: "Carta",       Icon: IconMenu  },
+  { id: "categories", label: "Categorías",  Icon: IconGrid  },
+  { id: "analytics",  label: "Analytics",   Icon: IconChart },
+  { id: "qr",         label: "Código QR",   Icon: IconQr    },
 ];
 
 export default function AdminPage() {
@@ -545,55 +553,6 @@ export default function AdminPage() {
         {/* ── PRODUCTS TAB ── */}
         {tab === "products" && (
           <div>
-            {/* Más vistos */}
-            {Object.keys(stats).length > 0 && (() => {
-              const top = products
-                .filter(p => stats[p.id] > 0)
-                .sort((a, b) => (stats[b.id] ?? 0) - (stats[a.id] ?? 0))
-                .slice(0, 5);
-              if (top.length === 0) return null;
-              const maxViews = stats[top[0].id] ?? 1;
-              return (
-                <div className="bg-brand-parchment rounded-2xl p-4 mb-6 border border-brand-stone/60">
-                  <div className="flex items-center gap-2 mb-4">
-                    <svg className="w-3.5 h-3.5 text-brand-caramel" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Más vistos</span>
-                  </div>
-                  <div className="space-y-3">
-                    {top.map((p, i) => {
-                      const v = stats[p.id] ?? 0;
-                      const pct = Math.round((v / maxViews) * 100);
-                      const cat = categories.find(c => c.id === p.categoryId);
-                      return (
-                        <div key={p.id} className="flex items-center gap-3">
-                          <span className="font-sans text-[11px] text-brand-muted/40 w-4 text-center flex-none">{i + 1}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="font-sans text-xs font-medium text-brand-espresso truncate">
-                                {cat && <span className="mr-1">{cat.emoji}</span>}{p.name}
-                              </span>
-                              <span className="font-sans text-[11px] text-brand-muted/60 flex-none ml-2 tabular-nums">
-                                {v} {v === 1 ? "vista" : "vistas"}
-                              </span>
-                            </div>
-                            <div className="h-1 bg-brand-stone rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-brand-caramel rounded-full transition-all duration-700"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* Carta / Bebidas switcher */}
             <div className="grid grid-cols-2 gap-2 mb-6">
               {([["food", "🍽️", "Carta"] as const, ["drinks", "☕", "Bebidas"] as const]).map(([type, icon, label]) => (
@@ -736,6 +695,91 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+        {/* ── ANALYTICS TAB ── */}
+        {tab === "analytics" && (() => {
+          const top = products
+            .filter(p => (stats[p.id] ?? 0) > 0)
+            .sort((a, b) => (stats[b.id] ?? 0) - (stats[a.id] ?? 0));
+          const totalViews = top.reduce((sum, p) => sum + (stats[p.id] ?? 0), 0);
+          const maxViews = top[0] ? (stats[top[0].id] ?? 1) : 1;
+
+          return (
+            <div className="space-y-6">
+              {/* Resumen */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white rounded-2xl border border-brand-stone p-4">
+                  <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Total vistas</p>
+                  <p className="font-serif text-3xl font-semibold text-brand-espresso">{totalViews}</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-brand-stone p-4">
+                  <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Productos vistos</p>
+                  <p className="font-serif text-3xl font-semibold text-brand-espresso">{top.length}</p>
+                  <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {products.length} en carta</p>
+                </div>
+              </div>
+
+              {/* Ranking */}
+              <div className="bg-white rounded-2xl border border-brand-stone p-5">
+                <div className="flex items-center gap-2 mb-5">
+                  <svg className="w-3.5 h-3.5 text-brand-caramel flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <h2 className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Productos más vistos</h2>
+                </div>
+
+                {top.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <p className="font-serif text-3xl text-brand-espresso/10 mb-2">0</p>
+                    <p className="font-sans text-sm text-brand-muted/50">Aún no hay vistas registradas.</p>
+                    <p className="font-sans text-xs text-brand-muted/35 mt-1">Se registran cuando los clientes abren un producto en la carta.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {top.map((p, i) => {
+                      const v = stats[p.id] ?? 0;
+                      const pct = Math.round((v / maxViews) * 100);
+                      const share = totalViews > 0 ? Math.round((v / totalViews) * 100) : 0;
+                      const cat = categories.find(c => c.id === p.categoryId);
+                      return (
+                        <div key={p.id} className="flex items-center gap-3">
+                          <span className="font-sans text-[11px] text-brand-muted/35 w-5 text-right flex-none">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-sans text-sm font-medium text-brand-espresso truncate">
+                                {cat && <span className="mr-1.5">{cat.emoji}</span>}{p.name}
+                              </span>
+                              <div className="flex items-center gap-2 flex-none ml-3">
+                                <span className="font-sans text-[11px] text-brand-muted/40">{share}%</span>
+                                <span className="font-sans text-xs font-semibold text-brand-espresso tabular-nums">
+                                  {v} {v === 1 ? "vista" : "vistas"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 bg-brand-stone/60 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{
+                                  width: `${pct}%`,
+                                  background: i === 0
+                                    ? "#B8722A"
+                                    : i === 1
+                                    ? "#C8894A"
+                                    : "#D4A070",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── QR TAB ── */}
         {tab === "qr" && (
