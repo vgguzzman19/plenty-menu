@@ -283,6 +283,17 @@ function AnalyticsTab({
   const totalViews = top.reduce((sum, p) => sum + (stats[p.id] ?? 0), 0);
   const maxViews = top[0] ? (stats[top[0].id] ?? 1) : 1;
 
+  // GSAP es el único que controla el ancho de las barras (sin conflicto con React)
+  const animateBars = useCallback((statsSnap: Record<number, number>, topList: Product[], delay = 0) => {
+    const max = topList[0] ? (statsSnap[topList[0].id] ?? 1) : 1;
+    topList.forEach((p, i) => {
+      const el = barRefs.current[p.id];
+      if (!el) return;
+      const pct = Math.round(((statsSnap[p.id] ?? 0) / max) * 100);
+      gsap.to(el, { width: `${pct}%`, duration: 0.65, delay: delay + i * 0.04, ease: "power2.out" });
+    });
+  }, []);
+
   // Animación de entrada al montar el tab
   useEffect(() => {
     if (containerRef.current) {
@@ -298,8 +309,11 @@ function AnalyticsTab({
         duration: 0.4, ease: "power2.out", stagger: 0.07, delay: 0.18, clearProps: "all",
       });
     }
+    // Barras: inicializar a 0 y animar hasta el valor real
+    top.forEach(p => { const el = barRefs.current[p.id]; if (el) gsap.set(el, { width: 0 }); });
+    animateBars(stats, top, 0.25);
     prevStatsRef.current = { ...stats };
-    const t = setTimeout(() => { justMountedRef.current = false; }, 300);
+    const t = setTimeout(() => { justMountedRef.current = false; }, 400);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line
 
@@ -313,16 +327,13 @@ function AnalyticsTab({
       const newV = stats[p.id] ?? 0;
 
       if (prevV === undefined) {
-        // Producto nuevo en el ranking
+        // Producto nuevo: entra deslizando + barra arranca desde 0
         const el = itemRefs.current[p.id];
-        if (el) {
-          gsap.fromTo(el,
-            { opacity: 0, x: 28 },
-            { opacity: 1, x: 0, duration: 0.55, ease: "power3.out", clearProps: "all" }
-          );
-        }
+        if (el) gsap.fromTo(el, { opacity: 0, x: 28 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out", clearProps: "all" });
+        const barEl = barRefs.current[p.id];
+        if (barEl) gsap.set(barEl, { width: 0 });
       } else if (newV > prevV) {
-        // Vista añadida: pulsa el número y destella la barra
+        // Vista añadida: pulsa el número
         const numEl = numberRefs.current[p.id];
         if (numEl) {
           gsap.fromTo(numEl,
@@ -330,15 +341,11 @@ function AnalyticsTab({
             { scale: 1, color: "#1C0D04", duration: 0.55, ease: "back.out(2.5)", clearProps: "color" }
           );
         }
-        const barEl = barRefs.current[p.id];
-        if (barEl) {
-          gsap.fromTo(barEl,
-            { opacity: 0.35, scaleX: 0.88, transformOrigin: "left center" },
-            { opacity: 1, scaleX: 1, duration: 0.45, ease: "power2.out", clearProps: "all" }
-          );
-        }
       }
     });
+
+    // Recalcula y anima TODAS las barras (maxViews puede haber cambiado)
+    animateBars(stats, top);
 
     // Contador animado del total
     if (totalRef.current) {
@@ -429,7 +436,6 @@ function AnalyticsTab({
           <div className="space-y-4">
             {top.map((p, i) => {
               const v = stats[p.id] ?? 0;
-              const pct = Math.round((v / maxViews) * 100);
               const share = totalViews > 0 ? Math.round((v / totalViews) * 100) : 0;
               const cat = categories.find(c => c.id === p.categoryId);
               const barColor = i === 0 ? "#B8722A" : i === 1 ? "#C8894A" : "#D4A070";
@@ -458,8 +464,8 @@ function AnalyticsTab({
                     <div className="h-1.5 bg-brand-stone/60 rounded-full overflow-hidden">
                       <div
                         ref={el => { barRefs.current[p.id] = el; }}
-                        className="h-full rounded-full transition-[width] duration-700"
-                        style={{ width: `${pct}%`, background: barColor }}
+                        className="h-full rounded-full"
+                        style={{ background: barColor }}
                       />
                     </div>
                   </div>
