@@ -475,17 +475,14 @@ export default function AdminPage() {
     if (typeof window !== "undefined") setQrUrl(window.location.origin);
   }, [fetchData]);
 
-  // Realtime: escucha cambios en product_stats para actualizar analytics al instante
+  // Broadcast: el endpoint /view emite el evento al instante via Supabase Realtime
   useEffect(() => {
     const channel = supabaseClient
-      .channel("admin-product-stats")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "product_stats" }, ({ new: row }) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setStats(prev => ({ ...prev, [(row as any).product_id]: (row as any).views }));
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "product_stats" }, ({ new: row }) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setStats(prev => ({ ...prev, [(row as any).product_id]: (row as any).views }));
+      .channel("admin-stats")
+      .on("broadcast", { event: "view" }, ({ payload }) => {
+        if (payload?.productId && payload?.views !== undefined) {
+          setStats(prev => ({ ...prev, [payload.productId]: payload.views }));
+        }
       })
       .subscribe();
     return () => { supabaseClient.removeChannel(channel); };
