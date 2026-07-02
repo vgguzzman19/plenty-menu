@@ -3,9 +3,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
+import { gsap } from "gsap";
 import { Category, Product } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import { supabaseClient } from "@/lib/supabase-client";
 import {
   DndContext, DragEndEvent, PointerSensor, TouchSensor,
   useSensor, useSensors, closestCenter,
@@ -240,6 +242,191 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element }[] = [
   { id: "qr",         label: "Código QR",   Icon: IconQr    },
 ];
 
+/* ─────────────────────────────────────────────
+   Analytics Tab — con GSAP real-time
+───────────────────────────────────────────── */
+function AnalyticsTab({
+  stats, products, categories,
+}: {
+  stats: Record<number, number>;
+  products: Product[];
+  categories: Category[];
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevStatsRef = useRef<Record<number, number>>({});
+  const justMountedRef = useRef(true);
+  const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const numberRefs = useRef<Record<number, HTMLSpanElement | null>>({});
+  const barRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const totalRef = useRef<HTMLSpanElement>(null);
+
+  const top = products
+    .filter(p => (stats[p.id] ?? 0) > 0)
+    .sort((a, b) => (stats[b.id] ?? 0) - (stats[a.id] ?? 0));
+  const totalViews = top.reduce((sum, p) => sum + (stats[p.id] ?? 0), 0);
+  const maxViews = top[0] ? (stats[top[0].id] ?? 1) : 1;
+
+  // Animación de entrada al montar el tab
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.from(Array.from(containerRef.current.children), {
+        opacity: 0, y: 18,
+        duration: 0.45, ease: "power2.out", stagger: 0.1, clearProps: "all",
+      });
+    }
+    const items = top.map(p => itemRefs.current[p.id]).filter(Boolean);
+    if (items.length > 0) {
+      gsap.from(items, {
+        opacity: 0, x: 22,
+        duration: 0.4, ease: "power2.out", stagger: 0.07, delay: 0.18, clearProps: "all",
+      });
+    }
+    prevStatsRef.current = { ...stats };
+    const t = setTimeout(() => { justMountedRef.current = false; }, 300);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line
+
+  // Animación en actualizaciones en tiempo real
+  useEffect(() => {
+    if (justMountedRef.current) return;
+    const prev = prevStatsRef.current;
+
+    top.forEach(p => {
+      const prevV = prev[p.id];
+      const newV = stats[p.id] ?? 0;
+
+      if (prevV === undefined) {
+        // Producto nuevo en el ranking
+        const el = itemRefs.current[p.id];
+        if (el) {
+          gsap.fromTo(el,
+            { opacity: 0, x: 28 },
+            { opacity: 1, x: 0, duration: 0.55, ease: "power3.out", clearProps: "all" }
+          );
+        }
+      } else if (newV > prevV) {
+        // Vista añadida: pulsa el número y destella la barra
+        const numEl = numberRefs.current[p.id];
+        if (numEl) {
+          gsap.fromTo(numEl,
+            { scale: 1.45, color: "#B8722A" },
+            { scale: 1, color: "#1C0D04", duration: 0.55, ease: "back.out(2.5)", clearProps: "color" }
+          );
+        }
+        const barEl = barRefs.current[p.id];
+        if (barEl) {
+          gsap.fromTo(barEl,
+            { opacity: 0.35, scaleX: 0.88, transformOrigin: "left center" },
+            { opacity: 1, scaleX: 1, duration: 0.45, ease: "power2.out", clearProps: "all" }
+          );
+        }
+      }
+    });
+
+    // Contador animado del total
+    if (totalRef.current) {
+      const prevTotal = Object.values(prev).reduce((s, v) => s + v, 0);
+      if (totalViews !== prevTotal) {
+        const obj = { val: prevTotal };
+        gsap.to(obj, {
+          val: totalViews, duration: 0.7, ease: "power2.out",
+          onUpdate() {
+            if (totalRef.current) totalRef.current.textContent = String(Math.round(obj.val));
+          },
+        });
+      }
+    }
+
+    prevStatsRef.current = { ...stats };
+  }, [stats]); // eslint-disable-line
+
+  return (
+    <div ref={containerRef} className="space-y-6">
+      {/* Resumen */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-2xl border border-brand-stone p-4">
+          <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Total vistas</p>
+          <p className="font-serif text-3xl font-semibold text-brand-espresso">
+            <span ref={totalRef}>{totalViews}</span>
+          </p>
+        </div>
+        <div className="bg-white rounded-2xl border border-brand-stone p-4">
+          <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Productos vistos</p>
+          <p className="font-serif text-3xl font-semibold text-brand-espresso">{top.length}</p>
+          <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {products.length} en carta</p>
+        </div>
+      </div>
+
+      {/* Ranking */}
+      <div className="bg-white rounded-2xl border border-brand-stone p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <svg className="w-3.5 h-3.5 text-brand-caramel flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <h2 className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Productos más vistos</h2>
+          <span className="ml-auto">
+            <span className="inline-flex items-center gap-1.5 font-sans text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+              En vivo
+            </span>
+          </span>
+        </div>
+
+        {top.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="font-serif text-3xl text-brand-espresso/10 mb-2">0</p>
+            <p className="font-sans text-sm text-brand-muted/50">Aún no hay vistas registradas.</p>
+            <p className="font-sans text-xs text-brand-muted/35 mt-1">Se registran cuando los clientes abren un producto en la carta.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {top.map((p, i) => {
+              const v = stats[p.id] ?? 0;
+              const pct = Math.round((v / maxViews) * 100);
+              const share = totalViews > 0 ? Math.round((v / totalViews) * 100) : 0;
+              const cat = categories.find(c => c.id === p.categoryId);
+              const barColor = i === 0 ? "#B8722A" : i === 1 ? "#C8894A" : "#D4A070";
+              return (
+                <div
+                  key={p.id}
+                  ref={el => { itemRefs.current[p.id] = el; }}
+                  className="flex items-center gap-3"
+                >
+                  <span className="font-sans text-[11px] text-brand-muted/35 w-5 text-right flex-none">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-sans text-sm font-medium text-brand-espresso truncate">
+                        {cat && <span className="mr-1.5">{cat.emoji}</span>}{p.name}
+                      </span>
+                      <div className="flex items-center gap-2 flex-none ml-3">
+                        <span className="font-sans text-[11px] text-brand-muted/40">{share}%</span>
+                        <span
+                          ref={el => { numberRefs.current[p.id] = el; }}
+                          className="font-sans text-xs font-semibold text-brand-espresso tabular-nums inline-block"
+                        >
+                          {v} {v === 1 ? "vista" : "vistas"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-brand-stone/60 rounded-full overflow-hidden">
+                      <div
+                        ref={el => { barRefs.current[p.id] = el; }}
+                        className="h-full rounded-full transition-[width] duration-700"
+                        style={{ width: `${pct}%`, background: barColor }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("products");
@@ -287,6 +474,22 @@ export default function AdminPage() {
     fetchData();
     if (typeof window !== "undefined") setQrUrl(window.location.origin);
   }, [fetchData]);
+
+  // Realtime: escucha cambios en product_stats para actualizar analytics al instante
+  useEffect(() => {
+    const channel = supabaseClient
+      .channel("admin-product-stats")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "product_stats" }, ({ new: row }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setStats(prev => ({ ...prev, [(row as any).product_id]: (row as any).views }));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "product_stats" }, ({ new: row }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setStats(prev => ({ ...prev, [(row as any).product_id]: (row as any).views }));
+      })
+      .subscribe();
+    return () => { supabaseClient.removeChannel(channel); };
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -697,89 +900,9 @@ export default function AdminPage() {
         )}
 
         {/* ── ANALYTICS TAB ── */}
-        {tab === "analytics" && (() => {
-          const top = products
-            .filter(p => (stats[p.id] ?? 0) > 0)
-            .sort((a, b) => (stats[b.id] ?? 0) - (stats[a.id] ?? 0));
-          const totalViews = top.reduce((sum, p) => sum + (stats[p.id] ?? 0), 0);
-          const maxViews = top[0] ? (stats[top[0].id] ?? 1) : 1;
-
-          return (
-            <div className="space-y-6">
-              {/* Resumen */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-2xl border border-brand-stone p-4">
-                  <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Total vistas</p>
-                  <p className="font-serif text-3xl font-semibold text-brand-espresso">{totalViews}</p>
-                </div>
-                <div className="bg-white rounded-2xl border border-brand-stone p-4">
-                  <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Productos vistos</p>
-                  <p className="font-serif text-3xl font-semibold text-brand-espresso">{top.length}</p>
-                  <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {products.length} en carta</p>
-                </div>
-              </div>
-
-              {/* Ranking */}
-              <div className="bg-white rounded-2xl border border-brand-stone p-5">
-                <div className="flex items-center gap-2 mb-5">
-                  <svg className="w-3.5 h-3.5 text-brand-caramel flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <h2 className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Productos más vistos</h2>
-                </div>
-
-                {top.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="font-serif text-3xl text-brand-espresso/10 mb-2">0</p>
-                    <p className="font-sans text-sm text-brand-muted/50">Aún no hay vistas registradas.</p>
-                    <p className="font-sans text-xs text-brand-muted/35 mt-1">Se registran cuando los clientes abren un producto en la carta.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {top.map((p, i) => {
-                      const v = stats[p.id] ?? 0;
-                      const pct = Math.round((v / maxViews) * 100);
-                      const share = totalViews > 0 ? Math.round((v / totalViews) * 100) : 0;
-                      const cat = categories.find(c => c.id === p.categoryId);
-                      return (
-                        <div key={p.id} className="flex items-center gap-3">
-                          <span className="font-sans text-[11px] text-brand-muted/35 w-5 text-right flex-none">{i + 1}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="font-sans text-sm font-medium text-brand-espresso truncate">
-                                {cat && <span className="mr-1.5">{cat.emoji}</span>}{p.name}
-                              </span>
-                              <div className="flex items-center gap-2 flex-none ml-3">
-                                <span className="font-sans text-[11px] text-brand-muted/40">{share}%</span>
-                                <span className="font-sans text-xs font-semibold text-brand-espresso tabular-nums">
-                                  {v} {v === 1 ? "vista" : "vistas"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="h-1.5 bg-brand-stone/60 rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-700"
-                                style={{
-                                  width: `${pct}%`,
-                                  background: i === 0
-                                    ? "#B8722A"
-                                    : i === 1
-                                    ? "#C8894A"
-                                    : "#D4A070",
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {tab === "analytics" && (
+          <AnalyticsTab stats={stats} products={products} categories={categories} />
+        )}
 
         {/* ── QR TAB ── */}
         {tab === "qr" && (
