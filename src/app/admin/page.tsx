@@ -246,11 +246,12 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element }[] = [
    Analytics Tab — con GSAP real-time
 ───────────────────────────────────────────── */
 function AnalyticsTab({
-  stats, products, categories,
+  stats, products, categories, onReset,
 }: {
   stats: Record<number, number>;
   products: Product[];
   categories: Category[];
+  onReset: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevStatsRef = useRef<Record<number, number>>({});
@@ -259,6 +260,22 @@ function AnalyticsTab({
   const numberRefs = useRef<Record<number, HTMLSpanElement | null>>({});
   const barRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const totalRef = useRef<HTMLSpanElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    setResetting(true);
+    const items = Object.values(itemRefs.current).filter(Boolean) as HTMLDivElement[];
+    if (items.length > 0) {
+      await new Promise<void>(resolve => {
+        gsap.to(items, { opacity: 0, y: -10, duration: 0.2, stagger: 0.04, ease: "power2.in", onComplete: resolve });
+      });
+    }
+    await fetch("/api/stats/reset", { method: "POST" });
+    onReset();
+    setConfirming(false);
+    setResetting(false);
+  };
 
   const top = products
     .filter(p => (stats[p.id] ?? 0) > 0)
@@ -365,12 +382,41 @@ function AnalyticsTab({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
           <h2 className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Productos más vistos</h2>
-          <span className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 font-sans text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
               En vivo
             </span>
-          </span>
+            {confirming ? (
+              <span className="flex items-center gap-1.5">
+                <span className="font-sans text-[11px] text-brand-muted/60">¿Resetear?</span>
+                <button
+                  onClick={handleReset}
+                  disabled={resetting}
+                  className="font-sans text-[11px] font-semibold text-red-600 hover:text-red-700 disabled:opacity-50 transition-colors"
+                >
+                  {resetting ? "…" : "Sí"}
+                </button>
+                <button
+                  onClick={() => setConfirming(false)}
+                  disabled={resetting}
+                  className="font-sans text-[11px] text-brand-muted/50 hover:text-brand-muted transition-colors"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => setConfirming(true)}
+                title="Resetear estadísticas"
+                className="w-6 h-6 flex items-center justify-center rounded-full text-brand-muted/40 hover:text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         {top.length === 0 ? (
@@ -898,7 +944,7 @@ export default function AdminPage() {
 
         {/* ── ANALYTICS TAB ── */}
         {tab === "analytics" && (
-          <AnalyticsTab stats={stats} products={products} categories={categories} />
+          <AnalyticsTab stats={stats} products={products} categories={categories} onReset={() => setStats({})} />
         )}
 
         {/* ── QR TAB ── */}
