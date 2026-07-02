@@ -19,10 +19,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark mode */
+.dark body {
+  background-color: #0D0804;
+  color: #F5E6CC;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #F2EBE0; }
 ::-webkit-scrollbar-thumb { background: #B8722A; border-radius: 2px; }
+.dark ::-webkit-scrollbar-track { background: #1C0D04; }
+.dark ::-webkit-scrollbar-thumb { background: #B8722A; border-radius: 2px; }
 
 /* Hide scrollbar but keep scrollable */
 .no-scrollbar::-webkit-scrollbar { display: none; }

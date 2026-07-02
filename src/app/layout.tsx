@@ -28,7 +28,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`${cormorant.variable} ${dmSans.variable}`}>
+    <html lang="es" className={`${cormorant.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Anti-flash: apply dark class before paint */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('plenty-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
+      </head>
       <body>{children}</body>
     </html>
   );

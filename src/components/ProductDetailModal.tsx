@@ -61,20 +61,20 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/60 backdrop-blur-sm px-0 sm:px-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/60 dark:bg-black/75 backdrop-blur-sm px-0 sm:px-4"
       style={{ opacity: 0, visibility: "hidden" }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md shadow-elevated overflow-hidden"
+        className="bg-white dark:bg-brand-espresso rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md shadow-elevated overflow-hidden"
         style={{ opacity: 0, visibility: "hidden" }}
       >
         {/* Imagen */}
         {product.imageUrl ? (
-          <div className="relative w-full aspect-[4/3] sm:aspect-square bg-brand-stone/30">
+          <div className="relative w-full aspect-[4/3] sm:aspect-square bg-brand-stone/30 dark:bg-brand-roast/20">
             {!imgLoaded && (
-              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 via-brand-stone/50 to-brand-stone/30" />
+              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-stone/30 dark:from-brand-roast/30 via-brand-stone/50 dark:via-brand-roast/50 to-brand-stone/30 dark:to-brand-roast/30" />
             )}
             <Image
               src={imgSrc!}
@@ -99,7 +99,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
           <div className="flex items-center justify-end px-5 pt-4">
             <button
               onClick={handleClose}
-              className="w-8 h-8 rounded-full bg-brand-stone/50 text-brand-muted flex items-center justify-center hover:bg-brand-stone transition-colors"
+              className="w-8 h-8 rounded-full bg-brand-stone/50 dark:bg-brand-roast/60 text-brand-muted dark:text-brand-honey/50 flex items-center justify-center hover:bg-brand-stone dark:hover:bg-brand-roast transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -117,7 +117,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
           )}
 
           <div className="flex items-start justify-between gap-3">
-            <h2 className="font-serif font-semibold text-brand-espresso text-2xl leading-tight flex-1">
+            <h2 className="font-serif font-semibold text-brand-espresso dark:text-brand-cream text-2xl leading-tight flex-1">
               {name}
             </h2>
             <span className="font-serif font-semibold text-brand-caramel text-2xl whitespace-nowrap flex-none">
@@ -126,27 +126,27 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
           </div>
 
           {desc && (
-            <p className="font-sans text-brand-muted text-[14px] leading-relaxed">
+            <p className="font-sans text-brand-muted dark:text-brand-honey/60 text-[14px] leading-relaxed">
               {desc}
             </p>
           )}
 
           {!product.available && (
-            <span className="inline-block font-sans text-[10px] font-medium text-brand-muted/70 tracking-widest uppercase border border-brand-stone/80 rounded-full px-3 py-1">
+            <span className="inline-block font-sans text-[10px] font-medium text-brand-muted/70 dark:text-brand-honey/40 tracking-widest uppercase border border-brand-stone/80 dark:border-brand-roast rounded-full px-3 py-1">
               No disponible
             </span>
           )}
 
           {activeAllergens.length > 0 && (
             <div>
-              <p className="font-sans text-[10px] font-semibold tracking-widest uppercase text-brand-muted/50 mb-2">
+              <p className="font-sans text-[10px] font-semibold tracking-widest uppercase text-brand-muted/50 dark:text-brand-honey/30 mb-2">
                 Alérgenos
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {activeAllergens.map((a) => (
                   <span
                     key={a.id}
-                    className="inline-flex items-center gap-1 text-[12px] font-sans text-brand-muted/80 bg-brand-parchment border border-brand-stone/60 rounded-full px-2.5 py-1"
+                    className="inline-flex items-center gap-1 text-[12px] font-sans text-brand-muted/80 dark:text-brand-honey/60 bg-brand-parchment dark:bg-brand-roast/50 border border-brand-stone/60 dark:border-brand-roast/80 rounded-full px-2.5 py-1"
                   >
                     <span>{a.icon}</span>
                     <span>{a.label[lang]}</span>

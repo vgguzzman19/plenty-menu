@@ -8,6 +8,7 @@ import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { supabaseClient } from "@/lib/supabase-client";
+import { useTheme } from "@/hooks/useTheme";
 import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -62,6 +63,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [lang, setLang] = useState<Lang>("es");
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const { isDark, toggle: toggleTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
@@ -265,7 +267,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   ];
 
   return (
-    <div className="min-h-dvh bg-brand-parchment">
+    <div className="min-h-dvh bg-brand-parchment dark:bg-[#0D0804] transition-colors duration-300">
 
       {/* ── HERO ── */}
       <header ref={heroRef} className="relative grain overflow-hidden bg-brand-espresso">
@@ -353,7 +355,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       </header>
 
       {/* ── STICKY NAV ── */}
-      <div className="sticky top-0 z-20 bg-brand-parchment/95 backdrop-blur-md border-b border-brand-stone shadow-[0_1px_8px_rgba(28,13,4,0.07)]">
+      <div className="sticky top-0 z-20 bg-brand-parchment/95 dark:bg-[#0D0804]/95 backdrop-blur-md border-b border-brand-stone dark:border-brand-roast shadow-[0_1px_8px_rgba(28,13,4,0.07)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)] transition-colors duration-300">
 
         {/* Menu type switcher + search icon */}
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
@@ -363,8 +365,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onClick={() => switchMenu(type)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all ${
                 menuType === type
-                  ? "bg-brand-espresso text-brand-cream"
-                  : "border border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50"
+                  ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso"
+                  : "border border-brand-stone dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40"
               }`}
             >
               <span>{icon}</span>
@@ -374,19 +376,46 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           <button
             onClick={openSearch}
             aria-label="Buscar"
-            className="flex-none w-10 h-10 flex items-center justify-center rounded-full border border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50 transition-all"
+            className="flex-none w-10 h-10 flex items-center justify-center rounded-full border border-brand-stone dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
               <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
             </svg>
           </button>
+
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            className={`flex-none w-10 h-10 flex items-center justify-center rounded-full border transition-all duration-300 relative overflow-hidden ${
+              isDark
+                ? "border-brand-honey/50 text-brand-honey bg-brand-honey/10 hover:border-brand-honey hover:bg-brand-honey/20"
+                : "border-brand-stone text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50"
+            }`}
+          >
+            {/* Sun icon — visible en dark mode */}
+            <svg
+              className={`absolute w-[17px] h-[17px] transition-all duration-300 ${isDark ? "opacity-100 rotate-0 scale-100" : "opacity-0 rotate-90 scale-75"}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4.5" strokeWidth={1.75} />
+              <path strokeLinecap="round" strokeWidth={1.75} d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            {/* Moon icon — visible en light mode */}
+            <svg
+              className={`absolute w-[17px] h-[17px] transition-all duration-300 ${isDark ? "opacity-0 -rotate-90 scale-75" : "opacity-100 rotate-0 scale-100"}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg>
+          </button>
         </div>
 
         {/* Search bar — renderizado condicional, GSAP anima la entrada */}
         {searchOpen && <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3">
-          <div className="flex items-center gap-2 bg-white border border-brand-stone rounded-full px-4 py-2.5 shadow-sm focus-within:border-brand-stone focus-within:outline-none">
-            <svg className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="flex items-center gap-2 bg-white dark:bg-brand-espresso border border-brand-stone dark:border-brand-roast rounded-full px-4 py-2.5 shadow-sm transition-colors duration-300">
+            <svg className="w-4 h-4 text-brand-muted dark:text-brand-honey/40 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
               <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
             </svg>
@@ -397,9 +426,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && closeSearch()}
               placeholder={ui[lang].searchPlaceholder}
-              className="flex-1 bg-transparent font-sans text-[16px] text-brand-espresso placeholder:text-brand-muted/50 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
+              className="flex-1 bg-transparent font-sans text-[16px] text-brand-espresso dark:text-brand-cream placeholder:text-brand-muted/50 dark:placeholder:text-brand-honey/30 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
             />
-            <button onClick={closeSearch} className="flex-none text-brand-muted hover:text-brand-espresso transition-colors">
+            <button onClick={closeSearch} className="flex-none text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -411,7 +440,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         {!searchOpen && visibleCategories.length > 0 && (
           <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
             <div
-              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 to-transparent pointer-events-none z-10"
+              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 dark:from-[#0D0804]/95 to-transparent pointer-events-none z-10"
               aria-hidden="true"
             />
             <div
@@ -426,8 +455,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                   onClick={() => scrollToCategory(cat.id)}
                   className={`flex-none px-4 min-h-[44px] rounded-full text-sm font-sans font-medium whitespace-nowrap transition-all ${
                     activeId === cat.id
-                      ? "bg-brand-espresso text-brand-cream shadow-sm"
-                      : "bg-white text-brand-muted border border-brand-stone hover:border-brand-caramel/50 hover:text-brand-brown"
+                      ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-sm"
+                      : "bg-white dark:bg-brand-espresso text-brand-muted dark:text-brand-honey/50 border border-brand-stone dark:border-brand-roast hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 hover:text-brand-brown dark:hover:text-brand-honey"
                   }`}
                 >
                   {catName(cat, lang)}
@@ -452,8 +481,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <p className="font-serif font-light text-4xl text-brand-espresso/10 mb-3">?</p>
-                <p className="font-sans text-sm text-brand-muted/60">
+                <p className="font-serif font-light text-4xl text-brand-espresso/10 dark:text-brand-cream/10 mb-3">?</p>
+                <p className="font-sans text-sm text-brand-muted/60 dark:text-brand-honey/40">
                   {ui[lang].searchEmpty} &ldquo;{searchQuery}&rdquo;
                 </p>
               </div>
@@ -473,10 +502,10 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                 <span className="text-lg leading-none" aria-hidden="true">
                   {cat.emoji}
                 </span>
-                <h2 className="font-serif text-2xl font-semibold text-brand-espresso tracking-wide">
+                <h2 className="font-serif text-2xl font-semibold text-brand-espresso dark:text-brand-cream tracking-wide">
                   {catName(cat, lang)}
                 </h2>
-                <div className="flex-1 h-px bg-brand-stone" />
+                <div className="flex-1 h-px bg-brand-stone dark:bg-brand-roast" />
               </div>
 
               <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
@@ -490,10 +519,10 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         {visibleCategories.length === 0 && !searchOpen && (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <p className="font-serif font-light text-4xl text-brand-espresso/15 mb-3">
+            <p className="font-serif font-light text-4xl text-brand-espresso/15 dark:text-brand-cream/15 mb-3">
               Plenty.
             </p>
-            <p className="font-sans text-sm text-brand-muted/50">
+            <p className="font-sans text-sm text-brand-muted/50 dark:text-brand-honey/30">
               {ui[lang].empty}
             </p>
           </div>
