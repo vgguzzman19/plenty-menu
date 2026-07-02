@@ -142,11 +142,12 @@ function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
 interface SortableProductRowProps {
   product: Product;
+  views: number;
   onToggle: (p: Product) => void;
   onEdit: (p: Product) => void;
   onDelete: (id: number) => void;
 }
-function SortableProductRow({ product: p, onToggle, onEdit, onDelete }: SortableProductRowProps) {
+function SortableProductRow({ product: p, views, onToggle, onEdit, onDelete }: SortableProductRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   return (
     <div
@@ -168,6 +169,15 @@ function SortableProductRow({ product: p, onToggle, onEdit, onDelete }: Sortable
           {p.price.toFixed(2).replace(".", ",")} €
         </span>
       </div>
+      {views > 0 && (
+        <span className="flex items-center gap-1 text-brand-muted/50 text-[11px] font-sans flex-none px-1" title={`${views} vistas`}>
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          {views}
+        </span>
+      )}
       <div className="flex items-center gap-0.5 flex-none">
         <button onClick={() => onToggle(p)} title={p.available ? "Ocultar" : "Mostrar"}
           className={`p-2 rounded-lg transition-colors ${p.available ? "text-emerald-500 hover:bg-emerald-50" : "text-brand-muted hover:bg-brand-parchment"}`}>
@@ -227,6 +237,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("products");
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
 
   const [productModal, setProductModal] = useState<"add" | "edit" | null>(null);
@@ -252,12 +263,15 @@ export default function AdminPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [catRes, prodRes] = await Promise.all([
+    const [catRes, prodRes, statsRes] = await Promise.all([
       fetch("/api/categories"),
       fetch("/api/products"),
+      fetch("/api/stats"),
     ]);
     if (catRes.ok) setCategories(await catRes.json());
     if (prodRes.ok) setProducts(await prodRes.json());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (statsRes.ok) setStats(Object.fromEntries((await statsRes.json()).map((s: any) => [s.product_id, s.views])));
     setLoading(false);
   }, []);
 
@@ -531,6 +545,55 @@ export default function AdminPage() {
         {/* ── PRODUCTS TAB ── */}
         {tab === "products" && (
           <div>
+            {/* Más vistos */}
+            {Object.keys(stats).length > 0 && (() => {
+              const top = products
+                .filter(p => stats[p.id] > 0)
+                .sort((a, b) => (stats[b.id] ?? 0) - (stats[a.id] ?? 0))
+                .slice(0, 5);
+              if (top.length === 0) return null;
+              const maxViews = stats[top[0].id] ?? 1;
+              return (
+                <div className="bg-brand-parchment rounded-2xl p-4 mb-6 border border-brand-stone/60">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg className="w-3.5 h-3.5 text-brand-caramel" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span className="font-sans text-[11px] font-bold text-brand-muted tracking-widest uppercase">Más vistos</span>
+                  </div>
+                  <div className="space-y-3">
+                    {top.map((p, i) => {
+                      const v = stats[p.id] ?? 0;
+                      const pct = Math.round((v / maxViews) * 100);
+                      const cat = categories.find(c => c.id === p.categoryId);
+                      return (
+                        <div key={p.id} className="flex items-center gap-3">
+                          <span className="font-sans text-[11px] text-brand-muted/40 w-4 text-center flex-none">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-sans text-xs font-medium text-brand-espresso truncate">
+                                {cat && <span className="mr-1">{cat.emoji}</span>}{p.name}
+                              </span>
+                              <span className="font-sans text-[11px] text-brand-muted/60 flex-none ml-2 tabular-nums">
+                                {v} {v === 1 ? "vista" : "vistas"}
+                              </span>
+                            </div>
+                            <div className="h-1 bg-brand-stone rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-brand-caramel rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Carta / Bebidas switcher */}
             <div className="grid grid-cols-2 gap-2 mb-6">
               {([["food", "🍽️", "Carta"] as const, ["drinks", "☕", "Bebidas"] as const]).map(([type, icon, label]) => (
@@ -597,6 +660,7 @@ export default function AdminPage() {
                               <SortableProductRow
                                 key={p.id}
                                 product={p}
+                                views={stats[p.id] ?? 0}
                                 onToggle={toggleAvailability}
                                 onEdit={openEditProduct}
                                 onDelete={deleteProduct}

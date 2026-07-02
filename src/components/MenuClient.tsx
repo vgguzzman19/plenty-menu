@@ -195,6 +195,15 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     return () => ctx.revert();
   }, [categoryIds]); // eslint-disable-line
 
+  function trackView(productId: number) {
+    try {
+      const key = `pv_${productId}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+      fetch(`/api/products/${productId}/view`, { method: "POST" }).catch(() => {});
+    } catch {}
+  }
+
   const scrollToCategory = (id: number) => {
     setActiveId(id);
     document.getElementById(`cat-${id}`)?.scrollIntoView({ behavior: "smooth" });
@@ -476,7 +485,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             {searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {searchResults.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} onClick={() => setDetailProduct(product)} />
+                  <ProductCard key={product.id} product={product} lang={lang} onClick={() => { setDetailProduct(product); trackView(product.id); }} />
                 ))}
               </div>
             ) : (
@@ -510,7 +519,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
               <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
                 {catProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} onClick={product.price > 0 ? () => setDetailProduct(product) : undefined} />
+                  <ProductCard key={product.id} product={product} lang={lang} onClick={product.price > 0 ? () => { setDetailProduct(product); trackView(product.id); } : undefined} />
                 ))}
               </div>
             </section>
