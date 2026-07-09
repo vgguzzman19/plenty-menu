@@ -30,10 +30,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
   const badgeStyle = product.badge ? (BADGE_STYLES[product.badge] ?? "bg-brand-parchment text-brand-espresso border-brand-stone/60") : null;
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Supabase image transform: sirve WebP redimensionado desde CDN (mucho más rápido)
-  const imgSrc = product.imageUrl?.includes("supabase.co/storage/v1/object/public")
-    ? product.imageUrl.replace("/storage/v1/object/public", "/storage/v1/render/image/public") + "?width=900&quality=80&format=webp"
-    : product.imageUrl;
+  const imgSrc = product.imageUrl;
 
   // Entrada con GSAP timeline
   useEffect(() => {

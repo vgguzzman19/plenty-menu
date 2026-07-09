@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getProducts, createProduct } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
+import { publish } from "@/lib/events";
 
 async function requireAdmin() {
   const token = cookies().get("token")?.value;
@@ -39,5 +40,6 @@ export async function POST(req: NextRequest) {
     order: Number(order) || 0,
     allergens: Array.isArray(allergens) ? allergens : [],
   });
+  publish("product_insert", product);
   return NextResponse.json(product, { status: 201 });
 }

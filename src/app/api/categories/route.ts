@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getCategories, createCategory } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
+import { publish } from "@/lib/events";
 
 async function requireAdmin() {
   const token = cookies().get("token")?.value;
@@ -22,5 +23,6 @@ export async function POST(req: NextRequest) {
   const { name, emoji, order, menu } = await req.json();
   if (!name) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
   const cat = await createCategory({ name, emoji: emoji || "🍽️", order: order ?? 0, menu: menu ?? "food" });
+  publish("category_insert", cat);
   return NextResponse.json(cat, { status: 201 });
 }

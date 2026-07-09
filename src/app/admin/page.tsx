@@ -7,7 +7,6 @@ import { gsap } from "gsap";
 import { Category, Product } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
-import { supabaseClient } from "@/lib/supabase-client";
 import {
   DndContext, DragEndEvent, PointerSensor, TouchSensor,
   useSensor, useSensors, closestCenter,
@@ -527,17 +526,16 @@ export default function AdminPage() {
     if (typeof window !== "undefined") setQrUrl(window.location.origin);
   }, [fetchData]);
 
-  // Broadcast: el endpoint /view emite el evento al instante via Supabase Realtime
+  // Realtime propio (SSE): el endpoint /view emite el evento al instante
   useEffect(() => {
-    const channel = supabaseClient
-      .channel("admin-stats")
-      .on("broadcast", { event: "view" }, ({ payload }) => {
-        if (payload?.productId && payload?.views !== undefined) {
-          setStats(prev => ({ ...prev, [payload.productId]: payload.views }));
-        }
-      })
-      .subscribe();
-    return () => { supabaseClient.removeChannel(channel); };
+    const source = new EventSource("/api/events");
+    source.addEventListener("view", (e) => {
+      const payload = JSON.parse(e.data) as { productId: number; views: number };
+      if (payload?.productId && payload?.views !== undefined) {
+        setStats(prev => ({ ...prev, [payload.productId]: payload.views }));
+      }
+    });
+    return () => source.close();
   }, []);
 
   async function logout() {

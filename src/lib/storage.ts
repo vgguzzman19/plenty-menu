@@ -1,15 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    global: {
-      fetch: (url, options = {}) =>
-        fetch(url, { ...options, cache: "no-store" }),
-    },
-  }
-);
+import pool from "@/lib/db";
 
 export interface User {
   id: number;
@@ -95,145 +84,154 @@ function mapUser(row: any): User {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("order");
-  if (error) throw error;
-  return (data ?? []).map(mapCategory);
+  const { rows } = await pool.query('SELECT * FROM categories ORDER BY "order"');
+  return rows.map(mapCategory);
 }
 
 export async function getProducts(categoryId?: number): Promise<Product[]> {
-  let query = supabase.from("products").select("*").order("order");
-  if (categoryId) query = query.eq("category_id", categoryId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data ?? []).map(mapProduct);
+  const { rows } = categoryId
+    ? await pool.query('SELECT * FROM products WHERE category_id = $1 ORDER BY "order"', [categoryId])
+    : await pool.query('SELECT * FROM products ORDER BY "order"');
+  return rows.map(mapProduct);
 }
 
 export async function getUsers(): Promise<User[]> {
-  const { data, error } = await supabase.from("users").select("*");
-  if (error) throw error;
-  return (data ?? []).map(mapUser);
+  const { rows } = await pool.query("SELECT * FROM users");
+  return rows.map(mapUser);
 }
 
 export async function getUserByUsername(username: string): Promise<User | undefined> {
-  const { data } = await supabase
-    .from("users")
-    .select("*")
-    .eq("username", username)
-    .maybeSingle();
-  return data ? mapUser(data) : undefined;
+  const { rows } = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+  return rows[0] ? mapUser(rows[0]) : undefined;
 }
 
 export async function createUser(data: Omit<User, "id">): Promise<User> {
-  const { data: row, error } = await supabase
-    .from("users")
-    .insert({ username: data.username, password_hash: data.passwordHash, role: data.role })
-    .select()
-    .single();
-  if (error) throw error;
-  return mapUser(row);
+  const { rows } = await pool.query(
+    "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING *",
+    [data.username, data.passwordHash, data.role]
+  );
+  return mapUser(rows[0]);
 }
 
 export async function createCategory(data: Omit<Category, "id">): Promise<Category> {
-  const { data: row, error } = await supabase
-    .from("categories")
-    .insert({
-      name: data.name,
-      name_en: data.name_en,
-      name_fr: data.name_fr,
-      name_ca: data.name_ca,
-      emoji: data.emoji,
-      order: data.order,
-      menu: data.menu ?? "food",
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  return mapCategory(row);
+  const { rows } = await pool.query(
+    `INSERT INTO categories (name, name_en, name_fr, name_ca, emoji, "order", menu)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [data.name, data.name_en, data.name_fr, data.name_ca, data.emoji, data.order, data.menu ?? "food"]
+  );
+  return mapCategory(rows[0]);
 }
 
 export async function updateCategory(id: number, data: Partial<Omit<Category, "id">>): Promise<Category | null> {
-  const update: Record<string, unknown> = {};
-  if (data.name !== undefined) update.name = data.name;
-  if (data.name_en !== undefined) update.name_en = data.name_en;
-  if (data.name_fr !== undefined) update.name_fr = data.name_fr;
-  if (data.name_ca !== undefined) update.name_ca = data.name_ca;
-  if (data.emoji !== undefined) update.emoji = data.emoji;
-  if (data.order !== undefined) update.order = data.order;
-  if (data.menu !== undefined) update.menu = data.menu;
+  const columns: Record<string, unknown> = {
+    name: data.name,
+    name_en: data.name_en,
+    name_fr: data.name_fr,
+    name_ca: data.name_ca,
+    emoji: data.emoji,
+    order: data.order,
+    menu: data.menu,
+  };
 
-  const { data: row, error } = await supabase
-    .from("categories")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) return null;
-  return row ? mapCategory(row) : null;
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  let i = 1;
+  for (const [key, value] of Object.entries(columns)) {
+    if (value === undefined) continue;
+    const col = key === "order" ? '"order"' : key;
+    fields.push(`${col} = $${i++}`);
+    values.push(value);
+  }
+
+  if (fields.length === 0) {
+    const { rows } = await pool.query("SELECT * FROM categories WHERE id = $1", [id]);
+    return rows[0] ? mapCategory(rows[0]) : null;
+  }
+
+  values.push(id);
+  const { rows } = await pool.query(
+    `UPDATE categories SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+    values
+  );
+  return rows[0] ? mapCategory(rows[0]) : null;
 }
 
 export async function deleteCategory(id: number): Promise<boolean> {
-  const { error } = await supabase.from("categories").delete().eq("id", id);
-  return !error;
+  const { rowCount } = await pool.query("DELETE FROM categories WHERE id = $1", [id]);
+  return (rowCount ?? 0) > 0;
 }
 
 export async function createProduct(data: Omit<Product, "id">): Promise<Product> {
-  const { data: row, error } = await supabase
-    .from("products")
-    .insert({
-      category_id: data.categoryId,
-      name: data.name,
-      description: data.description,
-      name_en: data.name_en,
-      description_en: data.description_en,
-      name_fr: data.name_fr,
-      description_fr: data.description_fr,
-      name_ca: data.name_ca,
-      description_ca: data.description_ca,
-      price: data.price,
-      image_url: data.imageUrl,
-      available: data.available,
-      order: data.order,
-      allergens: data.allergens ?? [],
-      badge: data.badge ?? null,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  return mapProduct(row);
+  const { rows } = await pool.query(
+    `INSERT INTO products
+       (category_id, name, description, name_en, description_en, name_fr, description_fr,
+        name_ca, description_ca, price, image_url, available, "order", allergens, badge)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+     RETURNING *`,
+    [
+      data.categoryId,
+      data.name,
+      data.description,
+      data.name_en,
+      data.description_en,
+      data.name_fr,
+      data.description_fr,
+      data.name_ca,
+      data.description_ca,
+      data.price,
+      data.imageUrl,
+      data.available,
+      data.order,
+      data.allergens ?? [],
+      data.badge ?? null,
+    ]
+  );
+  return mapProduct(rows[0]);
 }
 
 export async function updateProduct(id: number, data: Partial<Omit<Product, "id">>): Promise<Product | null> {
-  const update: Record<string, unknown> = {};
-  if (data.categoryId !== undefined) update.category_id = data.categoryId;
-  if (data.name !== undefined) update.name = data.name;
-  if (data.description !== undefined) update.description = data.description;
-  if (data.name_en !== undefined) update.name_en = data.name_en;
-  if (data.description_en !== undefined) update.description_en = data.description_en;
-  if (data.name_fr !== undefined) update.name_fr = data.name_fr;
-  if (data.description_fr !== undefined) update.description_fr = data.description_fr;
-  if (data.name_ca !== undefined) update.name_ca = data.name_ca;
-  if (data.description_ca !== undefined) update.description_ca = data.description_ca;
-  if (data.price !== undefined) update.price = data.price;
-  if (data.imageUrl !== undefined) update.image_url = data.imageUrl;
-  if (data.available !== undefined) update.available = data.available;
-  if (data.order !== undefined) update.order = data.order;
-  if (data.allergens !== undefined) update.allergens = data.allergens;
-  if (data.badge !== undefined) update.badge = data.badge;
+  const columns: Record<string, unknown> = {
+    category_id: data.categoryId,
+    name: data.name,
+    description: data.description,
+    name_en: data.name_en,
+    description_en: data.description_en,
+    name_fr: data.name_fr,
+    description_fr: data.description_fr,
+    name_ca: data.name_ca,
+    description_ca: data.description_ca,
+    price: data.price,
+    image_url: data.imageUrl,
+    available: data.available,
+    order: data.order,
+    allergens: data.allergens,
+    badge: data.badge,
+  };
 
-  const { data: row, error } = await supabase
-    .from("products")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) return null;
-  return row ? mapProduct(row) : null;
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  let i = 1;
+  for (const [key, value] of Object.entries(columns)) {
+    if (value === undefined) continue;
+    const col = key === "order" ? '"order"' : key;
+    fields.push(`${col} = $${i++}`);
+    values.push(value);
+  }
+
+  if (fields.length === 0) {
+    const { rows } = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
+    return rows[0] ? mapProduct(rows[0]) : null;
+  }
+
+  values.push(id);
+  const { rows } = await pool.query(
+    `UPDATE products SET ${fields.join(", ")} WHERE id = $${i} RETURNING *`,
+    values
+  );
+  return rows[0] ? mapProduct(rows[0]) : null;
 }
 
 export async function deleteProduct(id: number): Promise<boolean> {
-  const { error } = await supabase.from("products").delete().eq("id", id);
-  return !error;
+  const { rowCount } = await pool.query("DELETE FROM products WHERE id = $1", [id]);
+  return (rowCount ?? 0) > 0;
 }

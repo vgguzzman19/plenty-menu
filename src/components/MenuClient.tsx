@@ -7,7 +7,6 @@ import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
-import { supabaseClient } from "@/lib/supabase-client";
 import { useTheme } from "@/hooks/useTheme";
 import Link from "next/link";
 
@@ -18,44 +17,8 @@ interface Props {
   products: Product[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToProduct(row: any): Product {
-  return {
-    id: row.id,
-    categoryId: row.category_id,
-    name: row.name,
-    description: row.description,
-    name_en: row.name_en ?? undefined,
-    description_en: row.description_en ?? undefined,
-    name_fr: row.name_fr ?? undefined,
-    description_fr: row.description_fr ?? undefined,
-    name_ca: row.name_ca ?? undefined,
-    description_ca: row.description_ca ?? undefined,
-    price: Number(row.price),
-    imageUrl: row.image_url,
-    available: row.available,
-    order: row.order,
-    allergens: Array.isArray(row.allergens) ? row.allergens : [],
-    badge: row.badge ?? null,
-  };
-}
-
 const INSTAGRAM_URL = "https://www.instagram.com/plenty.brunch/";
 const GOOGLE_REVIEW_URL = "https://www.google.com/maps/place/Plenty./@41.8141564,3.0614864,17z/data=!4m8!3m7!1s0x12bb016c5e50eecf:0x52e50d290df5464a!8m2!3d41.8141524!4d3.0640613!9m1!1b1!16s%2Fg%2F11z9rfspc0?entry=ttu&g_ep=EgoyMDI2MDYyNC4wIKXMDSoASAFQAw%3D%3D";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToCategory(row: any): Category {
-  return {
-    id: row.id,
-    name: row.name,
-    name_en: row.name_en ?? undefined,
-    name_fr: row.name_fr ?? undefined,
-    name_ca: row.name_ca ?? undefined,
-    emoji: row.emoji,
-    order: row.order,
-    menu: row.menu ?? "food",
-  };
-}
 
 export function MenuClient({ categories: initialCategories, products: initialProducts }: Props) {
   const [menuType, setMenuType] = useState<"food" | "drinks">("food");
@@ -73,34 +36,39 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const normalMenuRef = useRef<HTMLDivElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
 
-  // Supabase Realtime — sincronización completa en tiempo real
+  // Realtime propio (SSE) — sincronización completa en tiempo real
   useEffect(() => {
-    const channel = supabaseClient
-      .channel("menu-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "products" }, ({ new: row }) => {
-        setProducts((prev) => [...prev, rowToProduct(row)].sort((a, b) => a.order - b.order));
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "products" }, ({ new: row }) => {
-        setProducts((prev) => prev.map((p) => p.id === row.id ? rowToProduct(row) : p).sort((a, b) => a.order - b.order));
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "products" }, ({ old: row }) => {
-        setProducts((prev) => prev.filter((p) => p.id !== row.id));
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "categories" }, ({ new: row }) => {
-        setCategories((prev) => [...prev, rowToCategory(row)].sort((a, b) => a.order - b.order));
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "categories" }, ({ new: row }) => {
-        setCategories((prev) => prev.map((c) => c.id === row.id ? rowToCategory(row) : c).sort((a, b) => a.order - b.order));
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "categories" }, ({ old: row }) => {
-        setCategories((prev) => prev.filter((c) => c.id !== row.id));
-      })
-      .on("broadcast", { event: "stats_reset" }, () => {
-        viewedRef.current.clear();
-      })
-      .subscribe();
+    const source = new EventSource("/api/events");
 
-    return () => { supabaseClient.removeChannel(channel); };
+    source.addEventListener("product_insert", (e) => {
+      const product = JSON.parse(e.data) as Product;
+      setProducts((prev) => [...prev, product].sort((a, b) => a.order - b.order));
+    });
+    source.addEventListener("product_update", (e) => {
+      const product = JSON.parse(e.data) as Product;
+      setProducts((prev) => prev.map((p) => p.id === product.id ? product : p).sort((a, b) => a.order - b.order));
+    });
+    source.addEventListener("product_delete", (e) => {
+      const { id } = JSON.parse(e.data) as { id: number };
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    });
+    source.addEventListener("category_insert", (e) => {
+      const category = JSON.parse(e.data) as Category;
+      setCategories((prev) => [...prev, category].sort((a, b) => a.order - b.order));
+    });
+    source.addEventListener("category_update", (e) => {
+      const category = JSON.parse(e.data) as Category;
+      setCategories((prev) => prev.map((c) => c.id === category.id ? category : c).sort((a, b) => a.order - b.order));
+    });
+    source.addEventListener("category_delete", (e) => {
+      const { id } = JSON.parse(e.data) as { id: number };
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+    });
+    source.addEventListener("stats_reset", () => {
+      viewedRef.current.clear();
+    });
+
+    return () => source.close();
   }, []);
   const pillsRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);

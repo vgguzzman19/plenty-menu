@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 import { verifyToken } from "@/lib/auth";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 async function requireAdmin() {
   const token = cookies().get("token")?.value;
@@ -31,14 +27,9 @@ export async function POST(req: NextRequest) {
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const { error } = await supabase.storage
-    .from("product-images")
-    .upload(filename, buffer, { contentType: file.type, upsert: false });
+  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(uploadDir, { recursive: true });
+  await writeFile(path.join(uploadDir, filename), buffer);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const { data } = supabase.storage.from("product-images").getPublicUrl(filename);
-  return NextResponse.json({ url: data.publicUrl });
+  return NextResponse.json({ url: `/uploads/${filename}` });
 }
