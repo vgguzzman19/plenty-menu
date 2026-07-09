@@ -229,9 +229,14 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     );
   }, [searchQuery, searchOpen]); // eslint-disable-line
 
-  // Anima la carta normal al volver de la búsqueda
+  // Anima la carta normal al volver de la búsqueda (no en la carga inicial)
+  const hasOpenedSearchRef = useRef(false);
   useEffect(() => {
-    if (searchOpen || !normalMenuRef.current) return;
+    if (searchOpen) {
+      hasOpenedSearchRef.current = true;
+      return;
+    }
+    if (!hasOpenedSearchRef.current || !normalMenuRef.current) return;
     const cards = normalMenuRef.current.querySelectorAll(".product-card");
     if (!cards || cards.length === 0) return;
     gsap.fromTo(
