@@ -83,7 +83,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     if (prefersReducedMotion) return;
 
     const lenis = new Lenis({
-      duration: 1.1,
+      duration: 0.22,
       smoothWheel: true,
       syncTouch: false,
     });
