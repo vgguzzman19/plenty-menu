@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
@@ -73,6 +74,32 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const pillsRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+
+  // Smooth (inertia) scroll — desactivado en touch (el móvil ya tiene inercia nativa)
+  // y si el usuario prefiere movimiento reducido.
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const lenis = new Lenis({
+      duration: 1.1,
+      smoothWheel: true,
+      syncTouch: false,
+    });
+    lenisRef.current = lenis;
+
+    lenis.on("scroll", ScrollTrigger.update);
+    const tickerCallback = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tickerCallback);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(tickerCallback);
+      lenis.destroy();
+      lenisRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("plenty-lang") as Lang | null;
@@ -177,13 +204,17 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
   const scrollToCategory = (id: number) => {
     setActiveId(id);
-    document.getElementById(`cat-${id}`)?.scrollIntoView({ behavior: "smooth" });
+    const target = document.getElementById(`cat-${id}`);
+    if (!target) return;
+    if (lenisRef.current) lenisRef.current.scrollTo(target);
+    else target.scrollIntoView({ behavior: "smooth" });
   };
 
   const switchMenu = (type: "food" | "drinks") => {
     if (type === menuType) return;
     setMenuType(type);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (lenisRef.current) lenisRef.current.scrollTo(0);
+    else window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openSearch = () => {
