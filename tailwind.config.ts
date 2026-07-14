@@ -45,6 +45,14 @@ const config: Config = {
         "pop-dk":           "0 2px 6px -1px rgba(0,0,0,0.5), 0 12px 26px -6px rgba(212,148,78,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
         "pop-press":        "inset 0 2px 5px rgba(28,13,4,0.2)",
         "pop-dk-press":     "inset 0 2px 6px rgba(0,0,0,0.55)",
+
+        /* Depth system — product cards (más sutil, se repite muchas veces por pantalla) */
+        "card-pop":            "0 1px 2px rgba(28,13,4,0.04), 0 8px 20px -6px rgba(28,13,4,0.10), 0 16px 32px -12px rgba(184,114,42,0.12), inset 0 1px 0 rgba(255,255,255,0.5)",
+        "card-pop-hover":      "0 2px 4px rgba(28,13,4,0.06), 0 14px 28px -8px rgba(28,13,4,0.14), 0 20px 40px -14px rgba(184,114,42,0.18), inset 0 1px 0 rgba(255,255,255,0.6)",
+        "card-pop-dk":         "0 1px 2px rgba(0,0,0,0.3), 0 10px 24px -8px rgba(0,0,0,0.45), 0 18px 34px -14px rgba(212,148,78,0.14), inset 0 1px 0 rgba(255,255,255,0.06)",
+        "card-pop-dk-hover":   "0 2px 6px rgba(0,0,0,0.4), 0 16px 32px -10px rgba(0,0,0,0.55), 0 22px 40px -14px rgba(212,148,78,0.22), inset 0 1px 0 rgba(255,255,255,0.1)",
+        "card-press":          "inset 0 2px 6px rgba(28,13,4,0.12)",
+        "card-press-dk":       "inset 0 2px 8px rgba(0,0,0,0.4)",
       },
     },
   },
