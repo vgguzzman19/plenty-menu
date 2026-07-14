@@ -52,7 +52,7 @@ export function ProductCard({ product, lang, onClick }: Props) {
   // Precio 0 → etiqueta informativa, no card de producto
   if (product.price === 0) {
     return (
-      <div className="product-card flex items-center gap-2 bg-white dark:bg-brand-espresso border border-brand-stone/50 dark:border-brand-roast rounded-full px-4 py-2.5 w-fit shadow-groove dark:shadow-groove-dk">
+      <div className="product-card flex items-center gap-2 bg-white dark:bg-brand-espresso border border-brand-stone/50 dark:border-brand-roast rounded-full px-4 py-2.5 w-fit shadow-groove dark:shadow-none">
         <span className="font-sans text-sm font-medium text-brand-espresso dark:text-brand-cream">{name}</span>
       </div>
     );
@@ -65,8 +65,8 @@ export function ProductCard({ product, lang, onClick }: Props) {
       className={`product-card group rounded-2xl transition-all duration-200 p-5 ${
         unavailable
           ? "bg-brand-stone/40 dark:bg-brand-roast/30 opacity-70"
-          : "bg-white dark:bg-brand-espresso shadow-card-pop-mobile dark:shadow-card-pop-mobile-dk sm:shadow-card-pop sm:dark:shadow-card-pop-dk hover:shadow-card-pop-hover dark:hover:shadow-card-pop-dk-hover dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
-      } ${onClick ? "cursor-pointer active:scale-[0.98] active:shadow-card-press dark:active:shadow-card-press-dk" : ""}`}
+          : "bg-white dark:bg-brand-espresso shadow-card-pop-mobile dark:shadow-none sm:shadow-card-pop sm:dark:shadow-none hover:shadow-card-pop-hover dark:hover:shadow-none dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
+      } ${onClick ? "cursor-pointer active:scale-[0.98] active:shadow-card-press dark:active:shadow-none" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

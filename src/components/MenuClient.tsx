@@ -381,8 +381,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onClick={() => switchMenu(type)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all active:scale-[0.97] ${
                 menuType === type
-                  ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-pop-mobile-dk sm:shadow-pop sm:dark:shadow-pop-dk active:shadow-pop-press dark:active:shadow-pop-dk-press"
-                  : "bg-white/70 dark:bg-white/[0.03] border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-groove-dk dark:hover:shadow-groove-dk-hover"
+                  ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-none sm:shadow-pop sm:dark:shadow-none active:shadow-pop-press dark:active:shadow-none"
+                  : "bg-white/70 border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
               }`}
             >
               <span>{icon}</span>
@@ -392,7 +392,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           <button
             onClick={openSearch}
             aria-label="Buscar"
-            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 dark:bg-white/[0.03] border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-groove-dk dark:hover:shadow-groove-dk-hover transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-pop-dk-press"
+            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
@@ -406,7 +406,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
             className={`flex-none w-10 h-10 flex items-center justify-center rounded-full border transition-all duration-300 relative overflow-hidden active:scale-[0.97] ${
               isDark
-                ? "border-brand-honey/50 text-brand-honey bg-brand-honey/10 hover:border-brand-honey hover:bg-brand-honey/20 shadow-pop-mobile-dk sm:shadow-pop-dk active:shadow-pop-dk-press"
+                ? "border-brand-honey/50 text-brand-honey bg-brand-honey/10 hover:border-brand-honey hover:bg-brand-honey/20"
                 : "border-brand-stone bg-white/70 text-brand-muted hover:text-brand-espresso hover:border-brand-caramel/50 shadow-groove hover:shadow-groove-hover active:shadow-pop-press"
             }`}
           >
@@ -471,8 +471,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                   onClick={() => scrollToCategory(cat.id)}
                   className={`flex-none px-4 min-h-[44px] rounded-full text-sm font-sans font-medium whitespace-nowrap transition-all active:scale-[0.97] ${
                     activeId === cat.id
-                      ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-pop-mobile-dk sm:shadow-pop sm:dark:shadow-pop-dk active:shadow-pop-press dark:active:shadow-pop-dk-press"
-                      : "bg-white dark:bg-brand-espresso text-brand-muted dark:text-brand-honey/50 border border-brand-stone dark:border-brand-roast hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 hover:text-brand-brown dark:hover:text-brand-honey shadow-groove hover:shadow-groove-hover dark:shadow-groove-dk dark:hover:shadow-groove-dk-hover"
+                      ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-none sm:shadow-pop sm:dark:shadow-none active:shadow-pop-press dark:active:shadow-none"
+                      : "bg-white dark:bg-brand-espresso text-brand-muted dark:text-brand-honey/50 border border-brand-stone dark:border-brand-roast hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 hover:text-brand-brown dark:hover:text-brand-honey shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
                   }`}
                 >
                   {catName(cat, lang)}
