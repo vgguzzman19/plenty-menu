@@ -45,6 +45,9 @@ const config: Config = {
         "pop-dk":           "0 2px 6px -1px rgba(0,0,0,0.5), 0 12px 26px -6px rgba(212,148,78,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
         "pop-press":        "inset 0 2px 5px rgba(28,13,4,0.2)",
         "pop-dk-press":     "inset 0 2px 6px rgba(0,0,0,0.55)",
+        /* Versión móvil (< sm) — mismo lenguaje, halo mucho más contenido */
+        "pop-mobile":       "0 1px 1px rgba(28,13,4,0.05), 0 2px 6px -1px rgba(28,13,4,0.12), 0 6px 12px -6px rgba(184,114,42,0.20), inset 0 1px 0 rgba(255,255,255,0.15)",
+        "pop-mobile-dk":    "0 1px 3px -1px rgba(0,0,0,0.35), 0 6px 12px -6px rgba(212,148,78,0.20), inset 0 1px 0 rgba(255,255,255,0.15)",
 
         /* Depth system — product cards */
         "card-pop":            "0 2px 4px rgba(28,13,4,0.10), 0 10px 22px -4px rgba(28,13,4,0.18), 0 24px 44px -12px rgba(184,114,42,0.30), inset 0 1px 0 rgba(255,255,255,0.7)",
@@ -53,6 +56,9 @@ const config: Config = {
         "card-pop-dk-hover":   "0 4px 10px rgba(0,0,0,0.55), 0 20px 38px -8px rgba(0,0,0,0.7), 0 34px 56px -14px rgba(212,148,78,0.38), inset 0 1px 0 rgba(255,255,255,0.12)",
         "card-press":          "inset 0 2px 6px rgba(28,13,4,0.14)",
         "card-press-dk":       "inset 0 2px 8px rgba(0,0,0,0.45)",
+        /* Versión móvil (< sm) */
+        "card-pop-mobile":     "0 1px 2px rgba(28,13,4,0.06), 0 4px 10px -3px rgba(28,13,4,0.10), 0 8px 16px -8px rgba(184,114,42,0.14), inset 0 1px 0 rgba(255,255,255,0.5)",
+        "card-pop-mobile-dk":  "0 1px 2px rgba(0,0,0,0.3), 0 6px 14px -4px rgba(0,0,0,0.35), 0 10px 18px -8px rgba(212,148,78,0.14), inset 0 1px 0 rgba(255,255,255,0.06)",
       },
     },
   },

@@ -65,7 +65,7 @@ export function ProductCard({ product, lang, onClick }: Props) {
       className={`product-card group rounded-2xl transition-all duration-200 p-5 ${
         unavailable
           ? "bg-brand-stone/40 dark:bg-brand-roast/30 opacity-70"
-          : "bg-white dark:bg-brand-espresso shadow-card-pop hover:shadow-card-pop-hover dark:shadow-card-pop-dk dark:hover:shadow-card-pop-dk-hover dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
+          : "bg-white dark:bg-brand-espresso shadow-card-pop-mobile dark:shadow-card-pop-mobile-dk sm:shadow-card-pop sm:dark:shadow-card-pop-dk hover:shadow-card-pop-hover dark:hover:shadow-card-pop-dk-hover dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
       } ${onClick ? "cursor-pointer active:scale-[0.98] active:shadow-card-press dark:active:shadow-card-press-dk" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
