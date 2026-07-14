@@ -342,7 +342,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             Platja d&apos;Aro &middot; Costa Brava
           </p>
 
-          <h1 className="hero-title font-serif font-light text-[76px] sm:text-[92px] leading-none tracking-[-0.02em] text-brand-cream [text-shadow:0_-1px_0_rgba(255,255,255,0.08),0_4px_14px_rgba(0,0,0,0.35),0_2px_46px_rgba(212,148,78,0.22)]">
+          <h1 className="hero-title font-serif font-light text-[76px] sm:text-[92px] leading-none tracking-[-0.02em] text-brand-cream [text-shadow:2px_3px_0_rgba(184,114,42,0.55),0_8px_20px_rgba(0,0,0,0.6)]">
             Plenty.
           </h1>
 
