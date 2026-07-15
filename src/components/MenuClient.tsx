@@ -382,7 +382,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all active:scale-[0.97] ${
                 menuType === type
                   ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-none sm:shadow-pop sm:dark:shadow-none active:shadow-pop-press dark:active:shadow-none"
-                  : "bg-white/70 border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
+                  : "bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
               }`}
             >
               <span>{icon}</span>
@@ -392,7 +392,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           <button
             onClick={openSearch}
             aria-label="Buscar"
-            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-none"
+            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
