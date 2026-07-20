@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { gsap } from "gsap";
-import { Category, Product } from "@/lib/storage";
+import { Category, Product, TableCall } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type Tab = "products" | "categories" | "analytics" | "qr";
+type Tab = "orders" | "products" | "categories" | "analytics" | "qr";
 
 interface ProductForm {
   name: string;
@@ -53,6 +53,13 @@ const EMPTY_PRODUCT: ProductForm = {
 const EMPTY_CATEGORY: CategoryForm = { name: "", emoji: "", order: "0", menu: "food" };
 
 /* ── Inline SVG icons ── */
+function IconBell() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
 function IconMenu() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -235,11 +242,96 @@ function SortableCategoryRow({ category: cat, count, onEdit, onDelete }: Sortabl
 }
 
 const TABS: { id: Tab; label: string; Icon: () => JSX.Element }[] = [
+  { id: "orders",     label: "Pedidos",     Icon: IconBell  },
   { id: "products",   label: "Carta",       Icon: IconMenu  },
   { id: "categories", label: "Categorías",  Icon: IconGrid  },
   { id: "analytics",  label: "Analytics",   Icon: IconChart },
   { id: "qr",         label: "Código QR",   Icon: IconQr    },
 ];
+
+/* ─────────────────────────────────────────────
+   Orders Tab — avisos de "listo para pedir" en tiempo real
+───────────────────────────────────────────── */
+function OrdersTab({ calls }: { calls: TableCall[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [resolvingIds, setResolvingIds] = useState<Set<number>>(new Set());
+  const [, forceTick] = useState(0);
+
+  // Refresca el "hace X min" cada 30s
+  useEffect(() => {
+    const t = setInterval(() => forceTick(v => v + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.from(Array.from(containerRef.current.children), {
+        opacity: 0, y: 18, duration: 0.45, ease: "power2.out", stagger: 0.1, clearProps: "all",
+      });
+    }
+  }, []); // eslint-disable-line
+
+  async function resolve(id: number) {
+    setResolvingIds(prev => new Set(prev).add(id));
+    const el = itemRefs.current[id];
+    if (el) {
+      await new Promise<void>(resolveAnim => {
+        gsap.to(el, { opacity: 0, x: 40, duration: 0.35, ease: "power2.in", onComplete: resolveAnim });
+      });
+    }
+    await fetch(`/api/table-calls/${id}`, { method: "PUT" });
+  }
+
+  function elapsed(createdAt: string) {
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000));
+    if (mins < 1) return "ahora mismo";
+    if (mins === 1) return "hace 1 min";
+    return `hace ${mins} min`;
+  }
+
+  return (
+    <div ref={containerRef} className="space-y-3">
+      {calls.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-2xl border border-brand-stone">
+          <p className="text-4xl mb-2">🔔</p>
+          <p className="font-sans text-sm text-brand-muted/50">No hay avisos pendientes.</p>
+          <p className="font-sans text-xs text-brand-muted/35 mt-1">
+            Aparecerán aquí cuando un cliente toque &ldquo;Pedir ya&rdquo; en la carta.
+          </p>
+        </div>
+      ) : (
+        calls.map((c) => {
+          const urgent = Date.now() - new Date(c.createdAt).getTime() > 5 * 60_000;
+          return (
+            <div
+              key={c.id}
+              ref={el => { itemRefs.current[c.id] = el; }}
+              className={`flex items-center gap-4 bg-white rounded-2xl border p-4 ${urgent ? "border-red-300" : "border-emerald-200"}`}
+            >
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-none font-serif font-bold text-lg ${urgent ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                {c.tableNumber}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-sans font-semibold text-brand-espresso text-sm">Mesa {c.tableNumber}</p>
+                <p className={`font-sans text-xs mt-0.5 ${urgent ? "text-red-500 font-medium" : "text-brand-muted/60"}`}>
+                  {elapsed(c.createdAt)}
+                </p>
+              </div>
+              <button
+                onClick={() => resolve(c.id)}
+                disabled={resolvingIds.has(c.id)}
+                className="flex-none bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-sans text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors"
+              >
+                Atendido
+              </button>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────────
    Analytics Tab — con GSAP real-time
@@ -480,10 +572,11 @@ function AnalyticsTab({
 
 export default function AdminPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("products");
+  const [tab, setTab] = useState<Tab>("orders");
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<Record<number, number>>({});
+  const [tableCalls, setTableCalls] = useState<TableCall[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [productModal, setProductModal] = useState<"add" | "edit" | null>(null);
@@ -509,15 +602,17 @@ export default function AdminPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [catRes, prodRes, statsRes] = await Promise.all([
+    const [catRes, prodRes, statsRes, callsRes] = await Promise.all([
       fetch("/api/categories"),
       fetch("/api/products"),
       fetch("/api/stats"),
+      fetch("/api/table-calls"),
     ]);
     if (catRes.ok) setCategories(await catRes.json());
     if (prodRes.ok) setProducts(await prodRes.json());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (statsRes.ok) setStats(Object.fromEntries((await statsRes.json()).map((s: any) => [s.product_id, s.views])));
+    if (callsRes.ok) setTableCalls(await callsRes.json());
     setLoading(false);
   }, []);
 
@@ -534,6 +629,14 @@ export default function AdminPage() {
       if (payload?.productId && payload?.views !== undefined) {
         setStats(prev => ({ ...prev, [payload.productId]: payload.views }));
       }
+    });
+    source.addEventListener("table_call", (e) => {
+      const call = JSON.parse(e.data) as TableCall;
+      setTableCalls(prev => [...prev, call]);
+    });
+    source.addEventListener("table_call_resolved", (e) => {
+      const { id } = JSON.parse(e.data) as { id: number };
+      setTableCalls(prev => prev.filter(c => c.id !== id));
     });
     return () => source.close();
   }, []);
@@ -781,24 +884,47 @@ export default function AdminPage() {
       {/* ── TAB BAR ── */}
       <div className="bg-white border-b border-brand-stone">
         <div className="max-w-3xl mx-auto px-4 flex">
-          {TABS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-sans font-medium border-b-2 transition-colors ${
-                tab === id
-                  ? "border-brand-caramel text-brand-caramel"
-                  : "border-transparent text-brand-muted hover:text-brand-espresso"
-              }`}
-            >
-              <Icon />
-              <span className="hidden xs:inline sm:inline">{label}</span>
-            </button>
-          ))}
+          {TABS.map(({ id, label, Icon }) => {
+            const isOrders = id === "orders";
+            const pending = tableCalls.length;
+            return (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-sans font-medium border-b-2 transition-colors ${
+                  tab === id
+                    ? isOrders && pending > 0 ? "border-red-500 text-red-600" : "border-brand-caramel text-brand-caramel"
+                    : isOrders && pending > 0 ? "border-transparent text-red-500" : "border-transparent text-brand-muted hover:text-brand-espresso"
+                }`}
+              >
+                <Icon />
+                <span className="hidden xs:inline sm:inline">{label}</span>
+                {isOrders && pending > 0 && (
+                  <span className="absolute top-2 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold animate-pulse">
+                    {pending}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-7">
+
+        {/* ── ORDERS TAB ── */}
+        {tab === "orders" && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-serif text-xl font-semibold text-brand-espresso">Pedidos</h2>
+              <span className="inline-flex items-center gap-1.5 font-sans text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                En vivo
+              </span>
+            </div>
+            <OrdersTab calls={tableCalls} />
+          </div>
+        )}
 
         {/* ── PRODUCTS TAB ── */}
         {tab === "products" && (

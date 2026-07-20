@@ -235,3 +235,43 @@ export async function deleteProduct(id: number): Promise<boolean> {
   const { rowCount } = await pool.query("DELETE FROM products WHERE id = $1", [id]);
   return (rowCount ?? 0) > 0;
 }
+
+export interface TableCall {
+  id: number;
+  tableNumber: number;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapTableCall(row: any): TableCall {
+  return {
+    id: row.id,
+    tableNumber: row.table_number,
+    createdAt: row.created_at,
+    resolvedAt: row.resolved_at,
+  };
+}
+
+export async function createTableCall(tableNumber: number): Promise<TableCall> {
+  const { rows } = await pool.query(
+    "INSERT INTO table_calls (table_number) VALUES ($1) RETURNING *",
+    [tableNumber]
+  );
+  return mapTableCall(rows[0]);
+}
+
+export async function getPendingTableCalls(): Promise<TableCall[]> {
+  const { rows } = await pool.query(
+    "SELECT * FROM table_calls WHERE resolved_at IS NULL ORDER BY created_at ASC"
+  );
+  return rows.map(mapTableCall);
+}
+
+export async function resolveTableCall(id: number): Promise<TableCall | null> {
+  const { rows } = await pool.query(
+    "UPDATE table_calls SET resolved_at = now() WHERE id = $1 RETURNING *",
+    [id]
+  );
+  return rows[0] ? mapTableCall(rows[0]) : null;
+}

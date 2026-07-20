@@ -8,6 +8,7 @@ import { Category, Product } from "@/lib/storage";
 import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
+import { OrderReadyButton } from "./OrderReadyButton";
 import { useTheme } from "@/hooks/useTheme";
 import Link from "next/link";
 
@@ -554,6 +555,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           onClose={() => setDetailProduct(null)}
         />
       )}
+
+      <OrderReadyButton />
 
       {/* ── FOOTER ── */}
       <footer className="relative grain overflow-hidden bg-brand-espresso mt-16">
