@@ -274,12 +274,29 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
   const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [resolvingIds, setResolvingIds] = useState<Set<number>>(new Set());
   const [, forceTick] = useState(0);
+  const [logOpen, setLogOpen] = useState(false);
+  const logContentRef = useRef<HTMLDivElement>(null);
+  const chevronRef = useRef<SVGSVGElement>(null);
 
   // Refresca el "hace X min" cada 30s
   useEffect(() => {
     const t = setInterval(() => forceTick(v => v + 1), 30_000);
     return () => clearInterval(t);
   }, []);
+
+  // Colapsado por defecto — arranca a altura 0
+  useEffect(() => {
+    if (logContentRef.current) gsap.set(logContentRef.current, { height: 0 });
+  }, []);
+
+  // Acordeón del historial: GSAP anima hasta la altura real del contenido
+  useEffect(() => {
+    if (!logContentRef.current) return;
+    gsap.to(logContentRef.current, { height: logOpen ? "auto" : 0, duration: 0.4, ease: "power2.inOut" });
+    if (chevronRef.current) {
+      gsap.to(chevronRef.current, { rotate: logOpen ? 180 : 0, duration: 0.3, ease: "power2.out" });
+    }
+  }, [logOpen]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -353,23 +370,33 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
 
       {log.length > 0 && (
         <div className="pt-2">
-          <p className="font-sans text-[10px] font-bold text-brand-muted/50 tracking-widest uppercase mb-2 px-1">
-            Historial · últimas 24h
-          </p>
-          <div className="space-y-1.5">
-            {log.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 bg-white/70 rounded-xl border border-brand-stone/50 px-3 py-2">
-                <span className="font-serif font-semibold text-brand-espresso/70 text-sm w-6 text-center flex-none">
-                  {c.tableNumber}
-                </span>
-                <span className="flex-1 font-sans text-xs text-brand-muted truncate">
-                  Atendido por <span className="font-semibold text-brand-espresso">{c.resolvedBy ?? "—"}</span>
-                </span>
-                <span className="font-sans text-[11px] text-brand-muted/50 flex-none tabular-nums">
-                  {c.resolvedAt && formatTime(c.resolvedAt)}
-                </span>
-              </div>
-            ))}
+          <button
+            onClick={() => setLogOpen(v => !v)}
+            className="w-full flex items-center justify-between px-1 py-2 group"
+          >
+            <span className="font-sans text-[10px] font-bold text-brand-muted/50 group-hover:text-brand-muted tracking-widest uppercase transition-colors">
+              Historial · últimas 24h ({log.length})
+            </span>
+            <svg ref={chevronRef} className="w-3.5 h-3.5 text-brand-muted/50 group-hover:text-brand-muted transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div ref={logContentRef} className="overflow-hidden">
+            <div className="space-y-1.5 pt-1 pb-1">
+              {log.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 bg-white/70 rounded-xl border border-brand-stone/50 px-3 py-2">
+                  <span className="font-serif font-semibold text-brand-espresso/70 text-sm w-6 text-center flex-none">
+                    {c.tableNumber}
+                  </span>
+                  <span className="flex-1 font-sans text-xs text-brand-muted truncate">
+                    Atendido por <span className="font-semibold text-brand-espresso">{c.resolvedBy ?? "—"}</span>
+                  </span>
+                  <span className="font-sans text-[11px] text-brand-muted/50 flex-none tabular-nums">
+                    {c.resolvedAt && formatTime(c.resolvedAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
