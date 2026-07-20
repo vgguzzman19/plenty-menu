@@ -269,7 +269,7 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element; adminOnly?: boole
 /* ─────────────────────────────────────────────
    Orders Tab — avisos de "listo para pedir" en tiempo real
 ───────────────────────────────────────────── */
-function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
+function OrdersTab({ calls, log, isAdmin }: { calls: TableCall[]; log: TableCall[]; isAdmin: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [resolvingIds, setResolvingIds] = useState<Set<number>>(new Set());
@@ -278,6 +278,8 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
   const logContentRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<SVGSVGElement>(null);
   const logHintRef = useRef<HTMLDivElement>(null);
+  const [confirmingLogReset, setConfirmingLogReset] = useState(false);
+  const [resettingLog, setResettingLog] = useState(false);
 
   // Refresca el "hace X min" cada 30s
   useEffect(() => {
@@ -330,6 +332,13 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
       });
     }
     await fetch(`/api/table-calls/${id}`, { method: "PUT" });
+  }
+
+  async function resetLog() {
+    setResettingLog(true);
+    await fetch("/api/table-calls/log/reset", { method: "POST" });
+    setConfirmingLogReset(false);
+    setResettingLog(false);
   }
 
   function elapsed(createdAt: string) {
@@ -430,6 +439,36 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
                 </div>
               ))}
             </div>
+            {isAdmin && (
+              <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-brand-stone/60 bg-brand-parchment/40">
+                {confirmingLogReset ? (
+                  <>
+                    <span className="font-sans text-[11px] text-brand-muted/60">¿Borrar todo el historial?</span>
+                    <button
+                      onClick={resetLog}
+                      disabled={resettingLog}
+                      className="font-sans text-[11px] font-semibold text-red-600 hover:text-red-700 disabled:opacity-50 transition-colors"
+                    >
+                      {resettingLog ? "…" : "Sí"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmingLogReset(false)}
+                      disabled={resettingLog}
+                      className="font-sans text-[11px] text-brand-muted/50 hover:text-brand-muted transition-colors"
+                    >
+                      No
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirmingLogReset(true)}
+                    className="font-sans text-[11px] text-brand-muted/50 hover:text-red-500 transition-colors"
+                  >
+                    Resetear historial
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1059,6 +1098,9 @@ export default function AdminPage() {
       setTableCalls(prev => prev.filter(c => c.id !== resolved.id));
       setResolvedLog(prev => [resolved, ...prev].slice(0, 100));
     });
+    source.addEventListener("table_calls_log_reset", () => {
+      setResolvedLog([]);
+    });
     return () => source.close();
   }, []);
 
@@ -1343,7 +1385,7 @@ export default function AdminPage() {
                 En vivo
               </span>
             </div>
-            <OrdersTab calls={tableCalls} log={resolvedLog} />
+            <OrdersTab calls={tableCalls} log={resolvedLog} isAdmin={myRole === "admin"} />
           </div>
         )}
 

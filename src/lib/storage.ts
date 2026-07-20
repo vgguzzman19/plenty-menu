@@ -307,6 +307,10 @@ export async function getRecentResolvedCalls(): Promise<TableCall[]> {
   return rows.map(mapTableCall);
 }
 
+export async function resetResolvedCalls(): Promise<void> {
+  await pool.query("DELETE FROM table_calls WHERE resolved_at IS NOT NULL");
+}
+
 export async function resolveTableCall(id: number, resolvedBy: string): Promise<TableCall | null> {
   const { rows } = await pool.query(
     "UPDATE table_calls SET resolved_at = now(), resolved_by = $1 WHERE id = $2 RETURNING *",
