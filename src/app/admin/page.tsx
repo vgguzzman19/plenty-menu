@@ -356,6 +356,7 @@ function UsersTab() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [listError, setListError] = useState("");
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -397,18 +398,28 @@ function UsersTab() {
   async function removeUser(id: number) {
     if (!confirm("¿Eliminar el acceso de este empleado?")) return;
     setDeletingId(id);
-    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    setListError("");
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setListError(d.error || `Error al eliminar (HTTP ${res.status})`);
+    }
     await fetchUsers();
     setDeletingId(null);
   }
 
   async function toggleActive(u: AdminUser) {
     setTogglingId(u.id);
-    await fetch(`/api/users/${u.id}`, {
+    setListError("");
+    const res = await fetch(`/api/users/${u.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ active: !u.active }),
     });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setListError(d.error || `Error al actualizar (HTTP ${res.status})`);
+    }
     await fetchUsers();
     setTogglingId(null);
   }
@@ -435,6 +446,12 @@ function UsersTab() {
           Añadir empleado
         </button>
       </div>
+
+      {listError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-3 rounded-xl mb-4">
+          {listError}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-2">
