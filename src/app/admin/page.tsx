@@ -351,9 +351,11 @@ function UsersTab() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ username: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [generated, setGenerated] = useState<{ username: string; password: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [listError, setListError] = useState("");
@@ -368,14 +370,22 @@ function UsersTab() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   function openModal() {
-    setForm({ username: "", password: "" });
+    setForm({ username: "" });
     setError("");
+    setGenerated(null);
+    setCopied(false);
     setModalOpen(true);
   }
 
+  function closeModal() {
+    setModalOpen(false);
+    setGenerated(null);
+    fetchUsers();
+  }
+
   async function saveUser() {
-    if (!form.username || form.password.length < 6) {
-      setError("Usuario y contraseña (mín. 6 caracteres) son obligatorios");
+    if (!form.username) {
+      setError("El usuario es obligatorio");
       return;
     }
     setSaving(true);
@@ -385,14 +395,23 @@ function UsersTab() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+    const d = await res.json();
     if (res.ok) {
-      setModalOpen(false);
-      fetchUsers();
+      // La contraseña se genera sola y solo se muestra esta vez — el jefe no
+      // tiene que inventarse ni escribir ninguna al crear el empleado
+      setGenerated({ username: d.username, password: d.password });
     } else {
-      const d = await res.json();
       setError(d.error || "Error al crear el usuario");
     }
     setSaving(false);
+  }
+
+  async function copyPassword() {
+    if (!generated) return;
+    try {
+      await navigator.clipboard.writeText(generated.password);
+      setCopied(true);
+    } catch { /* portapapeles no disponible, el empleado usa el texto en pantalla */ }
   }
 
   async function removeUser(id: number) {
@@ -514,41 +533,77 @@ function UsersTab() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/50 backdrop-blur-sm px-0 sm:px-4">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm shadow-elevated">
-            <div className="px-6 py-5 border-b border-brand-stone flex items-center justify-between">
-              <h3 className="font-serif text-lg font-semibold text-brand-espresso">Nuevo empleado</h3>
-              <button onClick={() => setModalOpen(false)} className="p-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment" aria-label="Cerrar">
-                <IconCross />
-              </button>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              <div>
-                <label className={labelCls}>Usuario</label>
-                <input type="text" value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className={inputCls} placeholder="camarero1" autoComplete="off" />
-              </div>
-              <div>
-                <label className={labelCls}>Contraseña</label>
-                <input type="password" value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className={inputCls} placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
-              </div>
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-3 rounded-xl">
-                  {error}
+            {generated ? (
+              <>
+                <div className="px-6 py-5 border-b border-brand-stone">
+                  <h3 className="font-serif text-lg font-semibold text-brand-espresso">Empleado creado</h3>
                 </div>
-              )}
-            </div>
-            <div className="px-6 pb-6 flex gap-3">
-              <button onClick={() => setModalOpen(false)}
-                className="flex-1 border border-brand-stone text-brand-muted font-sans py-2.5 rounded-xl text-sm font-medium hover:bg-brand-parchment">
-                Cancelar
-              </button>
-              <button onClick={saveUser} disabled={saving}
-                className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
-                {saving ? "Creando..." : "Crear"}
-              </button>
-            </div>
+                <div className="px-6 py-5 space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 font-sans text-sm px-4 py-3 rounded-xl">
+                    Apunta esta contraseña ahora — no se volverá a mostrar.
+                  </div>
+                  <div>
+                    <label className={labelCls}>Usuario</label>
+                    <p className="font-serif text-xl font-semibold text-brand-espresso">{generated.username}</p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Contraseña</label>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 font-mono text-xl font-semibold text-brand-espresso bg-brand-parchment border border-brand-stone rounded-xl px-4 py-2.5 tracking-wide">
+                        {generated.password}
+                      </p>
+                      <button
+                        onClick={copyPassword}
+                        className="flex-none px-3 py-2.5 rounded-xl border border-brand-stone text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment text-xs font-sans font-semibold"
+                      >
+                        {copied ? "¡Copiada!" : "Copiar"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 pb-6">
+                  <button onClick={closeModal}
+                    className="w-full bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium">
+                    Listo
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="px-6 py-5 border-b border-brand-stone flex items-center justify-between">
+                  <h3 className="font-serif text-lg font-semibold text-brand-espresso">Nuevo empleado</h3>
+                  <button onClick={() => setModalOpen(false)} className="p-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment" aria-label="Cerrar">
+                    <IconCross />
+                  </button>
+                </div>
+                <div className="px-6 py-5 space-y-4">
+                  <div>
+                    <label className={labelCls}>Usuario</label>
+                    <input type="text" value={form.username}
+                      onChange={(e) => setForm({ username: e.target.value })}
+                      className={inputCls} placeholder="camarero1" autoComplete="off" />
+                  </div>
+                  <p className="font-sans text-xs text-brand-muted">
+                    La contraseña se genera automáticamente — te la mostramos al crear la cuenta.
+                  </p>
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-3 rounded-xl">
+                      {error}
+                    </div>
+                  )}
+                </div>
+                <div className="px-6 pb-6 flex gap-3">
+                  <button onClick={() => setModalOpen(false)}
+                    className="flex-1 border border-brand-stone text-brand-muted font-sans py-2.5 rounded-xl text-sm font-medium hover:bg-brand-parchment">
+                    Cancelar
+                  </button>
+                  <button onClick={saveUser} disabled={saving}
+                    className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                    {saving ? "Creando..." : "Crear"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
