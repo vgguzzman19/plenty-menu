@@ -397,6 +397,10 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   </button>
                 </div>
 
+                <p className="text-center font-sans text-[11px] text-amber-600 dark:text-amber-400 mb-4">
+                  ⚠️ {t.tableWarning}
+                </p>
+
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-2.5 rounded-xl mb-4">
                     {error}

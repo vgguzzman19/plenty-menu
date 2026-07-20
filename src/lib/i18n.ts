@@ -61,6 +61,7 @@ interface UiText {
   modalDesc: string;
   confirmBtn: string;
   confirmBtnSending: string;
+  tableWarning: string;
   successTitle: string;
   successDesc: string;
   errorMsg: string;
@@ -87,6 +88,7 @@ export const ui: Record<Lang, UiText> = {
     modalDesc: "Avisamos al camarero de que estás listo para pedir.",
     confirmBtn: "Avisar al camarero",
     confirmBtnSending: "Avisando...",
+    tableWarning: "Comprueba que el número de mesa sea correcto",
     successTitle: "¡Aviso enviado!",
     successDesc: "El camarero está en camino a la mesa",
     errorMsg: "No se pudo enviar el aviso. Inténtalo de nuevo.",
@@ -111,6 +113,7 @@ export const ui: Record<Lang, UiText> = {
     modalDesc: "Avisem el cambrer que estàs a punt per demanar.",
     confirmBtn: "Avisar el cambrer",
     confirmBtnSending: "Avisant...",
+    tableWarning: "Comprova que el número de taula sigui correcte",
     successTitle: "Avís enviat!",
     successDesc: "El cambrer ja va cap a la taula",
     errorMsg: "No s'ha pogut enviar l'avís. Torna-ho a provar.",
@@ -135,6 +138,7 @@ export const ui: Record<Lang, UiText> = {
     modalDesc: "We'll let the waiter know you're ready to order.",
     confirmBtn: "Call the waiter",
     confirmBtnSending: "Sending...",
+    tableWarning: "Double-check the table number is correct",
     successTitle: "Alert sent!",
     successDesc: "The waiter is on the way to table",
     errorMsg: "Couldn't send the alert. Please try again.",
@@ -159,6 +163,7 @@ export const ui: Record<Lang, UiText> = {
     modalDesc: "Nous prévenons le serveur que vous êtes prêt à commander.",
     confirmBtn: "Appeler le serveur",
     confirmBtnSending: "Envoi...",
+    tableWarning: "Vérifiez que le numéro de table est correct",
     successTitle: "Alerte envoyée !",
     successDesc: "Le serveur arrive à la table",
     errorMsg: "Impossible d'envoyer l'alerte. Réessayez.",
