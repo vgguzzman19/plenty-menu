@@ -1085,9 +1085,9 @@ export default function AdminPage() {
                 }`}
               >
                 <Icon />
-                <span className="hidden xs:inline sm:inline">{label}</span>
+                <span className="hidden xs:inline sm:inline mr-1">{label}</span>
                 {isOrders && pending > 0 && (
-                  <span className="absolute top-2 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold animate-pulse">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white animate-pulse">
                     {pending}
                   </span>
                 )}
