@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { randomBytes } from "crypto";
 import { getUsers, createUser } from "@/lib/storage";
-import { verifyToken, hashPassword } from "@/lib/auth";
+import { verifyToken, hashPassword, generatePassword } from "@/lib/auth";
 
 async function requireAdmin() {
   const token = cookies().get("token")?.value;
@@ -10,18 +9,6 @@ async function requireAdmin() {
   const payload = await verifyToken(token);
   if (!payload || payload.role !== "admin") return null;
   return payload;
-}
-
-// Sin 0/O/1/l/I para que no se confundan al copiarla a mano
-const PASSWORD_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-
-function generatePassword(length = 10): string {
-  const bytes = randomBytes(length);
-  let pass = "";
-  for (let i = 0; i < length; i++) {
-    pass += PASSWORD_CHARS[bytes[i] % PASSWORD_CHARS.length];
-  }
-  return pass;
 }
 
 // Solo el admin gestiona usuarios. Nunca se expone el hash de la contraseña.

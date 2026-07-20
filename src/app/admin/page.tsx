@@ -134,6 +134,14 @@ function IconTrash() {
     </svg>
   );
 }
+function IconKey() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 7a2 2 0 012 2m4 0a6 6 0 11-12 0 6 6 0 0112 0zM3 21l7.5-7.5" />
+    </svg>
+  );
+}
 function IconExternalLink() {
   return (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -358,6 +366,7 @@ function UsersTab() {
   const [copied, setCopied] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [resettingId, setResettingId] = useState<number | null>(null);
   const [listError, setListError] = useState("");
 
   const fetchUsers = useCallback(async () => {
@@ -443,6 +452,22 @@ function UsersTab() {
     setTogglingId(null);
   }
 
+  async function resetPassword(u: AdminUser) {
+    if (!confirm(`¿Generar una contraseña nueva para ${u.username}? La anterior dejará de funcionar.`)) return;
+    setResettingId(u.id);
+    setListError("");
+    const res = await fetch(`/api/users/${u.id}/reset-password`, { method: "POST" });
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setCopied(false);
+      setGenerated({ username: d.username, password: d.password });
+      setModalOpen(true);
+    } else {
+      setListError(d.error || `Error al restablecer la contraseña (HTTP ${res.status})`);
+    }
+    setResettingId(null);
+  }
+
   const inputCls = "w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-white text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel text-sm font-sans";
   const labelCls = "block text-[11px] font-semibold text-brand-brown tracking-widest uppercase mb-1.5 font-sans";
 
@@ -515,6 +540,14 @@ function UsersTab() {
                       {togglingId === u.id ? "..." : disabled ? "Habilitar" : "Deshabilitar"}
                     </button>
                     <button
+                      onClick={() => resetPassword(u)}
+                      disabled={resettingId === u.id}
+                      className="flex-none p-2 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment disabled:opacity-50"
+                      title="Restablecer contraseña"
+                    >
+                      <IconKey />
+                    </button>
+                    <button
                       onClick={() => removeUser(u.id)}
                       disabled={deletingId === u.id}
                       className="flex-none p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
@@ -536,7 +569,7 @@ function UsersTab() {
             {generated ? (
               <>
                 <div className="px-6 py-5 border-b border-brand-stone">
-                  <h3 className="font-serif text-lg font-semibold text-brand-espresso">Empleado creado</h3>
+                  <h3 className="font-serif text-lg font-semibold text-brand-espresso">Contraseña generada</h3>
                 </div>
                 <div className="px-6 py-5 space-y-4">
                   <div className="bg-amber-50 border border-amber-200 text-amber-800 font-sans text-sm px-4 py-3 rounded-xl">

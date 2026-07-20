@@ -128,6 +128,14 @@ export async function setUserActive(id: number, active: boolean): Promise<User |
   return rows[0] ? mapUser(rows[0]) : null;
 }
 
+export async function setUserPassword(id: number, passwordHash: string): Promise<User | null> {
+  const { rows } = await pool.query(
+    "UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING *",
+    [passwordHash, id]
+  );
+  return rows[0] ? mapUser(rows[0]) : null;
+}
+
 export async function deleteUser(id: number): Promise<boolean> {
   const { rowCount } = await pool.query("DELETE FROM users WHERE id = $1", [id]);
   return (rowCount ?? 0) > 0;
