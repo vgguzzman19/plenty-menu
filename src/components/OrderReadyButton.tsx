@@ -213,76 +213,76 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
         >
           <div
             ref={hintCardRef}
-            className="relative bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-brand-roast/40 rounded-[28px] shadow-elevated ring-1 ring-emerald-500/20 max-w-xs w-full p-6 pt-5 text-center overflow-visible"
+            className="relative bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-brand-roast/40 rounded-[32px] shadow-elevated ring-1 ring-emerald-500/20 max-w-sm sm:max-w-md w-full p-7 sm:p-9 text-center"
             style={{ opacity: 0 }}
           >
-            {/* Badge superior */}
-            <span className="order-hint-line inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-sans font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-3">
-              ✨ {t.hintBadge}
-            </span>
+            {/* Cabecera: badge + selector de idioma, en línea normal (nunca se solapa con el resto) */}
+            <div className="order-hint-line flex items-center justify-between mb-6">
+              <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] font-sans font-bold tracking-widest uppercase px-3 py-1.5 rounded-full">
+                ✨ {t.hintBadge}
+              </span>
 
-            {/* Selector de idioma */}
-            <div className="order-hint-line absolute top-4 right-4">
               <button
                 onClick={() => (langOpen ? closeLangPanel() : setLangOpen(true))}
                 aria-label={t.langLabel}
-                className="flex items-center gap-1 bg-white/80 dark:bg-white/10 border border-brand-stone/60 dark:border-brand-roast rounded-full pl-2 pr-1.5 py-1 text-xs font-sans font-medium text-brand-espresso dark:text-brand-cream shadow-sm"
+                className="flex items-center gap-1.5 bg-white/90 dark:bg-white/10 border border-brand-stone/60 dark:border-brand-roast rounded-full pl-2.5 pr-2 py-1.5 text-sm font-sans font-semibold text-brand-espresso dark:text-brand-cream shadow-sm"
               >
-                <span className="text-base leading-none">{currentLang.flag}</span>
-                <svg className={`w-3 h-3 text-brand-muted dark:text-brand-honey/50 transition-transform ${langOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-lg leading-none">{currentLang.flag}</span>
+                <svg className={`w-3.5 h-3.5 text-brand-muted dark:text-brand-honey/50 transition-transform ${langOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-
-              {langOpen && (
-                <div
-                  ref={langPanelRef}
-                  className="absolute top-full right-0 mt-2 bg-white dark:bg-brand-espresso border border-brand-stone dark:border-brand-roast rounded-2xl shadow-elevated p-1.5 min-w-[9.5rem] z-10"
-                  style={{ opacity: 0 }}
-                >
-                  {LANGS.map((l) => (
-                    <button
-                      key={l.code}
-                      onClick={() => selectLang(l.code)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-sans transition-colors ${
-                        l.code === lang
-                          ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-semibold"
-                          : "text-brand-espresso dark:text-brand-cream hover:bg-brand-parchment dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <span className="text-base leading-none">{l.flag}</span>
-                      <span className="flex-1 text-left">{l.label}</span>
-                      {l.code === lang && (
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
+
+            {/* Panel de idioma — empuja el contenido, nunca lo tapa */}
+            {langOpen && (
+              <div
+                ref={langPanelRef}
+                className="grid grid-cols-2 gap-2 bg-white/70 dark:bg-black/20 border border-brand-stone/60 dark:border-brand-roast rounded-2xl p-2 mb-6"
+                style={{ opacity: 0 }}
+              >
+                {LANGS.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => selectLang(l.code)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-sans transition-colors ${
+                      l.code === lang
+                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-semibold"
+                        : "text-brand-espresso dark:text-brand-cream hover:bg-white dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="text-lg leading-none">{l.flag}</span>
+                    <span className="flex-1 text-left truncate">{l.label}</span>
+                    {l.code === lang && (
+                      <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Icono con anillo pulsante */}
-            <div className="relative flex justify-center mb-1">
-              <div ref={ringRef} className="absolute w-16 h-16 rounded-full bg-emerald-400/30" style={{ opacity: 0 }} />
-              <div ref={waveRef} className="order-hint-line relative text-5xl">👋</div>
+            <div className="relative flex justify-center mb-3">
+              <div ref={ringRef} className="absolute w-24 h-24 rounded-full bg-emerald-400/30" style={{ opacity: 0 }} />
+              <div ref={waveRef} className="order-hint-line relative text-7xl">👋</div>
             </div>
 
-            <h3 className="order-hint-line font-serif text-xl font-semibold text-brand-espresso dark:text-brand-cream mb-1.5 mt-1">
+            <h3 className="order-hint-line font-serif text-2xl sm:text-3xl font-bold text-brand-espresso dark:text-brand-cream mb-3 leading-tight">
               {t.hintTitle}
             </h3>
-            <p className="order-hint-line font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-4">
+            <p className="order-hint-line font-sans text-base text-brand-muted dark:text-brand-honey/60 mb-6 leading-relaxed">
               {t.hintDesc}
             </p>
-            <div ref={arrowRef} className="order-hint-line flex justify-center mb-1">
-              <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div ref={arrowRef} className="order-hint-line flex justify-center mb-2">
+              <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-6-6m6 6l6-6" />
               </svg>
             </div>
             <button
               onClick={dismissHint}
-              className="order-hint-line mt-3 w-full bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans text-sm font-semibold py-2.5 rounded-xl shadow-[0_4px_14px_-4px_rgba(28,13,4,0.4)]"
+              className="order-hint-line mt-3 w-full bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans text-base font-bold py-4 rounded-2xl shadow-[0_8px_20px_-6px_rgba(28,13,4,0.45)]"
             >
               {t.hintButton}
             </button>
