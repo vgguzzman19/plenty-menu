@@ -596,9 +596,12 @@ export default function AdminPage() {
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const [categorySaving, setCategorySaving] = useState(false);
 
+  // URL del QR: siempre el dominio real de la web, nunca editable
+  // (un campo editable aquí llevó a que se cambiara sin querer y hubiera que reimprimir los QR físicos)
   const [qrUrl, setQrUrl] = useState(
     typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"
   );
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -1091,7 +1094,7 @@ export default function AdminPage() {
 
             {/* QR Card */}
             <div className="bg-brand-espresso rounded-2xl p-7 flex flex-col items-center shadow-elevated">
-              <div className="bg-white rounded-xl p-4">
+              <div ref={qrContainerRef} className="bg-white rounded-xl p-4">
                 <QRCodeSVG
                   value={qrUrl}
                   size={196}
@@ -1109,17 +1112,18 @@ export default function AdminPage() {
               </p>
             </div>
 
-            {/* URL input */}
+            {/* URL — solo lectura a propósito: es el mismo QR ya impreso en las mesas */}
             <div className="mt-6">
               <label className={labelCls}>URL de la carta</label>
-              <input
-                type="text"
-                value={qrUrl}
-                onChange={(e) => setQrUrl(e.target.value)}
-                className={inputCls}
-              />
+              <div className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-brand-parchment/60 text-brand-muted text-sm font-sans">
+                <svg className="w-3.5 h-3.5 flex-none text-brand-muted/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={1.75} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 11V7a4 4 0 018 0v4" />
+                </svg>
+                <span className="truncate">{qrUrl}</span>
+              </div>
               <p className="font-sans text-xs text-brand-muted mt-2">
-                Actualiza con tu dominio cuando publiques la web.
+                Bloqueado a propósito: este es el mismo código que ya tienes impreso en las mesas. No se puede editar para evitar cambiarlo por error.
               </p>
             </div>
 
@@ -1135,7 +1139,7 @@ export default function AdminPage() {
               </a>
               <button
                 onClick={() => {
-                  const svg = document.querySelector("svg");
+                  const svg = qrContainerRef.current?.querySelector("svg");
                   if (!svg) return;
                   const data = new XMLSerializer().serializeToString(svg);
                   const blob = new Blob([data], { type: "image/svg+xml" });
