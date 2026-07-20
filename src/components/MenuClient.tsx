@@ -5,7 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Category, Product } from "@/lib/storage";
-import { Lang, LANGS, catName, prodName, prodDesc, ui } from "@/lib/i18n";
+import { Lang, LANGS, catName, prodName, prodDesc, ui, detectDeviceLang } from "@/lib/i18n";
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { OrderReadyButton } from "./OrderReadyButton";
@@ -104,7 +104,11 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
   useEffect(() => {
     const saved = localStorage.getItem("plenty-lang") as Lang | null;
-    if (saved && ["es", "en", "fr"].includes(saved)) setLang(saved);
+    if (saved && LANGS.some((l) => l.code === saved)) {
+      setLang(saved);
+    } else {
+      setLang(detectDeviceLang());
+    }
   }, []);
 
   const changeLang = (l: Lang) => {
@@ -556,7 +560,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         />
       )}
 
-      <OrderReadyButton />
+      <OrderReadyButton lang={lang} onChangeLang={changeLang} />
 
       {/* ── FOOTER ── */}
       <footer className="relative grain overflow-hidden bg-brand-espresso mt-16">

@@ -9,6 +9,20 @@ export const LANGS: { code: Lang; flag: string; label: string }[] = [
   { code: "fr", flag: "🇫🇷", label: "Français" },
 ];
 
+// Detecta el idioma del dispositivo y lo mapea a uno de los 4 soportados
+export function detectDeviceLang(): Lang {
+  if (typeof navigator === "undefined") return "es";
+  const candidates = navigator.languages && navigator.languages.length
+    ? navigator.languages
+    : [navigator.language];
+  for (const candidate of candidates) {
+    const code = candidate.slice(0, 2).toLowerCase();
+    const match = LANGS.find((l) => l.code === code);
+    if (match) return match.code;
+  }
+  return "es";
+}
+
 export function catName(cat: Category, lang: Lang): string {
   if (lang === "en" && cat.name_en) return cat.name_en;
   if (lang === "fr" && cat.name_fr) return cat.name_fr;
@@ -30,7 +44,33 @@ export function prodDesc(p: Product, lang: Lang): string {
   return p.description;
 }
 
-export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: string; food: string; drinks: string; searchPlaceholder: string; searchEmpty: string; clickMore: string }> = {
+interface UiText {
+  unavailable: string;
+  empty: string;
+  brunchCafe: string;
+  food: string;
+  drinks: string;
+  searchPlaceholder: string;
+  searchEmpty: string;
+  clickMore: string;
+  // Botón "Pedir ya" y flujo de aviso al camarero
+  orderButton: string;
+  orderButtonSent: string;
+  langLabel: string;
+  modalTitle: string;
+  modalDesc: string;
+  confirmBtn: string;
+  confirmBtnSending: string;
+  successTitle: string;
+  successDesc: string;
+  errorMsg: string;
+  hintBadge: string;
+  hintTitle: string;
+  hintDesc: string;
+  hintButton: string;
+}
+
+export const ui: Record<Lang, UiText> = {
   es: {
     unavailable: "No disponible",
     empty: "Carta en preparación. Vuelve pronto.",
@@ -40,6 +80,20 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     searchPlaceholder: "Buscar plato o bebida...",
     searchEmpty: "No se encontraron resultados para",
     clickMore: "Toca para ver más",
+    orderButton: "Pedir ya",
+    orderButtonSent: "Aviso enviado",
+    langLabel: "Idioma",
+    modalTitle: "¿En qué mesa estás?",
+    modalDesc: "Avisamos al camarero de que estás listo para pedir.",
+    confirmBtn: "Avisar al camarero",
+    confirmBtnSending: "Avisando...",
+    successTitle: "¡Aviso enviado!",
+    successDesc: "El camarero está en camino a la mesa",
+    errorMsg: "No se pudo enviar el aviso. Inténtalo de nuevo.",
+    hintBadge: "Consejo",
+    hintTitle: "¿Ya sabes qué vas a pedir?",
+    hintDesc: "Toca el botón verde cuando estés listo y avisamos al camarero al instante.",
+    hintButton: "¡Entendido!",
   },
   ca: {
     unavailable: "No disponible",
@@ -50,6 +104,20 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     searchPlaceholder: "Cercar plat o beguda...",
     searchEmpty: "No s'han trobat resultats per a",
     clickMore: "Toca per veure més",
+    orderButton: "Demanar ja",
+    orderButtonSent: "Avís enviat",
+    langLabel: "Idioma",
+    modalTitle: "A quina taula ets?",
+    modalDesc: "Avisem el cambrer que estàs a punt per demanar.",
+    confirmBtn: "Avisar el cambrer",
+    confirmBtnSending: "Avisant...",
+    successTitle: "Avís enviat!",
+    successDesc: "El cambrer ja va cap a la taula",
+    errorMsg: "No s'ha pogut enviar l'avís. Torna-ho a provar.",
+    hintBadge: "Consell",
+    hintTitle: "Ja saps què demanaràs?",
+    hintDesc: "Toca el botó verd quan estiguis a punt i avisem el cambrer a l'instant.",
+    hintButton: "Entesos!",
   },
   en: {
     unavailable: "Not available",
@@ -60,6 +128,20 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     searchPlaceholder: "Search dish or drink...",
     searchEmpty: "No results found for",
     clickMore: "Tap to see more",
+    orderButton: "Order now",
+    orderButtonSent: "Alert sent",
+    langLabel: "Language",
+    modalTitle: "Which table are you at?",
+    modalDesc: "We'll let the waiter know you're ready to order.",
+    confirmBtn: "Call the waiter",
+    confirmBtnSending: "Sending...",
+    successTitle: "Alert sent!",
+    successDesc: "The waiter is on the way to table",
+    errorMsg: "Couldn't send the alert. Please try again.",
+    hintBadge: "Tip",
+    hintTitle: "Already know what you'll order?",
+    hintDesc: "Tap the green button when you're ready and we'll notify the waiter instantly.",
+    hintButton: "Got it!",
   },
   fr: {
     unavailable: "Non disponible",
@@ -70,5 +152,19 @@ export const ui: Record<Lang, { unavailable: string; empty: string; brunchCafe: 
     searchPlaceholder: "Chercher un plat ou boisson...",
     searchEmpty: "Aucun résultat pour",
     clickMore: "Appuyez pour voir plus",
+    orderButton: "Commander",
+    orderButtonSent: "Alerte envoyée",
+    langLabel: "Langue",
+    modalTitle: "À quelle table êtes-vous ?",
+    modalDesc: "Nous prévenons le serveur que vous êtes prêt à commander.",
+    confirmBtn: "Appeler le serveur",
+    confirmBtnSending: "Envoi...",
+    successTitle: "Alerte envoyée !",
+    successDesc: "Le serveur arrive à la table",
+    errorMsg: "Impossible d'envoyer l'alerte. Réessayez.",
+    hintBadge: "Astuce",
+    hintTitle: "Vous savez déjà quoi commander ?",
+    hintDesc: "Appuyez sur le bouton vert quand vous êtes prêt, on prévient le serveur aussitôt.",
+    hintButton: "Compris !",
   },
 };
