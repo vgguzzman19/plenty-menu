@@ -309,7 +309,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
             {/* Icono con anillo pulsante */}
             <div className="relative flex justify-center mb-3">
-              <div ref={ringRef} className="absolute w-24 h-24 rounded-full bg-emerald-400/30" style={{ opacity: 0 }} />
+              <div ref={ringRef} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-emerald-400/30" style={{ opacity: 0 }} />
               <div ref={waveRef} className="order-hint-line relative text-7xl">👋</div>
             </div>
 
