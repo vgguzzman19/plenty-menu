@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     await new Promise((r) => setTimeout(r, MIN_RESPONSE_MS - elapsed));
   }
 
-  if (!user || !valid || !user.active) {
+  if (!user || !valid) {
     // Register failed attempt
     const rec = attempts.get(ip) ?? { count: 0, resetAt: now + WINDOW_MS };
     rec.count += 1;
@@ -69,6 +69,20 @@ export async function POST(req: NextRequest) {
     attempts.set(ip, rec);
 
     return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
+  }
+
+  // El usuario/contraseña son correctos, pero la cuenta está deshabilitada.
+  // Solo se revela este mensaje cuando las credenciales ya son válidas, para no
+  // convertirlo en un oráculo con el que adivinar qué cuentas existen.
+  if (!user.active) {
+    const rec = attempts.get(ip) ?? { count: 0, resetAt: now + WINDOW_MS };
+    rec.count += 1;
+    if (rec.count >= MAX_ATTEMPTS) {
+      rec.lockedUntil = now + LOCKOUT_MS;
+    }
+    attempts.set(ip, rec);
+
+    return NextResponse.json({ error: "Tu cuenta ha sido deshabilitada. Contacta con el administrador." }, { status: 403 });
   }
 
   // Success: clear failed attempts for this IP
