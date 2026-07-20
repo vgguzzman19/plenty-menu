@@ -269,6 +269,7 @@ export interface TableCall {
   tableNumber: number;
   createdAt: string;
   resolvedAt: string | null;
+  resolvedBy: string | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,6 +279,7 @@ function mapTableCall(row: any): TableCall {
     tableNumber: row.table_number,
     createdAt: row.created_at,
     resolvedAt: row.resolved_at,
+    resolvedBy: row.resolved_by ?? null,
   };
 }
 
@@ -296,10 +298,19 @@ export async function getPendingTableCalls(): Promise<TableCall[]> {
   return rows.map(mapTableCall);
 }
 
-export async function resolveTableCall(id: number): Promise<TableCall | null> {
+// Historial de las últimas 24h — es una ventana móvil, no hace falta borrar
+// nada a mano: las entradas más viejas dejan de aparecer solas.
+export async function getRecentResolvedCalls(): Promise<TableCall[]> {
   const { rows } = await pool.query(
-    "UPDATE table_calls SET resolved_at = now() WHERE id = $1 RETURNING *",
-    [id]
+    "SELECT * FROM table_calls WHERE resolved_at IS NOT NULL AND resolved_at > now() - interval '24 hours' ORDER BY resolved_at DESC"
+  );
+  return rows.map(mapTableCall);
+}
+
+export async function resolveTableCall(id: number, resolvedBy: string): Promise<TableCall | null> {
+  const { rows } = await pool.query(
+    "UPDATE table_calls SET resolved_at = now(), resolved_by = $1 WHERE id = $2 RETURNING *",
+    [resolvedBy, id]
   );
   return rows[0] ? mapTableCall(rows[0]) : null;
 }

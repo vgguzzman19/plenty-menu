@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { resolveTableCall, getUserById } from "@/lib/storage";
+import { getRecentResolvedCalls, getUserById } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
-import { publish } from "@/lib/events";
 
-export async function PUT(_: NextRequest, { params }: { params: { id: string } }) {
+// Historial de avisos atendidos en las últimas 24h — ventana móvil, se
+// "resetea" sola porque las entradas más antiguas dejan de entrar en el rango.
+export async function GET() {
   const token = cookies().get("token")?.value;
   if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const payload = await verifyToken(token);
@@ -14,9 +15,5 @@ export async function PUT(_: NextRequest, { params }: { params: { id: string } }
   const user = await getUserById(payload.userId);
   if (!user || !user.active) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const id = parseInt(params.id);
-  const updated = await resolveTableCall(id, user.username);
-  if (!updated) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
-  publish("table_call_resolved", updated);
-  return NextResponse.json(updated);
+  return NextResponse.json(await getRecentResolvedCalls());
 }

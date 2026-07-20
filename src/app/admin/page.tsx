@@ -269,7 +269,7 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element; adminOnly?: boole
 /* ─────────────────────────────────────────────
    Orders Tab — avisos de "listo para pedir" en tiempo real
 ───────────────────────────────────────────── */
-function OrdersTab({ calls }: { calls: TableCall[] }) {
+function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [resolvingIds, setResolvingIds] = useState<Set<number>>(new Set());
@@ -305,6 +305,10 @@ function OrdersTab({ calls }: { calls: TableCall[] }) {
     if (mins < 1) return "ahora mismo";
     if (mins === 1) return "hace 1 min";
     return `hace ${mins} min`;
+  }
+
+  function formatTime(iso: string) {
+    return new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   }
 
   return (
@@ -345,6 +349,29 @@ function OrdersTab({ calls }: { calls: TableCall[] }) {
             </div>
           );
         })
+      )}
+
+      {log.length > 0 && (
+        <div className="pt-2">
+          <p className="font-sans text-[10px] font-bold text-brand-muted/50 tracking-widest uppercase mb-2 px-1">
+            Historial · últimas 24h
+          </p>
+          <div className="space-y-1.5">
+            {log.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 bg-white/70 rounded-xl border border-brand-stone/50 px-3 py-2">
+                <span className="font-serif font-semibold text-brand-espresso/70 text-sm w-6 text-center flex-none">
+                  {c.tableNumber}
+                </span>
+                <span className="flex-1 font-sans text-xs text-brand-muted truncate">
+                  Atendido por <span className="font-semibold text-brand-espresso">{c.resolvedBy ?? "—"}</span>
+                </span>
+                <span className="font-sans text-[11px] text-brand-muted/50 flex-none tabular-nums">
+                  {c.resolvedAt && formatTime(c.resolvedAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -890,6 +917,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<Record<number, number>>({});
   const [tableCalls, setTableCalls] = useState<TableCall[]>([]);
+  const [resolvedLog, setResolvedLog] = useState<TableCall[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [productModal, setProductModal] = useState<"add" | "edit" | null>(null);
@@ -918,17 +946,19 @@ export default function AdminPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [catRes, prodRes, statsRes, callsRes] = await Promise.all([
+    const [catRes, prodRes, statsRes, callsRes, logRes] = await Promise.all([
       fetch("/api/categories"),
       fetch("/api/products"),
       fetch("/api/stats"),
       fetch("/api/table-calls"),
+      fetch("/api/table-calls/log"),
     ]);
     if (catRes.ok) setCategories(await catRes.json());
     if (prodRes.ok) setProducts(await prodRes.json());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (statsRes.ok) setStats(Object.fromEntries((await statsRes.json()).map((s: any) => [s.product_id, s.views])));
     if (callsRes.ok) setTableCalls(await callsRes.json());
+    if (logRes.ok) setResolvedLog(await logRes.json());
     setLoading(false);
   }, []);
 
@@ -965,8 +995,9 @@ export default function AdminPage() {
       setTableCalls(prev => [...prev, call]);
     });
     source.addEventListener("table_call_resolved", (e) => {
-      const { id } = JSON.parse(e.data) as { id: number };
-      setTableCalls(prev => prev.filter(c => c.id !== id));
+      const resolved = JSON.parse(e.data) as TableCall;
+      setTableCalls(prev => prev.filter(c => c.id !== resolved.id));
+      setResolvedLog(prev => [resolved, ...prev].slice(0, 100));
     });
     return () => source.close();
   }, []);
@@ -1252,7 +1283,7 @@ export default function AdminPage() {
                 En vivo
               </span>
             </div>
-            <OrdersTab calls={tableCalls} />
+            <OrdersTab calls={tableCalls} log={resolvedLog} />
           </div>
         )}
 
