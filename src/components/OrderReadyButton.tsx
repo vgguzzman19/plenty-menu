@@ -8,6 +8,14 @@ const TABLE_KEY = "plenty-table-number";
 const COOLDOWN_MS = 90_000;
 const HINT_DELAY_MS = 4500;
 
+// Vibración táctil — solo Android soporta la Vibration API del navegador,
+// iOS Safari nunca la ha implementado. En iPhone esto simplemente no hace nada.
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(pattern);
+  }
+}
+
 type Status = "idle" | "modal" | "sending" | "sent" | "cooldown";
 
 interface Props {
@@ -50,6 +58,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   // Entrada animada del popup de onboarding
   useEffect(() => {
     if (!hintVisible) return;
+    vibrate([20, 40, 20]);
     const ctx = gsap.context(() => {
       const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -161,6 +170,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   }
 
   async function confirmCall() {
+    vibrate(15);
     setStatus("sending");
     setError("");
     localStorage.setItem(TABLE_KEY, String(tableNumber));
