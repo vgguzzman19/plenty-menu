@@ -209,7 +209,6 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
           ref={hintBackdropRef}
           className="fixed inset-0 z-40 flex items-end justify-center bg-brand-espresso/70 backdrop-blur-md px-4 pb-28"
           style={{ opacity: 0 }}
-          onClick={(e) => e.target === e.currentTarget && dismissHint()}
         >
           <div
             ref={hintCardRef}
