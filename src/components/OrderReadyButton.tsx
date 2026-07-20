@@ -16,6 +16,40 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
+// "Ding" sintetizado con Web Audio — funciona en Android e iOS (a diferencia
+// de la vibración). Debe llamarse directamente dentro del gesto de clic del
+// usuario, sin ningún await antes: Safari bloquea el audio si no.
+function playConfirmSound() {
+  try {
+    type WebkitWindow = typeof window & { webkitAudioContext?: typeof AudioContext };
+    const AudioContextClass = window.AudioContext || (window as WebkitWindow).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const now = ctx.currentTime;
+
+    const playTone = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.2, now + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    };
+
+    playTone(880, 0, 0.12);      // A5
+    playTone(1318.5, 0.1, 0.22); // E6 — ding-ding ascendente
+
+    setTimeout(() => ctx.close(), 600);
+  } catch {
+    // Si el navegador bloquea el audio, simplemente no suena
+  }
+}
+
 type Status = "idle" | "modal" | "sending" | "sent" | "cooldown";
 
 interface Props {
@@ -171,6 +205,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
   async function confirmCall() {
     vibrate(15);
+    playConfirmSound();
     setStatus("sending");
     setError("");
     localStorage.setItem(TABLE_KEY, String(tableNumber));
