@@ -277,6 +277,7 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
   const [logOpen, setLogOpen] = useState(false);
   const logContentRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<SVGSVGElement>(null);
+  const logHintRef = useRef<HTMLDivElement>(null);
 
   // Refresca el "hace X min" cada 30s
   useEffect(() => {
@@ -284,19 +285,33 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
     return () => clearInterval(t);
   }, []);
 
-  // Colapsado por defecto — arranca a altura 0
+  // Acordeón del historial: colapsado desde el primer render (altura 0 va
+  // directa en el style, así no hay parpadeo inicial mientras GSAP arranca).
+  // Este efecto solo entra en juego cuando el usuario lo abre/cierra después.
+  const firstLogRender = useRef(true);
   useEffect(() => {
-    if (logContentRef.current) gsap.set(logContentRef.current, { height: 0 });
-  }, []);
-
-  // Acordeón del historial: GSAP anima hasta la altura real del contenido
-  useEffect(() => {
+    if (firstLogRender.current) { firstLogRender.current = false; return; }
     if (!logContentRef.current) return;
     gsap.to(logContentRef.current, { height: logOpen ? "auto" : 0, duration: 0.4, ease: "power2.inOut" });
     if (chevronRef.current) {
       gsap.to(chevronRef.current, { rotate: logOpen ? 180 : 0, duration: 0.3, ease: "power2.out" });
     }
   }, [logOpen]);
+
+  // Pista visual: un par de pulsos suaves en el icono para señalar que es
+  // desplegable, la primera vez que hay historial disponible.
+  useEffect(() => {
+    if (log.length === 0 || logOpen) return;
+    const t = setTimeout(() => {
+      if (logHintRef.current) {
+        gsap.fromTo(logHintRef.current,
+          { scale: 1 },
+          { scale: 1.15, duration: 0.4, repeat: 3, yoyo: true, ease: "power1.inOut" }
+        );
+      }
+    }, 700);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     if (containerRef.current) {
@@ -369,22 +384,40 @@ function OrdersTab({ calls, log }: { calls: TableCall[]; log: TableCall[] }) {
       )}
 
       {log.length > 0 && (
-        <div className="pt-2">
+        <div className="mt-2 rounded-2xl border border-brand-stone bg-white overflow-hidden">
           <button
             onClick={() => setLogOpen(v => !v)}
-            className="w-full flex items-center justify-between px-1 py-2 group"
+            className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-brand-parchment/60 transition-colors"
           >
-            <span className="font-sans text-[10px] font-bold text-brand-muted/50 group-hover:text-brand-muted tracking-widest uppercase transition-colors">
-              Historial · últimas 24h ({log.length})
-            </span>
-            <svg ref={chevronRef} className="w-3.5 h-3.5 text-brand-muted/50 group-hover:text-brand-muted transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div className="flex items-center gap-3 min-w-0">
+              <div ref={logHintRef} className="w-8 h-8 rounded-full bg-brand-parchment flex items-center justify-center flex-none">
+                <svg className="w-4 h-4 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="text-left min-w-0">
+                <p className="font-sans text-sm font-semibold text-brand-espresso">
+                  Historial de hoy
+                  <span className="ml-1.5 font-sans text-[11px] font-bold text-brand-muted bg-brand-parchment px-1.5 py-0.5 rounded-full align-middle">
+                    {log.length}
+                  </span>
+                </p>
+                <p className="font-sans text-[11px] text-brand-muted/70 truncate">
+                  {logOpen ? "Toca para ocultar" : "Toca para ver quién atendió cada mesa"}
+                </p>
+              </div>
+            </div>
+            <svg ref={chevronRef} className="w-4 h-4 text-brand-muted flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <div ref={logContentRef} className="overflow-hidden">
-            <div className="space-y-1.5 pt-1 pb-1">
-              {log.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 bg-white/70 rounded-xl border border-brand-stone/50 px-3 py-2">
+          <div ref={logContentRef} style={{ height: 0, overflow: "hidden" }}>
+            <div className="border-t border-brand-stone/60">
+              {log.map((c, i) => (
+                <div
+                  key={c.id}
+                  className={`flex items-center gap-3 px-4 py-2.5 ${i !== log.length - 1 ? "border-b border-brand-stone/40" : ""}`}
+                >
                   <span className="font-serif font-semibold text-brand-espresso/70 text-sm w-6 text-center flex-none">
                     {c.tableNumber}
                   </span>
