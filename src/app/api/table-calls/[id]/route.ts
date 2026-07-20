@@ -8,7 +8,9 @@ export async function PUT(_: NextRequest, { params }: { params: { id: string } }
   const token = cookies().get("token")?.value;
   if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const payload = await verifyToken(token);
-  if (!payload || payload.role !== "admin") return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  if (!payload || (payload.role !== "admin" && payload.role !== "employee")) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
 
   const id = parseInt(params.id);
   const updated = await resolveTableCall(id);

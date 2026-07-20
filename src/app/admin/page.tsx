@@ -16,7 +16,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type Tab = "orders" | "products" | "categories" | "analytics" | "qr";
+type Tab = "orders" | "products" | "categories" | "analytics" | "qr" | "users";
+type Role = "admin" | "employee";
 
 interface ProductForm {
   name: string;
@@ -93,6 +94,13 @@ function IconQr() {
       <rect x="13" y="7" width="4" height="4" rx="0.5" strokeWidth={1.5} />
       <rect x="7" y="13" width="4" height="4" rx="0.5" strokeWidth={1.5} />
       <path strokeLinecap="round" strokeWidth={1.5} d="M13 13h1.5M16.5 13H18M13 16.5v1.5M16.5 15v3" />
+    </svg>
+  );
+}
+function IconUsers() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m5-3.13a4 4 0 100-8 4 4 0 000 8zm6 4.13a4 4 0 00-1.5-7.75" />
     </svg>
   );
 }
@@ -241,12 +249,13 @@ function SortableCategoryRow({ category: cat, count, onEdit, onDelete }: Sortabl
   );
 }
 
-const TABS: { id: Tab; label: string; Icon: () => JSX.Element }[] = [
+const TABS: { id: Tab; label: string; Icon: () => JSX.Element; adminOnly?: boolean }[] = [
   { id: "orders",     label: "Pedidos",     Icon: IconBell  },
-  { id: "products",   label: "Carta",       Icon: IconMenu  },
-  { id: "categories", label: "Categorías",  Icon: IconGrid  },
-  { id: "analytics",  label: "Analytics",   Icon: IconChart },
-  { id: "qr",         label: "Código QR",   Icon: IconQr    },
+  { id: "products",   label: "Carta",       Icon: IconMenu,  adminOnly: true },
+  { id: "categories", label: "Categorías",  Icon: IconGrid,  adminOnly: true },
+  { id: "analytics",  label: "Analytics",   Icon: IconChart, adminOnly: true },
+  { id: "qr",         label: "Código QR",   Icon: IconQr,    adminOnly: true },
+  { id: "users",      label: "Usuarios",    Icon: IconUsers, adminOnly: true },
 ];
 
 /* ─────────────────────────────────────────────
@@ -328,6 +337,167 @@ function OrdersTab({ calls }: { calls: TableCall[] }) {
             </div>
           );
         })
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Users Tab — solo admin, crea/borra cuentas de empleado
+───────────────────────────────────────────── */
+interface AdminUser { id: number; username: string; role: Role }
+
+function UsersTab() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/users");
+    if (res.ok) setUsers(await res.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  function openModal() {
+    setForm({ username: "", password: "" });
+    setError("");
+    setModalOpen(true);
+  }
+
+  async function saveUser() {
+    if (!form.username || form.password.length < 6) {
+      setError("Usuario y contraseña (mín. 6 caracteres) son obligatorios");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      setModalOpen(false);
+      fetchUsers();
+    } else {
+      const d = await res.json();
+      setError(d.error || "Error al crear el usuario");
+    }
+    setSaving(false);
+  }
+
+  async function removeUser(id: number) {
+    if (!confirm("¿Eliminar el acceso de este empleado?")) return;
+    setDeletingId(id);
+    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    await fetchUsers();
+    setDeletingId(null);
+  }
+
+  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-white text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel text-sm font-sans";
+  const labelCls = "block text-[11px] font-semibold text-brand-brown tracking-widest uppercase mb-1.5 font-sans";
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="font-serif text-xl font-semibold text-brand-espresso">Usuarios</h2>
+          <p className="font-sans text-xs text-brand-muted mt-0.5">
+            Los empleados solo pueden ver y gestionar la pestaña Pedidos.
+          </p>
+        </div>
+        <button
+          onClick={openModal}
+          className="flex-none flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Añadir empleado
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(2)].map((_, i) => <div key={i} className="h-16 bg-brand-stone/40 rounded-xl animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {users.map((u) => (
+            <div key={u.id} className="flex items-center gap-3 bg-white rounded-xl border border-brand-stone px-4 py-3.5">
+              <div className="w-9 h-9 rounded-full bg-brand-parchment flex items-center justify-center flex-none font-sans font-semibold text-brand-espresso text-sm">
+                {u.username.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-sans font-medium text-brand-espresso text-sm truncate">{u.username}</p>
+              </div>
+              <span className={`font-sans text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-full flex-none ${
+                u.role === "admin" ? "bg-brand-caramel/15 text-brand-brown" : "bg-emerald-50 text-emerald-600"
+              }`}>
+                {u.role === "admin" ? "Admin" : "Empleado"}
+              </span>
+              {u.role === "employee" && (
+                <button
+                  onClick={() => removeUser(u.id)}
+                  disabled={deletingId === u.id}
+                  className="flex-none p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
+                  title="Eliminar acceso"
+                >
+                  <IconTrash />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/50 backdrop-blur-sm px-0 sm:px-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm shadow-elevated">
+            <div className="px-6 py-5 border-b border-brand-stone flex items-center justify-between">
+              <h3 className="font-serif text-lg font-semibold text-brand-espresso">Nuevo empleado</h3>
+              <button onClick={() => setModalOpen(false)} className="p-1.5 rounded-lg text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment" aria-label="Cerrar">
+                <IconCross />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className={labelCls}>Usuario</label>
+                <input type="text" value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  className={inputCls} placeholder="camarero1" autoComplete="off" />
+              </div>
+              <div>
+                <label className={labelCls}>Contraseña</label>
+                <input type="password" value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className={inputCls} placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-3 rounded-xl">
+                  {error}
+                </div>
+              )}
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button onClick={() => setModalOpen(false)}
+                className="flex-1 border border-brand-stone text-brand-muted font-sans py-2.5 rounded-xl text-sm font-medium hover:bg-brand-parchment">
+                Cancelar
+              </button>
+              <button onClick={saveUser} disabled={saving}
+                className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                {saving ? "Creando..." : "Crear"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -572,6 +742,8 @@ function AnalyticsTab({
 
 export default function AdminPage() {
   const router = useRouter();
+  const [myRole, setMyRole] = useState<Role | null>(null);
+  const visibleTabs = TABS.filter((t) => myRole === "admin" || !t.adminOnly);
   const [tab, setTab] = useState<Tab>("orders");
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -623,6 +795,18 @@ export default function AdminPage() {
     fetchData();
     if (typeof window !== "undefined") setQrUrl(window.location.origin);
   }, [fetchData]);
+
+  // Quién soy — determina qué pestañas puede ver (los empleados solo Pedidos)
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setMyRole(data?.role === "admin" ? "admin" : "employee"));
+  }, []);
+
+  // Red de seguridad: si un empleado quedara en una pestaña que ya no puede ver, vuelve a Pedidos
+  useEffect(() => {
+    if (myRole === "employee" && tab !== "orders") setTab("orders");
+  }, [myRole, tab]);
 
   // Realtime propio (SSE): el endpoint /view emite el evento al instante
   useEffect(() => {
@@ -887,7 +1071,7 @@ export default function AdminPage() {
       {/* ── TAB BAR ── */}
       <div className="bg-white border-b border-brand-stone">
         <div className="max-w-3xl mx-auto px-4 flex">
-          {TABS.map(({ id, label, Icon }) => {
+          {visibleTabs.map(({ id, label, Icon }) => {
             const isOrders = id === "orders";
             const pending = tableCalls.length;
             return (
@@ -1157,6 +1341,9 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ── USERS TAB ── */}
+        {tab === "users" && <UsersTab />}
       </div>
 
       {/* ── PRODUCT MODAL ── */}

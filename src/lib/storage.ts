@@ -4,7 +4,7 @@ export interface User {
   id: number;
   username: string;
   passwordHash: string;
-  role: "admin";
+  role: "admin" | "employee";
 }
 
 export interface Category {
@@ -105,12 +105,22 @@ export async function getUserByUsername(username: string): Promise<User | undefi
   return rows[0] ? mapUser(rows[0]) : undefined;
 }
 
+export async function getUserById(id: number): Promise<User | undefined> {
+  const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+  return rows[0] ? mapUser(rows[0]) : undefined;
+}
+
 export async function createUser(data: Omit<User, "id">): Promise<User> {
   const { rows } = await pool.query(
     "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING *",
     [data.username, data.passwordHash, data.role]
   );
   return mapUser(rows[0]);
+}
+
+export async function deleteUser(id: number): Promise<boolean> {
+  const { rowCount } = await pool.query("DELETE FROM users WHERE id = $1", [id]);
+  return (rowCount ?? 0) > 0;
 }
 
 export async function createCategory(data: Omit<Category, "id">): Promise<Category> {

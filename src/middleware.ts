@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== "admin") {
+    if (!payload || (payload.role !== "admin" && payload.role !== "employee")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
