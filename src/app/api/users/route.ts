@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
   const users = await getUsers();
-  return NextResponse.json(users.map(({ id, username, role }) => ({ id, username, role })));
+  return NextResponse.json(users.map(({ id, username, role, active }) => ({ id, username, role, active })));
 }
 
 // Crea cuentas de empleado — la cuenta admin solo se crea una vez, desde /setup

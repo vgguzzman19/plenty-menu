@@ -345,7 +345,7 @@ function OrdersTab({ calls }: { calls: TableCall[] }) {
 /* ─────────────────────────────────────────────
    Users Tab — solo admin, crea/borra cuentas de empleado
 ───────────────────────────────────────────── */
-interface AdminUser { id: number; username: string; role: Role }
+interface AdminUser { id: number; username: string; role: Role; active: boolean }
 
 function UsersTab() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -355,6 +355,7 @@ function UsersTab() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -401,6 +402,17 @@ function UsersTab() {
     setDeletingId(null);
   }
 
+  async function toggleActive(u: AdminUser) {
+    setTogglingId(u.id);
+    await fetch(`/api/users/${u.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: !u.active }),
+    });
+    await fetchUsers();
+    setTogglingId(null);
+  }
+
   const inputCls = "w-full px-4 py-2.5 rounded-xl border border-brand-stone bg-white text-brand-espresso placeholder-brand-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25 focus:border-brand-caramel text-sm font-sans";
   const labelCls = "block text-[11px] font-semibold text-brand-brown tracking-widest uppercase mb-1.5 font-sans";
 
@@ -430,31 +442,55 @@ function UsersTab() {
         </div>
       ) : (
         <div className="space-y-2">
-          {users.map((u) => (
-            <div key={u.id} className="flex items-center gap-3 bg-white rounded-xl border border-brand-stone px-4 py-3.5">
-              <div className="w-9 h-9 rounded-full bg-brand-parchment flex items-center justify-center flex-none font-sans font-semibold text-brand-espresso text-sm">
-                {u.username.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-sans font-medium text-brand-espresso text-sm truncate">{u.username}</p>
-              </div>
-              <span className={`font-sans text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-full flex-none ${
-                u.role === "admin" ? "bg-brand-caramel/15 text-brand-brown" : "bg-emerald-50 text-emerald-600"
+          {users.map((u) => {
+            const disabled = u.role === "employee" && !u.active;
+            return (
+              <div key={u.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
+                disabled ? "bg-amber-50 border-amber-200" : "bg-white border-brand-stone"
               }`}>
-                {u.role === "admin" ? "Admin" : "Empleado"}
-              </span>
-              {u.role === "employee" && (
-                <button
-                  onClick={() => removeUser(u.id)}
-                  disabled={deletingId === u.id}
-                  className="flex-none p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
-                  title="Eliminar acceso"
-                >
-                  <IconTrash />
-                </button>
-              )}
-            </div>
-          ))}
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-none font-sans font-semibold text-sm ${
+                  disabled ? "bg-amber-100 text-amber-700" : "bg-brand-parchment text-brand-espresso"
+                }`}>
+                  {u.username.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-sans font-medium text-sm truncate ${disabled ? "text-amber-900" : "text-brand-espresso"}`}>
+                    {u.username}
+                  </p>
+                </div>
+                <span className={`font-sans text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-full flex-none ${
+                  u.role === "admin"
+                    ? "bg-brand-caramel/15 text-brand-brown"
+                    : disabled ? "bg-amber-100 text-amber-700" : "bg-emerald-50 text-emerald-600"
+                }`}>
+                  {u.role === "admin" ? "Admin" : disabled ? "Deshabilitado" : "Empleado"}
+                </span>
+                {u.role === "employee" && (
+                  <>
+                    <button
+                      onClick={() => toggleActive(u)}
+                      disabled={togglingId === u.id}
+                      className={`flex-none font-sans text-xs font-semibold px-3 py-2 rounded-lg transition-colors disabled:opacity-50 ${
+                        disabled
+                          ? "bg-amber-500 hover:bg-amber-600 text-white"
+                          : "border border-brand-stone text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment"
+                      }`}
+                    >
+                      {togglingId === u.id ? "..." : disabled ? "Habilitar" : "Deshabilitar"}
+                    </button>
+                    <button
+                      onClick={() => removeUser(u.id)}
+                      disabled={deletingId === u.id}
+                      className="flex-none p-2 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      title="Eliminar acceso"
+                    >
+                      <IconTrash />
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -796,12 +832,14 @@ export default function AdminPage() {
     if (typeof window !== "undefined") setQrUrl(window.location.origin);
   }, [fetchData]);
 
-  // Quién soy — determina qué pestañas puede ver (los empleados solo Pedidos)
+  // Quién soy — determina qué pestañas puede ver (los empleados solo Pedidos).
+  // Si la cuenta ha sido deshabilitada, /api/auth/me devuelve 401 y nos manda al login.
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setMyRole(data?.role === "admin" ? "admin" : "employee"));
-  }, []);
+    fetch("/api/auth/me").then((r) => {
+      if (!r.ok) { router.replace("/login"); return; }
+      r.json().then((data) => setMyRole(data?.role === "admin" ? "admin" : "employee"));
+    });
+  }, [router]);
 
   // Red de seguridad: si un empleado quedara en una pestaña que ya no puede ver, vuelve a Pedidos
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createTableCall, getPendingTableCalls } from "@/lib/storage";
+import { createTableCall, getPendingTableCalls, getUserById } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
 import { publish } from "@/lib/events";
 
@@ -23,6 +23,10 @@ export async function GET() {
   if (!payload || (payload.role !== "admin" && payload.role !== "employee")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+  // Comprueba el estado actual en BD (no solo el JWT) para que deshabilitar
+  // una cuenta de empleado tenga efecto inmediato, no solo en el próximo login
+  const user = await getUserById(payload.userId);
+  if (!user || !user.active) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   return NextResponse.json(await getPendingTableCalls());
 }

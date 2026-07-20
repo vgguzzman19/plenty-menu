@@ -5,6 +5,7 @@ export interface User {
   username: string;
   passwordHash: string;
   role: "admin" | "employee";
+  active: boolean;
 }
 
 export interface Category {
@@ -80,6 +81,7 @@ function mapUser(row: any): User {
     username: row.username,
     passwordHash: row.password_hash,
     role: row.role,
+    active: row.active ?? true,
   };
 }
 
@@ -110,12 +112,20 @@ export async function getUserById(id: number): Promise<User | undefined> {
   return rows[0] ? mapUser(rows[0]) : undefined;
 }
 
-export async function createUser(data: Omit<User, "id">): Promise<User> {
+export async function createUser(data: Omit<User, "id" | "active">): Promise<User> {
   const { rows } = await pool.query(
     "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING *",
     [data.username, data.passwordHash, data.role]
   );
   return mapUser(rows[0]);
+}
+
+export async function setUserActive(id: number, active: boolean): Promise<User | null> {
+  const { rows } = await pool.query(
+    "UPDATE users SET active = $1 WHERE id = $2 RETURNING *",
+    [active, id]
+  );
+  return rows[0] ? mapUser(rows[0]) : null;
 }
 
 export async function deleteUser(id: number): Promise<boolean> {

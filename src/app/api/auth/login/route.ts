@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     await new Promise((r) => setTimeout(r, MIN_RESPONSE_MS - elapsed));
   }
 
-  if (!user || !valid) {
+  if (!user || !valid || !user.active) {
     // Register failed attempt
     const rec = attempts.get(ip) ?? { count: 0, resetAt: now + WINDOW_MS };
     rec.count += 1;

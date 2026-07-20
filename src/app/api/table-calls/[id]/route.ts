@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { resolveTableCall } from "@/lib/storage";
+import { resolveTableCall, getUserById } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
 import { publish } from "@/lib/events";
 
@@ -11,6 +11,8 @@ export async function PUT(_: NextRequest, { params }: { params: { id: string } }
   if (!payload || (payload.role !== "admin" && payload.role !== "employee")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+  const user = await getUserById(payload.userId);
+  if (!user || !user.active) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const id = parseInt(params.id);
   const updated = await resolveTableCall(id);
