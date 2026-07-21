@@ -291,6 +291,16 @@ export async function createTableCall(tableNumber: number): Promise<TableCall> {
   return mapTableCall(rows[0]);
 }
 
+// Si varios móviles de la misma mesa avisan a la vez, solo debe llegar un
+// aviso al personal — esto detecta si ya hay uno sin atender para esa mesa.
+export async function getPendingCallForTable(tableNumber: number): Promise<TableCall | null> {
+  const { rows } = await pool.query(
+    "SELECT * FROM table_calls WHERE table_number = $1 AND resolved_at IS NULL ORDER BY created_at DESC LIMIT 1",
+    [tableNumber]
+  );
+  return rows[0] ? mapTableCall(rows[0]) : null;
+}
+
 export async function getPendingTableCalls(): Promise<TableCall[]> {
   const { rows } = await pool.query(
     "SELECT * FROM table_calls WHERE resolved_at IS NULL ORDER BY created_at ASC"
