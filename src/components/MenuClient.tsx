@@ -122,7 +122,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
   const closeLangMenu = () => {
     if (!langMenuRef.current) { setLangMenuOpen(false); return; }
-    gsap.to(langGlobeRef.current, { rotate: 0, duration: 0.25, ease: "power2.inOut" });
+    gsap.to(langGlobeRef.current, { scale: 1, rotate: 0, duration: 0.25, ease: "power2.inOut" });
     gsap.to(langMenuRef.current, {
       autoAlpha: 0, y: -10, scale: 0.92, duration: 0.18, ease: "power2.in",
       onComplete: () => setLangMenuOpen(false),
@@ -134,7 +134,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     closeLangMenu();
   };
 
-  // Entrada animada del desplegable de idiomas — panel + items en cascada + giro del globo
+  // Entrada animada del desplegable de idiomas — panel + items en cascada + pulso del icono
   useEffect(() => {
     if (!langMenuOpen) return;
     const items = langMenuRef.current?.querySelectorAll(".lang-menu-item");
@@ -150,7 +150,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         "-=0.22"
       );
     }
-    tl.to(langGlobeRef.current, { rotate: 180, duration: 0.45, ease: "back.out(2)" }, 0);
+    tl.to(langGlobeRef.current, { scale: 1.2, rotate: -8, duration: 0.2, ease: "power2.out" }, 0)
+      .to(langGlobeRef.current, { scale: 1, rotate: 0, duration: 0.35, ease: "back.out(3)" }, 0.2);
     return () => { tl.kill(); };
   }, [langMenuOpen]);
 
@@ -378,23 +379,21 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           </a>
         </div>
 
-        {/* Language switcher — top right: icono de globo + desplegable animado */}
+        {/* Language switcher — top right: icono de traducción + desplegable animado */}
         <div ref={langWrapRef} className="absolute top-4 right-4 z-20">
           <button
             onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
             aria-label={ui[lang].langLabel}
             aria-expanded={langMenuOpen}
             title={ui[lang].langLabel}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-90"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors active:scale-90"
           >
             <svg
               ref={langGlobeRef}
               className="w-4 h-4 text-brand-honey/70"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+              fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"
             >
-              <circle cx="12" cy="12" r="9" strokeWidth={1.7} />
-              <path strokeLinecap="round" strokeWidth={1.7} d="M3.6 9h16.8M3.6 15h16.8" />
-              <path strokeLinecap="round" strokeWidth={1.7} d="M12 3c2.4 2.5 3.6 5.6 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.6-3.6-9s1.2-6.5 3.6-9z" />
+              <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z" />
             </svg>
           </button>
 
