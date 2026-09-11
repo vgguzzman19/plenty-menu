@@ -32,11 +32,15 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
   const normalMenuRef = useRef<HTMLDivElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
+  const langWrapRef = useRef<HTMLDivElement>(null);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+  const langGlobeRef = useRef<SVGSVGElement>(null);
 
   // Realtime propio (SSE) — sincronización completa en tiempo real
   useEffect(() => {
@@ -115,6 +119,57 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     setLang(l);
     localStorage.setItem("plenty-lang", l);
   };
+
+  const closeLangMenu = () => {
+    if (!langMenuRef.current) { setLangMenuOpen(false); return; }
+    gsap.to(langGlobeRef.current, { rotate: 0, duration: 0.25, ease: "power2.inOut" });
+    gsap.to(langMenuRef.current, {
+      autoAlpha: 0, y: -10, scale: 0.92, duration: 0.18, ease: "power2.in",
+      onComplete: () => setLangMenuOpen(false),
+    });
+  };
+
+  const selectLang = (l: Lang) => {
+    changeLang(l);
+    closeLangMenu();
+  };
+
+  // Entrada animada del desplegable de idiomas — panel + items en cascada + giro del globo
+  useEffect(() => {
+    if (!langMenuOpen) return;
+    const items = langMenuRef.current?.querySelectorAll(".lang-menu-item");
+    const tl = gsap.timeline();
+    tl.fromTo(langMenuRef.current,
+      { autoAlpha: 0, y: -12, scale: 0.88, rotate: -3, transformOrigin: "top right" },
+      { autoAlpha: 1, y: 0, scale: 1, rotate: 0, duration: 0.4, ease: "back.out(1.8)" }
+    );
+    if (items && items.length) {
+      tl.fromTo(items,
+        { autoAlpha: 0, x: -12 },
+        { autoAlpha: 1, x: 0, duration: 0.3, stagger: 0.05, ease: "power2.out" },
+        "-=0.22"
+      );
+    }
+    tl.to(langGlobeRef.current, { rotate: 180, duration: 0.45, ease: "back.out(2)" }, 0);
+    return () => { tl.kill(); };
+  }, [langMenuOpen]);
+
+  // Cierra el desplegable al hacer click fuera o pulsar Escape
+  useEffect(() => {
+    if (!langMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (langWrapRef.current && !langWrapRef.current.contains(e.target as Node)) closeLangMenu();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLangMenu();
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [langMenuOpen]); // eslint-disable-line
 
   const allProductsByCategory = (catId: number) =>
     products.filter((p) => p.categoryId === catId).sort((a, b) => a.order - b.order);
@@ -323,22 +378,53 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           </a>
         </div>
 
-        {/* Language switcher — top right */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-          {LANGS.map(({ code, label }) => (
-            <button
-              key={code}
-              onClick={() => changeLang(code)}
-              title={label}
-              className={`font-sans text-[11px] font-semibold tracking-widest uppercase transition-all ${
-                lang === code
-                  ? "text-brand-honey"
-                  : "text-brand-honey/30 hover:text-brand-honey/60"
-              }`}
+        {/* Language switcher — top right: icono de globo + desplegable animado */}
+        <div ref={langWrapRef} className="absolute top-4 right-4 z-20">
+          <button
+            onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
+            aria-label={ui[lang].langLabel}
+            aria-expanded={langMenuOpen}
+            title={ui[lang].langLabel}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-90"
+          >
+            <svg
+              ref={langGlobeRef}
+              className="w-4 h-4 text-brand-honey/70"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
             >
-              {code}
-            </button>
-          ))}
+              <circle cx="12" cy="12" r="9" strokeWidth={1.7} />
+              <path strokeLinecap="round" strokeWidth={1.7} d="M3.6 9h16.8M3.6 15h16.8" />
+              <path strokeLinecap="round" strokeWidth={1.7} d="M12 3c2.4 2.5 3.6 5.6 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.6-3.6-9s1.2-6.5 3.6-9z" />
+            </svg>
+          </button>
+
+          {langMenuOpen && (
+            <div
+              ref={langMenuRef}
+              className="absolute right-0 top-full mt-2 w-44 origin-top-right bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-brand-roast/40 rounded-2xl shadow-elevated ring-1 ring-black/5 dark:ring-white/10 p-1.5 overflow-hidden"
+              style={{ opacity: 0 }}
+            >
+              {LANGS.map(({ code, flag, label }) => (
+                <button
+                  key={code}
+                  onClick={() => selectLang(code)}
+                  className={`lang-menu-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-sans transition-colors ${
+                    lang === code
+                      ? "bg-brand-honey/15 text-brand-espresso dark:text-brand-honey font-semibold"
+                      : "text-brand-espresso/80 dark:text-brand-cream/80 hover:bg-brand-honey/10"
+                  }`}
+                >
+                  <span className="text-lg leading-none">{flag}</span>
+                  <span className="flex-1 text-left truncate">{label}</span>
+                  {lang === code && (
+                    <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="relative z-10 max-w-lg mx-auto px-6 pt-16 pb-14 text-center">
