@@ -269,7 +269,7 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element; adminOnly?: boole
 /* ─────────────────────────────────────────────
    Orders Tab — avisos de "listo para pedir" en tiempo real
 ───────────────────────────────────────────── */
-function OrdersTab({ calls, log, isAdmin }: { calls: TableCall[]; log: TableCall[]; isAdmin: boolean }) {
+function OrdersTab({ calls, log, isAdmin, clockOffsetMs }: { calls: TableCall[]; log: TableCall[]; isAdmin: boolean; clockOffsetMs: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [resolvingIds, setResolvingIds] = useState<Set<number>>(new Set());
@@ -341,15 +341,24 @@ function OrdersTab({ calls, log, isAdmin }: { calls: TableCall[]; log: TableCall
     setResettingLog(false);
   }
 
+  // El reloj del dispositivo del camarero/admin no siempre es fiable (zona horaria
+  // mal configurada, hora manual, etc.). clockOffsetMs corrige Date.now() usando la
+  // hora real del servidor, así "hace X min" no depende del reloj local.
+  function serverNow() {
+    return Date.now() + clockOffsetMs;
+  }
+
   function elapsed(createdAt: string) {
-    const mins = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000));
+    const mins = Math.max(0, Math.floor((serverNow() - new Date(createdAt).getTime()) / 60000));
     if (mins < 1) return "ahora mismo";
     if (mins === 1) return "hace 1 min";
     return `hace ${mins} min`;
   }
 
   function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+    // Zona horaria fija del restaurante — no depende de cómo tenga
+    // configurada la hora/zona el dispositivo del camarero o admin.
+    return new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
   }
 
   return (
@@ -364,7 +373,7 @@ function OrdersTab({ calls, log, isAdmin }: { calls: TableCall[]; log: TableCall
         </div>
       ) : (
         calls.map((c) => {
-          const urgent = Date.now() - new Date(c.createdAt).getTime() > 5 * 60_000;
+          const urgent = serverNow() - new Date(c.createdAt).getTime() > 5 * 60_000;
           return (
             <div
               key={c.id}
@@ -1018,6 +1027,9 @@ export default function AdminPage() {
   const [tableCalls, setTableCalls] = useState<TableCall[]>([]);
   const [resolvedLog, setResolvedLog] = useState<TableCall[]>([]);
   const [loading, setLoading] = useState(true);
+  // Diferencia entre el reloj local del dispositivo y la hora real del servidor,
+  // para que "hace X min" no dependa de que el dispositivo tenga bien la hora/zona horaria.
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
 
   const [productModal, setProductModal] = useState<"add" | "edit" | null>(null);
   const [productForm, setProductForm] = useState<ProductForm>(EMPTY_PRODUCT);
@@ -1056,6 +1068,8 @@ export default function AdminPage() {
     if (prodRes.ok) setProducts(await prodRes.json());
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (statsRes.ok) setStats(Object.fromEntries((await statsRes.json()).map((s: any) => [s.product_id, s.views])));
+    const serverDateHeader = callsRes.headers.get("date");
+    if (serverDateHeader) setClockOffsetMs(new Date(serverDateHeader).getTime() - Date.now());
     if (callsRes.ok) setTableCalls(await callsRes.json());
     if (logRes.ok) setResolvedLog(await logRes.json());
     setLoading(false);
@@ -1385,7 +1399,7 @@ export default function AdminPage() {
                 En vivo
               </span>
             </div>
-            <OrdersTab calls={tableCalls} log={resolvedLog} isAdmin={myRole === "admin"} />
+            <OrdersTab calls={tableCalls} log={resolvedLog} isAdmin={myRole === "admin"} clockOffsetMs={clockOffsetMs} />
           </div>
         )}
 
