@@ -461,7 +461,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       </header>
 
       {/* ── STICKY NAV ── */}
-      <div className="sticky top-0 z-20 bg-brand-parchment/95 dark:bg-[#0D0804]/95 backdrop-blur-md border-b border-brand-stone dark:border-brand-roast shadow-[0_1px_8px_rgba(28,13,4,0.07)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)] transition-colors duration-300">
+      <div className="sticky top-0 z-20 bg-[#F8F3EA]/95 dark:bg-[#0D0804]/95 backdrop-blur-md border-b border-brand-stone dark:border-brand-roast shadow-[0_1px_8px_rgba(28,13,4,0.07)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)] transition-colors duration-300">
 
         {/* Menu type switcher + search icon */}
         <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
@@ -546,7 +546,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         {!searchOpen && visibleCategories.length > 0 && (
           <div ref={pillsWrapRef} className="relative max-w-2xl lg:max-w-5xl mx-auto">
             <div
-              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 dark:from-[#0D0804]/95 to-transparent pointer-events-none z-10"
+              className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#F8F3EA]/95 dark:from-[#0D0804]/95 to-transparent pointer-events-none z-10"
               aria-hidden="true"
             />
             <div
@@ -573,8 +573,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         )}
       </div>
 
-      {/* ── MENU CONTENT ── */}
-      <main ref={mainRef} className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-10 space-y-16">
+      {/* ── MENU CONTENT ── fondo cálido con halos y grano (ver .menu-surface) */}
+      <div className="menu-surface relative pb-16">
+      <main ref={mainRef} className="relative max-w-2xl lg:max-w-5xl mx-auto px-4 py-10 space-y-16">
 
         {/* Resultados de búsqueda */}
         {searchOpen && searchQuery.trim() && (
@@ -597,21 +598,32 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         )}
 
         {/* Carta normal — se oculta cuando hay búsqueda activa */}
-        <div ref={normalMenuRef}>
-        {(!searchOpen || !searchQuery.trim()) && visibleCategories.map((cat) => {
+        <div ref={normalMenuRef} className="space-y-14">
+        {(!searchOpen || !searchQuery.trim()) && visibleCategories.map((cat, idx) => {
           const catProducts = allProductsByCategory(cat.id);
           if (catProducts.length === 0) return null;
           return (
             <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28 pt-4">
 
-              <div className="cat-heading flex items-center gap-3 mb-8">
-                <span className="text-lg leading-none" aria-hidden="true">
+              <div className="cat-heading flex items-center gap-4 mb-7">
+                <span
+                  className="flex-none w-12 h-12 rounded-full flex items-center justify-center text-[22px] leading-none bg-gradient-to-br from-white to-brand-sand ring-1 ring-brand-stone shadow-card-pop-mobile dark:from-brand-roast dark:to-brand-espresso dark:ring-brand-roast dark:shadow-none"
+                  aria-hidden="true"
+                >
                   {cat.emoji}
                 </span>
-                <h2 className="font-serif text-2xl font-semibold text-brand-espresso dark:text-brand-cream tracking-wide">
-                  {catName(cat, lang)}
-                </h2>
-                <div className="flex-1 h-px bg-brand-stone dark:bg-brand-roast" />
+                <div className="min-w-0">
+                  <p className="font-sans text-[10px] font-semibold tracking-[0.35em] uppercase text-brand-caramel/70 dark:text-brand-honey/50 leading-none mb-1.5">
+                    {String(idx + 1).padStart(2, "0")}
+                  </p>
+                  <h2 className="font-serif text-[28px] leading-none font-semibold text-brand-espresso dark:text-brand-cream tracking-wide">
+                    {catName(cat, lang)}
+                  </h2>
+                </div>
+                <div className="flex-1 flex items-center gap-1.5 self-end mb-1.5">
+                  <div className="flex-1 h-px bg-gradient-to-r from-brand-caramel/45 via-brand-stone to-transparent dark:from-brand-honey/35 dark:via-brand-roast" />
+                  <div className="w-1 h-1 rounded-full bg-brand-caramel/40 dark:bg-brand-honey/30" />
+                </div>
               </div>
 
               <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"}>
@@ -635,6 +647,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         )}
         </div>
       </main>
+      </div>
 
       {/* ── PRODUCT DETAIL MODAL ── */}
       {detailProduct && (
@@ -648,7 +661,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       <OrderReadyButton lang={lang} onChangeLang={changeLang} />
 
       {/* ── FOOTER ── */}
-      <footer className="relative grain overflow-hidden bg-brand-espresso mt-16">
+      <footer className="relative grain overflow-hidden bg-brand-espresso">
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-12 text-center">
           <p className="font-serif font-light text-[32px] leading-none text-brand-cream tracking-tight">
             Plenty.

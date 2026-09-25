@@ -62,16 +62,24 @@ export function ProductCard({ product, lang, onClick }: Props) {
   return (
     <div
       onClick={onClick}
-      className={`product-card group flex flex-col rounded-2xl transition-all duration-200 p-5 ${
+      className={`product-card group relative overflow-hidden flex flex-col rounded-2xl transition-all duration-200 p-5 ${
         unavailable
           ? "bg-brand-stone/40 dark:bg-brand-roast/30 opacity-70"
-          : "bg-white dark:bg-brand-espresso shadow-card-pop-mobile dark:shadow-none sm:shadow-card-pop sm:dark:shadow-none hover:shadow-card-pop-hover dark:hover:shadow-none dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
+          : "bg-gradient-to-br from-white via-white to-brand-sand dark:from-brand-espresso dark:via-brand-espresso dark:to-brand-roast/60 ring-1 ring-brand-stone/60 hover:ring-brand-caramel/40 shadow-card-pop-mobile dark:shadow-none sm:shadow-card-pop sm:dark:shadow-none hover:shadow-card-pop-hover dark:hover:shadow-none dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
       } ${onClick ? "cursor-pointer active:scale-[0.98] active:shadow-card-press dark:active:shadow-none" : ""}`}
     >
+      {/* Filete caramelo arriba — se intensifica al pasar el ratón */}
+      {!unavailable && (
+        <div
+          className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-brand-caramel/45 to-transparent opacity-70 group-hover:opacity-100 transition-opacity"
+          aria-hidden="true"
+        />
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-serif font-semibold text-brand-espresso dark:text-brand-cream text-[17px] leading-tight">
+            <h3 className="font-serif font-semibold text-brand-espresso dark:text-brand-cream text-[18px] leading-tight">
               {name}
             </h3>
             {!unavailable && <ProductBadge badge={product.badge} />}
@@ -89,16 +97,22 @@ export function ProductCard({ product, lang, onClick }: Props) {
           <AllergenBadges allergens={product.allergens} lang={lang} />
         </div>
 
-        <div className="flex-none text-right">
-          <span className="font-serif font-semibold text-brand-caramel text-[18px] leading-tight whitespace-nowrap">
+        <div className="flex-none">
+          <span className="inline-block font-serif font-semibold text-brand-caramel dark:text-brand-honey text-[18px] leading-none whitespace-nowrap bg-brand-caramel/10 dark:bg-brand-honey/10 ring-1 ring-brand-caramel/15 dark:ring-brand-honey/15 rounded-full px-3 py-1.5">
             {product.price.toFixed(2).replace(".", ",")}€
           </span>
         </div>
       </div>
       {onClick && (
-        <div className="flex justify-end mt-auto pt-3">
-          <span className="font-sans text-[11px] text-brand-muted/50 dark:text-brand-honey/30 tracking-wide">
-            {ui[lang].clickMore} →
+        <div className="flex items-center justify-end gap-2 mt-auto pt-4">
+          <div className="flex-1 border-t border-dashed border-brand-stone/80 dark:border-brand-roast" aria-hidden="true" />
+          <span className="font-sans text-[11px] text-brand-muted/60 dark:text-brand-honey/35 tracking-wide group-hover:text-brand-caramel dark:group-hover:text-brand-honey/70 transition-colors">
+            {ui[lang].clickMore}
+          </span>
+          <span className="flex-none w-6 h-6 rounded-full flex items-center justify-center bg-brand-caramel/10 dark:bg-brand-honey/10 text-brand-caramel dark:text-brand-honey group-hover:bg-brand-caramel group-hover:text-white dark:group-hover:bg-brand-honey dark:group-hover:text-brand-espresso transition-colors" aria-hidden="true">
+            <svg className="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
           </span>
         </div>
       )}
