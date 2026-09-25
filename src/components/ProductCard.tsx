@@ -62,7 +62,7 @@ export function ProductCard({ product, lang, onClick }: Props) {
   return (
     <div
       onClick={onClick}
-      className={`product-card group rounded-2xl transition-all duration-200 p-5 ${
+      className={`product-card group flex flex-col rounded-2xl transition-all duration-200 p-5 ${
         unavailable
           ? "bg-brand-stone/40 dark:bg-brand-roast/30 opacity-70"
           : "bg-white dark:bg-brand-espresso shadow-card-pop-mobile dark:shadow-none sm:shadow-card-pop sm:dark:shadow-none hover:shadow-card-pop-hover dark:hover:shadow-none dark:ring-1 dark:ring-brand-roast dark:hover:ring-brand-caramel/40 hover:-translate-y-0.5"
@@ -96,7 +96,7 @@ export function ProductCard({ product, lang, onClick }: Props) {
         </div>
       </div>
       {onClick && (
-        <div className="flex justify-end mt-3">
+        <div className="flex justify-end mt-auto pt-3">
           <span className="font-sans text-[11px] text-brand-muted/50 dark:text-brand-honey/30 tracking-wide">
             {ui[lang].clickMore} →
           </span>

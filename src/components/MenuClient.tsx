@@ -464,7 +464,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       <div className="sticky top-0 z-20 bg-brand-parchment/95 dark:bg-[#0D0804]/95 backdrop-blur-md border-b border-brand-stone dark:border-brand-roast shadow-[0_1px_8px_rgba(28,13,4,0.07)] dark:shadow-[0_1px_8px_rgba(0,0,0,0.5)] transition-colors duration-300">
 
         {/* Menu type switcher + search icon */}
-        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
           {menuTabs.map(({ type, icon }) => (
             <button
               key={type}
@@ -519,7 +519,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         </div>
 
         {/* Search bar — renderizado condicional, GSAP anima la entrada */}
-        {searchOpen && <div ref={searchBarRef} className="max-w-2xl mx-auto px-4 pb-3">
+        {searchOpen && <div ref={searchBarRef} className="max-w-2xl lg:max-w-5xl mx-auto px-4 pb-3">
           <div className="flex items-center gap-2 bg-white dark:bg-brand-espresso border border-brand-stone dark:border-brand-roast rounded-full px-4 py-2.5 shadow-sm transition-colors duration-300">
             <svg className="w-4 h-4 text-brand-muted dark:text-brand-honey/40 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
@@ -544,7 +544,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         {/* Category pills */}
         {!searchOpen && visibleCategories.length > 0 && (
-          <div ref={pillsWrapRef} className="relative max-w-2xl mx-auto">
+          <div ref={pillsWrapRef} className="relative max-w-2xl lg:max-w-5xl mx-auto">
             <div
               className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-brand-parchment/95 dark:from-[#0D0804]/95 to-transparent pointer-events-none z-10"
               aria-hidden="true"
@@ -574,13 +574,13 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       </div>
 
       {/* ── MENU CONTENT ── */}
-      <main ref={mainRef} className="max-w-2xl mx-auto px-4 py-10 space-y-16">
+      <main ref={mainRef} className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-10 space-y-16">
 
         {/* Resultados de búsqueda */}
         {searchOpen && searchQuery.trim() && (
           <section ref={searchResultsRef}>
             {searchResults.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {searchResults.map((product) => (
                   <ProductCard key={product.id} product={product} lang={lang} onClick={() => { setDetailProduct(product); trackView(product.id); }} />
                 ))}
@@ -614,7 +614,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                 <div className="flex-1 h-px bg-brand-stone dark:bg-brand-roast" />
               </div>
 
-              <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
+              <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"}>
                 {catProducts.map((product) => (
                   <ProductCard key={product.id} product={product} lang={lang} onClick={product.price > 0 ? () => { setDetailProduct(product); trackView(product.id); } : undefined} />
                 ))}
