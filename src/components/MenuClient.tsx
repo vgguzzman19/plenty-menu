@@ -404,7 +404,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               className="absolute right-0 top-full mt-2 w-44 origin-top-right bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-brand-roast/40 rounded-2xl shadow-elevated ring-1 ring-black/5 dark:ring-white/10 p-1.5 overflow-hidden"
               style={{ opacity: 0 }}
             >
-              {LANGS.map(({ code, flag, label }) => (
+              {LANGS.map(({ code, label }) => (
                 <button
                   key={code}
                   onClick={() => selectLang(code)}
@@ -414,7 +414,6 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                       : "text-brand-espresso/80 dark:text-brand-cream/80 hover:bg-brand-honey/10"
                   }`}
                 >
-                  <span className="text-lg leading-none">{flag}</span>
                   <span className="flex-1 text-left truncate">{label}</span>
                   {lang === code && (
                     <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

@@ -272,7 +272,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                 aria-label={t.langLabel}
                 className="flex items-center gap-1.5 bg-white/90 dark:bg-white/10 border border-brand-stone/60 dark:border-brand-roast rounded-full pl-2.5 pr-2 py-1.5 text-sm font-sans font-semibold text-brand-espresso dark:text-brand-cream shadow-sm"
               >
-                <span className="text-lg leading-none">{currentLang.flag}</span>
+                <span>{currentLang.label}</span>
                 <svg className={`w-3.5 h-3.5 text-brand-muted dark:text-brand-honey/50 transition-transform ${langOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -296,7 +296,6 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                         : "text-brand-espresso dark:text-brand-cream hover:bg-white dark:hover:bg-white/5"
                     }`}
                   >
-                    <span className="text-lg leading-none">{l.flag}</span>
                     <span className="flex-1 text-left truncate">{l.label}</span>
                     {l.code === lang && (
                       <svg className="w-3.5 h-3.5 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
