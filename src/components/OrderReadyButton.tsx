@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Lang, LANGS, ui } from "@/lib/i18n";
+import { ServiceBellIcon } from "./icons";
 
 const TABLE_KEY = "plenty-table-number";
 const COOLDOWN_MS = 90_000;
@@ -112,7 +113,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
             "-=0.3"
           )
           .to(waveRef.current, {
-            rotate: 18, duration: 0.35, ease: "sine.inOut", repeat: 5, yoyo: true, transformOrigin: "70% 70%",
+            rotate: 12, duration: 0.18, ease: "sine.inOut", repeat: 7, yoyo: true, transformOrigin: "50% 90%",
           }, "-=0.15")
           .to(arrowRef.current, { y: 10, duration: 0.55, ease: "sine.inOut", repeat: -1, yoyo: true }, "-=1.2")
           .fromTo(ringRef.current,
@@ -310,7 +311,9 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
             {/* Icono con anillo pulsante */}
             <div className="relative flex justify-center mb-3">
               <div ref={ringRef} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-emerald-400/30" style={{ opacity: 0 }} />
-              <div ref={waveRef} className="order-hint-line relative text-7xl">👋</div>
+              <div ref={waveRef} className="order-hint-line relative text-emerald-500 dark:text-emerald-400">
+                <ServiceBellIcon className="w-16 h-16" />
+              </div>
             </div>
 
             <h3 className="order-hint-line font-serif text-2xl sm:text-3xl font-bold text-brand-espresso dark:text-brand-cream mb-3 leading-tight">

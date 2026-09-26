@@ -1,6 +1,7 @@
 import { Product } from "@/lib/storage";
 import { Lang, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ALLERGENS } from "@/lib/allergens";
+import { AllergenIcon } from "./icons";
 
 interface Props {
   product: Product;
@@ -20,7 +21,7 @@ function AllergenBadges({ allergens, lang }: { allergens: string[]; lang: Lang }
           title={a.label[lang]}
           className="inline-flex items-center gap-0.5 text-[11px] font-sans text-brand-muted/70 dark:text-brand-honey/50 bg-brand-parchment dark:bg-brand-roast/50 border border-brand-stone/60 dark:border-brand-roast rounded-full px-1.5 py-0.5 leading-none"
         >
-          <span>{a.icon}</span>
+          <AllergenIcon id={a.id} className="w-3 h-3 flex-none" />
           <span className="hidden sm:inline">{a.label[lang]}</span>
         </span>
       ))}

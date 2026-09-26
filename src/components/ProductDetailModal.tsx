@@ -6,6 +6,7 @@ import { gsap } from "gsap";
 import { Product } from "@/lib/storage";
 import { Lang, prodName, prodDesc } from "@/lib/i18n";
 import { ALLERGENS } from "@/lib/allergens";
+import { AllergenIcon } from "./icons";
 
 interface Props {
   product: Product;
@@ -145,7 +146,7 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
                     key={a.id}
                     className="inline-flex items-center gap-1 text-[12px] font-sans text-brand-muted/80 dark:text-brand-honey/60 bg-brand-parchment dark:bg-brand-roast/50 border border-brand-stone/60 dark:border-brand-roast/80 rounded-full px-2.5 py-1"
                   >
-                    <span>{a.icon}</span>
+                    <AllergenIcon id={a.id} className="w-3.5 h-3.5 flex-none" />
                     <span>{a.label[lang]}</span>
                   </span>
                 ))}

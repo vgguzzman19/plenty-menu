@@ -7,6 +7,7 @@ import { gsap } from "gsap";
 import { Category, Product, TableCall } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import { AllergenIcon } from "@/components/icons";
 import {
   DndContext, DragEndEvent, PointerSensor, TouchSensor,
   useSensor, useSensors, closestCenter,
@@ -1845,7 +1846,7 @@ export default function AdminPage() {
                             : "bg-white border-brand-stone text-brand-muted hover:border-brand-caramel/50"
                         }`}
                       >
-                        <span>{a.icon}</span>
+                        <AllergenIcon id={a.id} className="w-3.5 h-3.5 flex-none" />
                         <span>{a.label.es}</span>
                       </button>
                     );

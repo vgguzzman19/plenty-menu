@@ -48,6 +48,18 @@ body {
   mix-blend-mode: overlay;
 }
 
+/* Hero: espresso con profundidad — resplandor caramelo detrás del título,
+   esquinas más tostadas y un degradado vertical suave */
+.hero-surface {
+  background-color: #1C0D04;
+  background-image:
+    radial-gradient(ellipse 55% 65% at 50% 45%, rgba(184,114,42,0.30), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 0% 100%, rgba(212,148,78,0.10), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 100% 100%, rgba(212,148,78,0.10), transparent 70%),
+    radial-gradient(ellipse 60% 60% at 50% 0%, rgba(107,53,32,0.35), transparent 70%),
+    linear-gradient(180deg, #241006 0%, #1C0D04 55%, #140902 100%);
+}
+
 /* Fondo de la zona de productos: crema cálido con halos caramelo que se
    repiten a lo largo de la carta + grano de papel muy sutil encima */
 .menu-surface {

@@ -9,6 +9,8 @@ import { Lang, LANGS, catName, prodName, prodDesc, ui, detectDeviceLang } from "
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { OrderReadyButton } from "./OrderReadyButton";
+import { CategoryIcon, MenuTypeIcon } from "./icons";
+import { HeroArch, HeroBranch } from "./HeroDecor";
 import { useTheme } from "@/hooks/useTheme";
 import Link from "next/link";
 
@@ -212,6 +214,8 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.timeline({ defaults: { ease: "power2.out" } })
+        .from(".hero-arch",     { autoAlpha: 0, scale: 0.94, duration: 1.1, transformOrigin: "50% 100%" }, 0)
+        .from(".hero-branch",   { autoAlpha: 0, y: 14, duration: 1.3, stagger: 0.15 }, 0.15)
         .from(".hero-location", { autoAlpha: 0, y: 10, duration: 0.7 })
         .from(".hero-title",    { autoAlpha: 0, y: 20, duration: 0.9 }, "-=0.4")
         .from(".hero-divider",  { autoAlpha: 0, scaleX: 0, duration: 0.5, transformOrigin: "center center" }, "-=0.35")
@@ -338,20 +342,17 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     );
   }, [searchOpen]); // eslint-disable-line
 
-  const menuTabs: { type: "food" | "drinks"; icon: string }[] = [
-    { type: "food", icon: "🍽️" },
-    { type: "drinks", icon: "☕" },
-  ];
+  const menuTabs: ("food" | "drinks")[] = ["food", "drinks"];
 
   return (
     <div className="min-h-dvh bg-brand-parchment dark:bg-[#0D0804] transition-colors duration-300">
 
       {/* ── HERO ── */}
-      <header ref={heroRef} className="relative grain overflow-hidden bg-brand-espresso">
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"
-          aria-hidden="true"
-        />
+      <header ref={heroRef} className="hero-surface relative grain overflow-hidden">
+        {/* Arco tipo ventanal detrás del título + ramas de cafeto a los lados */}
+        <HeroArch className="hero-arch pointer-events-none absolute left-1/2 -translate-x-1/2 top-7 w-[250px] sm:w-[300px] h-auto text-brand-caramel/30" />
+        <HeroBranch className="hero-branch pointer-events-none absolute -left-8 sm:left-[6%] lg:left-[14%] bottom-2 w-28 sm:w-36 lg:w-40 h-auto text-brand-honey/20 sm:text-brand-honey/25" />
+        <HeroBranch className="hero-branch pointer-events-none absolute -right-8 sm:right-[6%] lg:right-[14%] bottom-2 w-28 sm:w-36 lg:w-40 h-auto text-brand-honey/20 sm:text-brand-honey/25 -scale-x-100" />
 
         {/* Social links — top left */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
@@ -451,13 +452,23 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         <Link
           href="/login"
           aria-label="Acceso administración"
-          className="absolute bottom-3 right-4 z-20 p-1.5 text-brand-honey/20 hover:text-brand-honey/50 transition-colors duration-300"
+          className="absolute bottom-6 sm:bottom-9 right-4 z-20 p-1.5 text-brand-honey/20 hover:text-brand-honey/50 transition-colors duration-300"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={1.75} />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 11V7a4 4 0 018 0v4" />
           </svg>
         </Link>
+
+        {/* Borde inferior curvo: la carta "abraza" al hero en vez de un corte recto */}
+        <svg
+          className="absolute bottom-0 inset-x-0 w-full h-4 sm:h-7 fill-[#F8F3EA] dark:fill-[#0D0804] transition-colors duration-300"
+          viewBox="0 0 1440 40"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M0 0C360 38 1080 38 1440 0V40H0Z" />
+        </svg>
       </header>
 
       {/* ── STICKY NAV ── */}
@@ -465,7 +476,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         {/* Menu type switcher + search icon */}
         <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
-          {menuTabs.map(({ type, icon }) => (
+          {menuTabs.map((type) => (
             <button
               key={type}
               onClick={() => switchMenu(type)}
@@ -475,7 +486,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                   : "bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
               }`}
             >
-              <span>{icon}</span>
+              <MenuTypeIcon type={type} className="w-4 h-4 flex-none" />
               <span>{ui[lang][type]}</span>
             </button>
           ))}
@@ -607,10 +618,10 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
               <div className="cat-heading flex items-center gap-4 mb-7">
                 <span
-                  className="flex-none w-12 h-12 rounded-full flex items-center justify-center text-[22px] leading-none bg-gradient-to-br from-white to-brand-sand ring-1 ring-brand-stone shadow-card-pop-mobile dark:from-brand-roast dark:to-brand-espresso dark:ring-brand-roast dark:shadow-none"
+                  className="flex-none w-12 h-12 rounded-full flex items-center justify-center text-brand-caramel dark:text-brand-honey bg-gradient-to-br from-white to-brand-sand ring-1 ring-brand-stone shadow-card-pop-mobile dark:from-brand-roast dark:to-brand-espresso dark:ring-brand-roast dark:shadow-none"
                   aria-hidden="true"
                 >
-                  {cat.emoji}
+                  <CategoryIcon name={cat.name} menu={cat.menu} className="w-6 h-6" />
                 </span>
                 <div className="min-w-0">
                   <p className="font-sans text-[10px] font-semibold tracking-[0.35em] uppercase text-brand-caramel/70 dark:text-brand-honey/50 leading-none mb-1.5">
