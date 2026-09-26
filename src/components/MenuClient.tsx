@@ -143,12 +143,12 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     const tl = gsap.timeline();
     tl.fromTo(langMenuRef.current,
       { autoAlpha: 0, y: -12, scale: 0.88, rotate: -3, transformOrigin: "top right" },
-      { autoAlpha: 1, y: 0, scale: 1, rotate: 0, duration: 0.4, ease: "back.out(1.8)" }
+      { autoAlpha: 1, y: 0, scale: 1, rotate: 0, duration: 0.25, ease: "back.out(1.8)" }
     );
     if (items && items.length) {
       tl.fromTo(items,
         { autoAlpha: 0, x: -12 },
-        { autoAlpha: 1, x: 0, duration: 0.3, stagger: 0.05, ease: "power2.out" },
+        { autoAlpha: 1, x: 0, duration: 0.3, stagger: 0.025, ease: "power2.out" },
         "-=0.22"
       );
     }
@@ -213,12 +213,13 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   // Hero entrance animation — runs once on mount
   useEffect(() => {
     const ctx = gsap.context(() => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       gsap.timeline({ defaults: { ease: "power2.out" } })
-        .from(".hero-branch",   { autoAlpha: 0, y: 14, duration: 1.3, stagger: 0.15 }, 0.15)
-        .from(".hero-location", { autoAlpha: 0, y: 10, duration: 0.7 })
-        .from(".hero-title",    { autoAlpha: 0, y: 20, duration: 0.9 }, "-=0.4")
-        .from(".hero-divider",  { autoAlpha: 0, scaleX: 0, duration: 0.5, transformOrigin: "center center" }, "-=0.35")
-        .from(".hero-subtitle", { autoAlpha: 0, y: 8,  duration: 0.6 }, "-=0.2");
+        .from(".hero-branch",   { autoAlpha: 0, y: 6, duration: 0.45, stagger: 0.04 }, 0)
+        .from(".hero-location", { autoAlpha: 0, y: 6, duration: 0.25 }, 0)
+        .from(".hero-title",    { autoAlpha: 0, y: 8, duration: 0.35 }, 0.05)
+        .from(".hero-divider",  { autoAlpha: 0, scaleX: 0, duration: 0.25, transformOrigin: "center center" }, 0.1)
+        .from(".hero-subtitle", { autoAlpha: 0, y: 4, duration: 0.25 }, 0.15);
     }, heroRef);
     return () => ctx.revert();
   }, []);
@@ -226,27 +227,28 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   // Scroll-triggered animations — re-runs when visible menu content changes
   useEffect(() => {
     const ctx = gsap.context(() => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       // Category headings slide in from left
       gsap.utils.toArray<HTMLElement>(".cat-heading").forEach((el) => {
         gsap.from(el, {
           autoAlpha: 0,
-          x: -14,
-          duration: 0.55,
+          x: -6,
+          duration: 0.25,
           ease: "power2.out",
           scrollTrigger: { trigger: el, start: "top 88%", once: true },
         });
       });
 
       // Product cards fade up in batches
-      gsap.set(".product-card", { autoAlpha: 0, y: 18 });
+      gsap.set(".product-card", { autoAlpha: 0, y: 8 });
       ScrollTrigger.batch(".product-card", {
         onEnter: (elements) => {
           gsap.to(elements, {
             autoAlpha: 1,
             y: 0,
-            duration: 0.5,
+            duration: 0.25,
             ease: "power2.out",
-            stagger: 0.07,
+            stagger: 0.025,
             overwrite: true,
           });
         },
@@ -286,7 +288,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     requestAnimationFrame(() => {
       gsap.from(searchBarRef.current, {
         autoAlpha: 0, scaleX: 0.85, transformOrigin: "right center",
-        duration: 0.38, ease: "back.out(1.6)",
+        duration: 0.22, ease: "back.out(1.6)",
         onComplete: () => searchInputRef.current?.focus(),
       });
     });
@@ -320,7 +322,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     gsap.fromTo(
       Array.from(cards),
       { autoAlpha: 0, y: 20 },
-      { autoAlpha: 1, y: 0, duration: 0.38, ease: "power2.out", stagger: 0.07, overwrite: true }
+      { autoAlpha: 1, y: 0, duration: 0.22, ease: "power2.out", stagger: 0.025, overwrite: true }
     );
   }, [searchQuery, searchOpen]); // eslint-disable-line
 
@@ -337,7 +339,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     gsap.fromTo(
       Array.from(cards),
       { autoAlpha: 0, y: 14 },
-      { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.04, overwrite: true }
+      { autoAlpha: 1, y: 0, duration: 0.25, ease: "power2.out", stagger: 0.04, overwrite: true }
     );
   }, [searchOpen]); // eslint-disable-line
 
@@ -426,7 +428,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
         <div className="relative z-10 max-w-lg mx-auto px-6 pt-16 pb-14 text-center">
 
-          <p className="hero-location font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/40 mb-8">
+          <p className="hero-location font-sans text-[10px] font-medium tracking-[0.45em] uppercase text-brand-honey/75 mb-8">
             Platja d&apos;Aro &middot; Costa Brava
           </p>
 
@@ -440,7 +442,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             <div className="flex-1 h-px bg-brand-caramel/25" />
           </div>
 
-          <p className="hero-subtitle font-sans text-[11px] font-medium tracking-[0.38em] uppercase text-brand-honey/45">
+          <p className="hero-subtitle font-sans text-[11px] font-medium tracking-[0.38em] uppercase text-brand-honey/75">
             {ui[lang].brunchCafe}
           </p>
         </div>
@@ -449,7 +451,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         <Link
           href="/login"
           aria-label="Acceso administración"
-          className="absolute bottom-6 sm:bottom-9 right-4 z-20 p-1.5 text-brand-honey/20 hover:text-brand-honey/50 transition-colors duration-300"
+          className="absolute bottom-6 sm:bottom-9 right-4 z-20 p-1.5 text-brand-honey/20 hover:text-brand-honey/75 transition-colors duration-300"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={1.75} />
@@ -480,7 +482,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-[11px] font-semibold tracking-[0.18em] uppercase font-sans transition-all active:scale-[0.97] ${
                 menuType === type
                   ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-none sm:shadow-pop sm:dark:shadow-none active:shadow-pop-press dark:active:shadow-none"
-                  : "bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/40 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
+                  : "bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/75 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
               }`}
             >
               <MenuTypeIcon type={type} className="w-4 h-4 flex-none" />
@@ -490,7 +492,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           <button
             onClick={openSearch}
             aria-label="Buscar"
-            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-none"
+            className="flex-none w-10 h-10 flex items-center justify-center rounded-full bg-white/70 dark:bg-transparent border border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/75 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none transition-all active:scale-[0.97] active:shadow-pop-press dark:active:shadow-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
@@ -529,7 +531,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         {/* Search bar — renderizado condicional, GSAP anima la entrada */}
         {searchOpen && <div ref={searchBarRef} className="max-w-2xl lg:max-w-5xl mx-auto px-4 pb-3">
           <div className="flex items-center gap-2 bg-white dark:bg-brand-espresso border border-brand-stone dark:border-brand-roast rounded-full px-4 py-2.5 shadow-sm transition-colors duration-300">
-            <svg className="w-4 h-4 text-brand-muted dark:text-brand-honey/40 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-4 h-4 text-brand-muted dark:text-brand-honey/75 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7" strokeWidth={1.75} />
               <path strokeLinecap="round" strokeWidth={1.75} d="M16.5 16.5L21 21" />
             </svg>
@@ -540,9 +542,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && closeSearch()}
               placeholder={ui[lang].searchPlaceholder}
-              className="flex-1 bg-transparent font-sans text-[16px] text-brand-espresso dark:text-brand-cream placeholder:text-brand-muted/50 dark:placeholder:text-brand-honey/30 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
+              className="flex-1 bg-transparent font-sans text-[16px] text-brand-espresso dark:text-brand-cream placeholder:text-brand-brown/70 dark:placeholder:text-brand-honey/70 outline-none focus:outline-none ring-0 focus:ring-0 border-none"
             />
-            <button onClick={closeSearch} className="flex-none text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey transition-colors">
+            <button onClick={closeSearch} className="flex-none text-brand-muted dark:text-brand-honey/75 hover:text-brand-espresso dark:hover:text-brand-honey transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -570,7 +572,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                   className={`flex-none px-4 min-h-[44px] rounded-full text-sm font-sans font-medium whitespace-nowrap transition-all active:scale-[0.97] ${
                     activeId === cat.id
                       ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso shadow-pop-mobile dark:shadow-none sm:shadow-pop sm:dark:shadow-none active:shadow-pop-press dark:active:shadow-none"
-                      : "bg-white dark:bg-brand-espresso text-brand-muted dark:text-brand-honey/50 border border-brand-stone dark:border-brand-roast hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 hover:text-brand-brown dark:hover:text-brand-honey shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
+                      : "bg-white dark:bg-brand-espresso text-brand-muted dark:text-brand-honey/75 border border-brand-stone dark:border-brand-roast hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 hover:text-brand-brown dark:hover:text-brand-honey shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none"
                   }`}
                 >
                   {catName(cat, lang)}
@@ -597,7 +599,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             ) : (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <p className="font-serif font-light text-4xl text-brand-espresso/10 dark:text-brand-cream/10 mb-3">?</p>
-                <p className="font-sans text-sm text-brand-muted/60 dark:text-brand-honey/40">
+                <p className="font-sans text-sm text-brand-brown/80 dark:text-brand-honey/75">
                   {ui[lang].searchEmpty} &ldquo;{searchQuery}&rdquo;
                 </p>
               </div>
@@ -621,7 +623,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
                   <CategoryIcon name={cat.name} menu={cat.menu} className="w-6 h-6" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-sans text-[10px] font-semibold tracking-[0.35em] uppercase text-brand-caramel/70 dark:text-brand-honey/50 leading-none mb-1.5">
+                  <p className="font-sans text-[10px] font-semibold tracking-[0.35em] uppercase text-brand-caramel/70 dark:text-brand-honey/75 leading-none mb-1.5">
                     {String(idx + 1).padStart(2, "0")}
                   </p>
                   <h2 className="font-serif text-[28px] leading-none font-semibold text-brand-espresso dark:text-brand-cream tracking-wide">
@@ -648,7 +650,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             <p className="font-serif font-light text-4xl text-brand-espresso/15 dark:text-brand-cream/15 mb-3">
               Plenty.
             </p>
-            <p className="font-sans text-sm text-brand-muted/50 dark:text-brand-honey/30">
+            <p className="font-sans text-sm text-brand-brown/70 dark:text-brand-honey/70">
               {ui[lang].empty}
             </p>
           </div>
@@ -666,7 +668,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
         />
       )}
 
-      <OrderReadyButton lang={lang} onChangeLang={changeLang} />
+      <OrderReadyButton lang={lang} />
 
       {/* ── FOOTER ── */}
       <footer className="relative grain overflow-hidden bg-brand-espresso">
@@ -676,7 +678,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
             <div className="h-px w-8 bg-brand-caramel/20" />
-            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-brand-honey/35">
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-brand-honey/70">
               {ui[lang].brunchCafe} &middot; Platja d&apos;Aro
             </p>
             <div className="h-px w-8 bg-brand-caramel/20" />
