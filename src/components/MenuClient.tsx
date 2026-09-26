@@ -214,7 +214,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.timeline({ defaults: { ease: "power2.out" } })
-        .from(".hero-branch",   { autoAlpha: 0, y: 10, duration: 1.1 }, 0)
+        .from(".hero-branch",   { autoAlpha: 0, y: 14, duration: 1.3, stagger: 0.15 }, 0.15)
         .from(".hero-location", { autoAlpha: 0, y: 10, duration: 0.7 })
         .from(".hero-title",    { autoAlpha: 0, y: 20, duration: 0.9 }, "-=0.4")
         .from(".hero-divider",  { autoAlpha: 0, scaleX: 0, duration: 0.5, transformOrigin: "center center" }, "-=0.35")
@@ -348,8 +348,9 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
       {/* ── HERO ── */}
       <header ref={heroRef} className="hero-surface relative grain overflow-hidden">
-        {/* Una ramita de cafeto tenue en la esquina, dejando aire al título */}
-        <HeroBranch className="hero-branch pointer-events-none absolute left-3 sm:left-8 bottom-3 w-16 sm:w-20 h-auto text-brand-honey/15" />
+        {/* Ramas de cafeto a los lados del título */}
+        <HeroBranch className="hero-branch pointer-events-none absolute -left-8 sm:left-[6%] lg:left-[14%] bottom-2 w-28 sm:w-36 lg:w-40 h-auto text-brand-honey/20 sm:text-brand-honey/25" />
+        <HeroBranch className="hero-branch pointer-events-none absolute -right-8 sm:right-[6%] lg:right-[14%] bottom-2 w-28 sm:w-36 lg:w-40 h-auto text-brand-honey/20 sm:text-brand-honey/25 -scale-x-100" />
 
         {/* Social links — top left */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
