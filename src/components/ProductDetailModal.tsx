@@ -40,8 +40,8 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
       { autoAlpha: 0 },
       { autoAlpha: 1, duration: 0.25, ease: "power2.out" }
     ).fromTo(modalRef.current,
-      { autoAlpha: 0, y: 16, scale: 0.98 },
-      { autoAlpha: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" },
+      { autoAlpha: 0, y: 48, scale: 0.95 },
+      { autoAlpha: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.3)" },
       "-=0.1"
     );
   }, []);
@@ -124,27 +124,27 @@ export function ProductDetailModal({ product, lang, onClose }: Props) {
           </div>
 
           {desc && (
-            <p className="font-sans text-brand-brown/80 dark:text-brand-cream/75 text-[14px] leading-relaxed">
+            <p className="font-sans text-brand-muted dark:text-brand-honey/60 text-[14px] leading-relaxed">
               {desc}
             </p>
           )}
 
           {!product.available && (
-            <span className="inline-block font-sans text-[10px] font-medium text-brand-brown/80 dark:text-brand-cream/75 tracking-widest uppercase border border-brand-stone/80 dark:border-brand-roast rounded-full px-3 py-1">
+            <span className="inline-block font-sans text-[10px] font-medium text-brand-muted/70 dark:text-brand-honey/40 tracking-widest uppercase border border-brand-stone/80 dark:border-brand-roast rounded-full px-3 py-1">
               No disponible
             </span>
           )}
 
           {activeAllergens.length > 0 && (
             <div>
-              <p className="font-sans text-[10px] font-semibold tracking-widest uppercase text-brand-brown/80 dark:text-brand-cream/75 mb-2">
+              <p className="font-sans text-[10px] font-semibold tracking-widest uppercase text-brand-muted/50 dark:text-brand-honey/30 mb-2">
                 Alérgenos
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {activeAllergens.map((a) => (
                   <span
                     key={a.id}
-                    className="inline-flex items-center gap-1 text-[12px] font-sans text-brand-brown/80 dark:text-brand-cream/75 bg-brand-parchment dark:bg-brand-roast/50 border border-brand-stone/60 dark:border-brand-roast/80 rounded-full px-2.5 py-1"
+                    className="inline-flex items-center gap-1 text-[12px] font-sans text-brand-muted/80 dark:text-brand-honey/60 bg-brand-parchment dark:bg-brand-roast/50 border border-brand-stone/60 dark:border-brand-roast/80 rounded-full px-2.5 py-1"
                   >
                     <AllergenIcon id={a.id} className="w-3.5 h-3.5 flex-none" />
                     <span>{a.label[lang]}</span>
