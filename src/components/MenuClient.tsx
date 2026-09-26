@@ -591,7 +591,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             {searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {searchResults.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} onClick={() => { setDetailProduct(product); trackView(product.id); }} />
+                  <ProductCard key={product.id} product={product} lang={lang} category={categories.find((c) => c.id === product.categoryId)} onClick={() => { setDetailProduct(product); trackView(product.id); }} />
                 ))}
               </div>
             ) : (
@@ -636,7 +636,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
 
               <div className={catProducts.every(p => p.price === 0) ? "flex flex-wrap gap-2" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"}>
                 {catProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} onClick={product.price > 0 ? () => { setDetailProduct(product); trackView(product.id); } : undefined} />
+                  <ProductCard key={product.id} product={product} lang={lang} category={cat} onClick={product.price > 0 ? () => { setDetailProduct(product); trackView(product.id); } : undefined} />
                 ))}
               </div>
             </section>

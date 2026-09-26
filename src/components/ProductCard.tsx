@@ -1,12 +1,46 @@
-import { Product } from "@/lib/storage";
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { Category, Product } from "@/lib/storage";
 import { Lang, prodName, prodDesc, ui } from "@/lib/i18n";
 import { ALLERGENS } from "@/lib/allergens";
-import { AllergenIcon } from "./icons";
+import { AllergenIcon, CategoryIcon } from "./icons";
 
 interface Props {
   product: Product;
   lang: Lang;
+  category?: Category;
   onClick?: () => void;
+}
+
+// Miniatura de la card. Next.js sirve una versión pequeña (no la foto de
+// 1000px) y solo la carga al acercarse a pantalla. Sin foto, o mientras carga,
+// se ve el dibujo de la categoría para que todas las cards queden iguales.
+function Thumb({ src, alt, category, dimmed }: { src: string; alt: string; category?: Category; dimmed: boolean }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const showImg = !!src && !failed;
+  return (
+    <div className="relative w-20 h-20 sm:w-[84px] sm:h-[84px] rounded-xl overflow-hidden ring-1 ring-brand-stone/60 dark:ring-brand-roast bg-gradient-to-br from-brand-sand to-brand-paper dark:from-brand-roast/60 dark:to-brand-espresso">
+      {(!showImg || !loaded) && (
+        <div className="absolute inset-0 flex items-center justify-center text-brand-caramel/55 dark:text-brand-honey/45">
+          <CategoryIcon name={category?.name ?? ""} menu={category?.menu ?? "food"} className="w-8 h-8" />
+        </div>
+      )}
+      {showImg && (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="96px"
+          className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"} ${dimmed ? "grayscale" : ""}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
+  );
 }
 
 function AllergenBadges({ allergens, lang }: { allergens: string[]; lang: Lang }) {
@@ -46,7 +80,7 @@ function ProductBadge({ badge }: { badge?: string | null }) {
   );
 }
 
-export function ProductCard({ product, lang, onClick }: Props) {
+export function ProductCard({ product, lang, category, onClick }: Props) {
   const unavailable = !product.available;
   const name = prodName(product, lang);
 
@@ -77,7 +111,7 @@ export function ProductCard({ product, lang, onClick }: Props) {
         />
       )}
 
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-serif font-semibold text-brand-espresso dark:text-brand-cream text-[18px] leading-tight">
@@ -98,8 +132,10 @@ export function ProductCard({ product, lang, onClick }: Props) {
           <AllergenBadges allergens={product.allergens} lang={lang} />
         </div>
 
-        <div className="flex-none">
-          <span className="inline-block font-serif font-semibold text-brand-caramel dark:text-brand-honey text-[18px] leading-none whitespace-nowrap bg-brand-caramel/10 dark:bg-brand-honey/10 ring-1 ring-brand-caramel/15 dark:ring-brand-honey/15 rounded-full px-3 py-1.5">
+        {/* Miniatura con el precio "colgando" en su borde inferior */}
+        <div className="flex-none relative pb-3">
+          <Thumb src={product.imageUrl} alt={name} category={category} dimmed={unavailable} />
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 font-serif font-semibold text-brand-caramel dark:text-brand-honey text-[16px] leading-none whitespace-nowrap bg-white dark:bg-brand-espresso ring-1 ring-brand-caramel/25 dark:ring-brand-honey/25 shadow-[0_2px_6px_rgba(28,13,4,0.12)] rounded-full px-2.5 py-1">
             {product.price.toFixed(2).replace(".", ",")}€
           </span>
         </div>
