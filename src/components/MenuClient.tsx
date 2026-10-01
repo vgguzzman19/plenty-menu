@@ -669,7 +669,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       <OrderReadyButton lang={lang} onChangeLang={changeLang} />
 
       {/* ── FOOTER ── */}
-      <footer className="relative grain overflow-hidden bg-brand-espresso">
+      <footer className="menu-footer relative grain overflow-hidden bg-brand-espresso">
         <div className="relative z-10 max-w-2xl mx-auto px-6 py-12 text-center">
           <p className="font-serif font-light text-[32px] leading-none text-brand-cream tracking-tight">
             Plenty.
