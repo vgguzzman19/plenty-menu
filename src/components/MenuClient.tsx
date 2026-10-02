@@ -9,8 +9,10 @@ import { Lang, LANGS, catName, prodName, prodDesc, ui, detectDeviceLang } from "
 import { ProductCard } from "./ProductCard";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { OrderReadyButton } from "./OrderReadyButton";
-import { CategoryIcon, MenuTypeIcon } from "./icons";
+import { AllergenIcon, CategoryIcon, FilterIcon, MenuTypeIcon } from "./icons";
+import { ALLERGENS } from "@/lib/allergens";
 import { HeroBranch } from "./HeroDecor";
+import { INSTAGRAM_URL, GOOGLE_REVIEW_URL } from "@/lib/links";
 import { useTheme } from "@/hooks/useTheme";
 import Link from "next/link";
 
@@ -20,9 +22,6 @@ interface Props {
   categories: Category[];
   products: Product[];
 }
-
-const INSTAGRAM_URL = "https://www.instagram.com/plenty.brunch/";
-const GOOGLE_REVIEW_URL = "https://www.google.com/maps/place/Plenty./@41.8141564,3.0614864,17z/data=!4m8!3m7!1s0x12bb016c5e50eecf:0x52e50d290df5464a!8m2!3d41.8141524!4d3.0640613!9m1!1b1!16s%2Fg%2F11z9rfspc0?entry=ttu&g_ep=EgoyMDI2MDYyNC4wIKXMDSoASAFQAw%3D%3D";
 
 export function MenuClient({ categories: initialCategories, products: initialProducts }: Props) {
   const [menuType, setMenuType] = useState<"food" | "drinks">("food");
@@ -35,9 +34,15 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [searchQuery, setSearchQuery] = useState("");
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  // Filtro: oculta platos que lleven alguno de estos alérgenos
+  const [excludedAllergens, setExcludedAllergens] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterWrapRef = useRef<HTMLDivElement>(null);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
+  // (refs del filtro de alérgenos declarados junto a su estado, arriba)
   const normalMenuRef = useRef<HTMLDivElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
   const langWrapRef = useRef<HTMLDivElement>(null);
@@ -117,6 +122,53 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("plenty-allergen-filters");
+      if (saved) setExcludedAllergens(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  function toggleAllergenFilter(id: string) {
+    setExcludedAllergens((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      try { localStorage.setItem("plenty-allergen-filters", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+
+  function clearAllergenFilters() {
+    setExcludedAllergens([]);
+    try { localStorage.removeItem("plenty-allergen-filters"); } catch {}
+  }
+
+  const closeFilterMenu = () => {
+    if (!filterPanelRef.current) { setFilterOpen(false); return; }
+    gsap.to(filterPanelRef.current, {
+      autoAlpha: 0, y: -10, scale: 0.94, duration: 0.16, ease: "power2.in",
+      onComplete: () => setFilterOpen(false),
+    });
+  };
+
+  // Entrada animada + cierre al hacer click fuera o pulsar Escape (igual que el idioma)
+  useEffect(() => {
+    if (!filterOpen) return;
+    gsap.fromTo(filterPanelRef.current,
+      { autoAlpha: 0, y: -10, scale: 0.94, transformOrigin: "top right" },
+      { autoAlpha: 1, y: 0, scale: 1, duration: 0.25, ease: "back.out(1.8)" }
+    );
+    const handleClick = (e: MouseEvent) => {
+      if (filterWrapRef.current && !filterWrapRef.current.contains(e.target as Node)) closeFilterMenu();
+    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeFilterMenu(); };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [filterOpen]); // eslint-disable-line
+
   const changeLang = (l: Lang) => {
     setLang(l);
     localStorage.setItem("plenty-lang", l);
@@ -174,8 +226,12 @@ export function MenuClient({ categories: initialCategories, products: initialPro
     };
   }, [langMenuOpen]); // eslint-disable-line
 
+  const filteredProducts = excludedAllergens.length === 0
+    ? products
+    : products.filter((p) => !(p.allergens ?? []).some((a) => excludedAllergens.includes(a)));
+
   const allProductsByCategory = (catId: number) =>
-    products.filter((p) => p.categoryId === catId).sort((a, b) => a.order - b.order);
+    filteredProducts.filter((p) => p.categoryId === catId).sort((a, b) => a.order - b.order);
 
   const visibleCategories = categories
     .filter((c) => c.menu === menuType && allProductsByCategory(c.id).length > 0)
@@ -303,7 +359,7 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   };
 
   const searchResults = searchQuery.trim()
-    ? products.filter((p) => {
+    ? filteredProducts.filter((p) => {
         const q = searchQuery.toLowerCase();
         return (
           prodName(p, lang).toLowerCase().includes(q) ||
@@ -498,6 +554,66 @@ export function MenuClient({ categories: initialCategories, products: initialPro
             </svg>
           </button>
 
+          {/* Filtro de alérgenos */}
+          <div ref={filterWrapRef} className="relative flex-none">
+            <button
+              onClick={() => (filterOpen ? closeFilterMenu() : setFilterOpen(true))}
+              aria-label={ui[lang].filterLabel}
+              title={ui[lang].filterLabel}
+              className={`relative w-10 h-10 flex items-center justify-center rounded-full border transition-all active:scale-[0.97] ${
+                excludedAllergens.length > 0
+                  ? "bg-brand-caramel/15 border-brand-caramel/50 text-brand-caramel dark:bg-brand-honey/15 dark:border-brand-honey/50 dark:text-brand-honey"
+                  : "bg-white/70 dark:bg-transparent border-brand-stone/70 dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey hover:border-brand-caramel/50 dark:hover:border-brand-honey/40 shadow-groove hover:shadow-groove-hover dark:shadow-none dark:hover:shadow-none active:shadow-pop-press dark:active:shadow-none"
+              }`}
+            >
+              <FilterIcon className="w-4 h-4" />
+              {excludedAllergens.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-brand-caramel dark:bg-brand-honey text-white dark:text-brand-espresso text-[10px] font-bold leading-none">
+                  {excludedAllergens.length}
+                </span>
+              )}
+            </button>
+
+            {filterOpen && (
+              <div
+                ref={filterPanelRef}
+                className="absolute right-0 top-full mt-2 w-64 origin-top-right bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-brand-roast/40 rounded-2xl shadow-elevated ring-1 ring-black/5 dark:ring-white/10 p-3 overflow-hidden z-30"
+                style={{ opacity: 0 }}
+              >
+                <p className="font-sans text-[11px] font-bold text-brand-muted dark:text-brand-honey/50 tracking-widest uppercase mb-2 px-1">
+                  {ui[lang].filterTitle}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-1">
+                  {ALLERGENS.map((a) => {
+                    const active = excludedAllergens.includes(a.id);
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => toggleAllergenFilter(a.id)}
+                        className={`flex items-center gap-1 text-xs font-sans px-2.5 py-1.5 rounded-full border transition-all ${
+                          active
+                            ? "bg-brand-caramel/15 border-brand-caramel text-brand-brown dark:bg-brand-honey/15 dark:border-brand-honey dark:text-brand-honey"
+                            : "bg-white dark:bg-transparent border-brand-stone dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:border-brand-caramel/50 dark:hover:border-brand-honey/40"
+                        }`}
+                      >
+                        <AllergenIcon id={a.id} className="w-3.5 h-3.5 flex-none" />
+                        <span>{a.label[lang]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {excludedAllergens.length > 0 && (
+                  <button
+                    onClick={clearAllergenFilters}
+                    className="mt-1.5 w-full text-center font-sans text-xs font-semibold text-brand-caramel dark:text-brand-honey hover:underline py-1.5"
+                  >
+                    {ui[lang].filterClear}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Dark mode toggle */}
           <button
             onClick={toggleTheme}
@@ -649,8 +765,16 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               Plenty.
             </p>
             <p className="font-sans text-sm text-brand-muted/50 dark:text-brand-honey/30">
-              {ui[lang].empty}
+              {excludedAllergens.length > 0 ? ui[lang].filterNoResults : ui[lang].empty}
             </p>
+            {excludedAllergens.length > 0 && (
+              <button
+                onClick={clearAllergenFilters}
+                className="mt-4 font-sans text-sm font-semibold text-brand-caramel dark:text-brand-honey hover:underline"
+              >
+                {ui[lang].filterClear}
+              </button>
+            )}
           </div>
         )}
         </div>

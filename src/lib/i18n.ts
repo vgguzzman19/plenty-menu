@@ -81,6 +81,31 @@ interface UiText {
   geoAskPrivacy: string;
   geoAskAllow: string;
   geoAskLater: string;
+  // Pedir la cuenta
+  billButton: string;
+  billModalDesc: string;
+  confirmBillBtn: string;
+  confirmBillBtnSending: string;
+  billSuccessTitle: string;
+  billSuccessDesc: string;
+  // Encuesta de satisfaccion al pedir la cuenta
+  surveyTitle: string;
+  surveyDesc: string;
+  surveyHappyTitle: string;
+  surveyHappyDesc: string;
+  surveyHappyBtn: string;
+  surveyHappySkip: string;
+  surveyLowTitle: string;
+  surveyLowDesc: string;
+  surveyLowPlaceholder: string;
+  surveyLowSubmit: string;
+  surveyLowSkip: string;
+  surveyThanks: string;
+  // Filtro de alergenos en la carta
+  filterLabel: string;
+  filterTitle: string;
+  filterClear: string;
+  filterNoResults: string;
 }
 
 export const ui: Record<Lang, UiText> = {
@@ -118,6 +143,28 @@ export const ui: Record<Lang, UiText> = {
     geoAskPrivacy: "Solo la usamos para esto y no la guardamos.",
     geoAskAllow: "Permitir ubicación",
     geoAskLater: "Ahora no",
+    billButton: "La cuenta",
+    billModalDesc: "Pedimos la cuenta a tu mesa.",
+    confirmBillBtn: "Pedir la cuenta",
+    confirmBillBtnSending: "Pidiendo...",
+    billSuccessTitle: "¡Cuenta pedida!",
+    billSuccessDesc: "Te traemos la cuenta a la mesa",
+    surveyTitle: "¿Qué tal todo?",
+    surveyDesc: "Tu opinión nos ayuda a mejorar.",
+    surveyHappyTitle: "¡Nos alegra mucho!",
+    surveyHappyDesc: "¿Nos dejas una reseña en Google? Nos ayuda muchísimo.",
+    surveyHappyBtn: "Dejar reseña",
+    surveyHappySkip: "Ahora no",
+    surveyLowTitle: "Gracias por contárnoslo",
+    surveyLowDesc: "¿Qué podríamos mejorar? (opcional)",
+    surveyLowPlaceholder: "Cuéntanos qué ha pasado...",
+    surveyLowSubmit: "Enviar",
+    surveyLowSkip: "Omitir",
+    surveyThanks: "¡Gracias por tu tiempo!",
+    filterLabel: "Alérgenos",
+    filterTitle: "Ocultar platos con",
+    filterClear: "Quitar filtros",
+    filterNoResults: "Ningún plato cumple estos filtros.",
   },
   ca: {
     unavailable: "No disponible",
@@ -153,6 +200,28 @@ export const ui: Record<Lang, UiText> = {
     geoAskPrivacy: "Només la fem servir per a això i no la guardem.",
     geoAskAllow: "Permetre ubicació",
     geoAskLater: "Ara no",
+    billButton: "El compte",
+    billModalDesc: "Portem el compte a la teva taula.",
+    confirmBillBtn: "Demanar el compte",
+    confirmBillBtnSending: "Demanant...",
+    billSuccessTitle: "Compte demanat!",
+    billSuccessDesc: "Et portem el compte a la taula",
+    surveyTitle: "Què tal tot?",
+    surveyDesc: "La teva opinió ens ajuda a millorar.",
+    surveyHappyTitle: "Ens alegra molt!",
+    surveyHappyDesc: "Ens deixes una ressenya a Google? Ens ajuda moltíssim.",
+    surveyHappyBtn: "Deixar ressenya",
+    surveyHappySkip: "Ara no",
+    surveyLowTitle: "Gràcies per dir-nos-ho",
+    surveyLowDesc: "Què podríem millorar? (opcional)",
+    surveyLowPlaceholder: "Explica'ns què ha passat...",
+    surveyLowSubmit: "Enviar",
+    surveyLowSkip: "Ometre",
+    surveyThanks: "Gràcies pel teu temps!",
+    filterLabel: "Al·lèrgens",
+    filterTitle: "Amagar plats amb",
+    filterClear: "Treure filtres",
+    filterNoResults: "Cap plat compleix aquests filtres.",
   },
   en: {
     unavailable: "Not available",
@@ -188,6 +257,28 @@ export const ui: Record<Lang, UiText> = {
     geoAskPrivacy: "We only use it for this and never store it.",
     geoAskAllow: "Allow location",
     geoAskLater: "Not now",
+    billButton: "The bill",
+    billModalDesc: "We'll bring the bill to your table.",
+    confirmBillBtn: "Request the bill",
+    confirmBillBtnSending: "Requesting...",
+    billSuccessTitle: "Bill requested!",
+    billSuccessDesc: "We're bringing the bill to table",
+    surveyTitle: "How was everything?",
+    surveyDesc: "Your feedback helps us improve.",
+    surveyHappyTitle: "So glad to hear it!",
+    surveyHappyDesc: "Would you leave us a Google review? It helps us a lot.",
+    surveyHappyBtn: "Leave a review",
+    surveyHappySkip: "Not now",
+    surveyLowTitle: "Thanks for telling us",
+    surveyLowDesc: "What could we improve? (optional)",
+    surveyLowPlaceholder: "Tell us what happened...",
+    surveyLowSubmit: "Send",
+    surveyLowSkip: "Skip",
+    surveyThanks: "Thanks for your time!",
+    filterLabel: "Allergens",
+    filterTitle: "Hide dishes with",
+    filterClear: "Clear filters",
+    filterNoResults: "No dishes match these filters.",
   },
   fr: {
     unavailable: "Non disponible",
@@ -223,5 +314,27 @@ export const ui: Record<Lang, UiText> = {
     geoAskPrivacy: "Nous l'utilisons uniquement pour cela et ne la conservons pas.",
     geoAskAllow: "Autoriser la position",
     geoAskLater: "Plus tard",
+    billButton: "L'addition",
+    billModalDesc: "Nous apportons l'addition à votre table.",
+    confirmBillBtn: "Demander l'addition",
+    confirmBillBtnSending: "Envoi...",
+    billSuccessTitle: "Addition demandée !",
+    billSuccessDesc: "Nous apportons l'addition à la table",
+    surveyTitle: "Comment c'était ?",
+    surveyDesc: "Votre avis nous aide à nous améliorer.",
+    surveyHappyTitle: "Ça nous fait très plaisir !",
+    surveyHappyDesc: "Pouvez-vous nous laisser un avis Google ? Ça nous aide beaucoup.",
+    surveyHappyBtn: "Laisser un avis",
+    surveyHappySkip: "Plus tard",
+    surveyLowTitle: "Merci de nous le dire",
+    surveyLowDesc: "Que pourrions-nous améliorer ? (facultatif)",
+    surveyLowPlaceholder: "Dites-nous ce qui s'est passé...",
+    surveyLowSubmit: "Envoyer",
+    surveyLowSkip: "Passer",
+    surveyThanks: "Merci pour votre temps !",
+    filterLabel: "Allergènes",
+    filterTitle: "Masquer les plats avec",
+    filterClear: "Effacer les filtres",
+    filterNoResults: "Aucun plat ne correspond à ces filtres.",
   },
 };

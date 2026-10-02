@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Lang, LANGS, ui } from "@/lib/i18n";
-import { LocationPinIcon, ServiceBellIcon } from "./icons";
+import { LocationPinIcon, ReceiptIcon, ServiceBellIcon, StarIcon } from "./icons";
+import { GOOGLE_REVIEW_URL } from "@/lib/links";
 import { GeoReading, isNearVenue } from "@/lib/venue";
 
 const TABLE_KEY = "plenty-table-number";
@@ -53,7 +54,8 @@ function playConfirmSound() {
   }
 }
 
-type Status = "idle" | "geoAsk" | "modal" | "sending" | "sent" | "cooldown";
+type Status = "idle" | "geoAsk" | "modal" | "sending" | "sent" | "survey" | "surveyLow" | "surveyHappy" | "surveyDone" | "cooldown";
+type RequestType = "order" | "bill";
 
 // Estado de la comprobación "¿estás en Plenty?" que se hace al abrir el modal
 type GeoState =
@@ -73,7 +75,13 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
   const [status, setStatus] = useState<Status>("idle");
   const [tableNumber, setTableNumber] = useState(1);
+  const [requestType, setRequestType] = useState<RequestType>("order");
   const [error, setError] = useState("");
+  // Encuesta de satisfaccion al pedir la cuenta: estrella elegida y, si es
+  // baja, un comentario opcional antes de enviar el feedback.
+  const [surveyRating, setSurveyRating] = useState<number | null>(null);
+  const [surveyComment, setSurveyComment] = useState("");
+  const [surveySending, setSurveySending] = useState(false);
   const [geo, setGeo] = useState<GeoState>({ state: "checking" });
   // Modo prueba (solo para el dueño): con la contraseña del servidor se puede
   // avisar sin estar en el local. Se recuerda durante la sesión del navegador.
@@ -213,11 +221,17 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
   // Rebote del check al confirmar
   useEffect(() => {
-    if (status !== "sent") return;
+    if (status !== "sent" && status !== "surveyDone") return;
     gsap.fromTo(".order-sent-check",
       { scale: 0, rotate: -45 },
       { scale: 1, rotate: 0, duration: 0.5, ease: "back.out(2.5)" }
     );
+  }, [status]);
+
+  // Entrada suave al cambiar de paso dentro de la encuesta de satisfaccion
+  useEffect(() => {
+    if (status !== "survey" && status !== "surveyLow" && status !== "surveyHappy") return;
+    gsap.fromTo(".survey-fade", { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" });
   }, [status]);
 
   // Vuelve a estar disponible pasado el cooldown
@@ -268,6 +282,9 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   async function openModal() {
     if (status !== "idle") return;
     setError("");
+    setRequestType("order");
+    setSurveyRating(null);
+    setSurveyComment("");
     if (testPassword) {
       setGeo({ state: "test" });
       setStatus("modal");
@@ -338,6 +355,51 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
       .to(modalBackdropRef.current, { autoAlpha: 0, duration: 0.2 }, "-=0.1");
   }
 
+  // Cierra todo el flujo (tras confirmar, o tras la encuesta) y entra en cooldown
+  function fadeToCooldown() {
+    const tl = gsap.timeline({ onComplete: () => setStatus("cooldown") });
+    tl.to(modalCardRef.current, { autoAlpha: 0, y: 32, scale: 0.96, duration: 0.25, ease: "power2.in" })
+      .to(modalBackdropRef.current, { autoAlpha: 0, duration: 0.2 }, "-=0.1");
+  }
+
+  async function sendFeedback(rating: number, comment: string | null) {
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableNumber, rating, comment }),
+      });
+    } catch {
+      // La encuesta es opcional — si falla el envio, no bloqueamos al cliente
+    }
+  }
+
+  // Estrella elegida: si es alta vamos directos a pedir reseña en Google; si
+  // es baja, pedimos un comentario privado antes de dar las gracias.
+  function rateSurvey(rating: number) {
+    setSurveyRating(rating);
+    if (rating >= 4) {
+      sendFeedback(rating, null);
+      setStatus("surveyHappy");
+    } else {
+      setStatus("surveyLow");
+    }
+  }
+
+  async function submitLowSurvey(comment: string | null) {
+    if (!surveyRating) return;
+    setSurveySending(true);
+    await sendFeedback(surveyRating, comment);
+    setSurveySending(false);
+    setStatus("surveyDone");
+    setTimeout(fadeToCooldown, 1600);
+  }
+
+  function openGoogleReview() {
+    fadeToCooldown();
+  }
+
+
   async function confirmCall() {
     if (geo.state !== "ok" && geo.state !== "test") return;
     vibrate(15);
@@ -349,7 +411,9 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
       const res = await fetch("/api/table-calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(geo.state === "test" ? { tableNumber, testPassword } : { tableNumber, ...geo.reading }),
+        body: JSON.stringify(geo.state === "test"
+          ? { tableNumber, type: requestType, testPassword }
+          : { tableNumber, type: requestType, ...geo.reading }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -358,11 +422,13 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
         throw new Error();
       }
       setStatus("sent");
-      setTimeout(() => {
-        const tl = gsap.timeline({ onComplete: () => setStatus("cooldown") });
-        tl.to(modalCardRef.current, { autoAlpha: 0, y: 32, scale: 0.96, duration: 0.25, ease: "power2.in" })
-          .to(modalBackdropRef.current, { autoAlpha: 0, duration: 0.2 }, "-=0.1");
-      }, 1600);
+      if (requestType === "bill") {
+        // Al pedir la cuenta, tras el check de confirmación entra la encuesta
+        // rápida en vez de cerrarse directamente — mismo modal, sin perder el sitio.
+        setTimeout(() => setStatus("survey"), 1600);
+      } else {
+        setTimeout(fadeToCooldown, 1600);
+      }
     } catch {
       setError(t.errorMsg);
       setStatus("modal");
@@ -531,8 +597,9 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
         </div>
       )}
 
-      {/* Modal de selección de mesa */}
-      {(status === "modal" || status === "sending" || status === "sent") && (
+      {/* Modal de selección de mesa (y, tras pedir la cuenta, la encuesta) */}
+      {(status === "modal" || status === "sending" || status === "sent"
+        || status === "survey" || status === "surveyLow" || status === "surveyHappy" || status === "surveyDone") && (
         <div
           ref={modalBackdropRef}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-espresso/60 dark:bg-black/75 backdrop-blur-sm px-0 sm:px-4"
@@ -552,11 +619,102 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   </svg>
                 </div>
                 <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream mb-1">
-                  {t.successTitle}
+                  {requestType === "bill" ? t.billSuccessTitle : t.successTitle}
                 </h3>
                 <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/60">
-                  {t.successDesc} {tableNumber}.
+                  {requestType === "bill" ? t.billSuccessDesc : t.successDesc} {tableNumber}.
                 </p>
+              </div>
+            ) : status === "survey" ? (
+              <div className="survey-fade text-center py-2">
+                <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream mb-1">
+                  {t.surveyTitle}
+                </h3>
+                <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-5">
+                  {t.surveyDesc}
+                </p>
+                <div className="flex items-center justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => rateSurvey(n)}
+                      aria-label={`${n} / 5`}
+                      className="p-2 text-brand-stone dark:text-brand-roast hover:text-amber-400 dark:hover:text-amber-400 active:scale-90 transition-colors"
+                    >
+                      <StarIcon className="w-8 h-8" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : status === "surveyLow" ? (
+              <div className="survey-fade">
+                <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream mb-1">
+                  {t.surveyLowTitle}
+                </h3>
+                <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-3">
+                  {t.surveyLowDesc}
+                </p>
+                <textarea
+                  value={surveyComment}
+                  onChange={(e) => setSurveyComment(e.target.value)}
+                  rows={3}
+                  placeholder={t.surveyLowPlaceholder}
+                  className="w-full px-4 py-2.5 rounded-xl border border-brand-stone dark:border-brand-roast bg-white dark:bg-brand-espresso text-brand-espresso dark:text-brand-cream placeholder:text-brand-muted/50 dark:placeholder:text-brand-honey/30 font-sans text-[16px] resize-none focus:outline-none focus:ring-2 focus:ring-brand-caramel/25"
+                />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => submitLowSurvey(null)}
+                    disabled={surveySending}
+                    className="flex-1 border border-brand-stone dark:border-brand-roast text-brand-muted dark:text-brand-honey/60 font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
+                  >
+                    {t.surveyLowSkip}
+                  </button>
+                  <button
+                    onClick={() => submitLowSurvey(surveyComment.trim() || null)}
+                    disabled={surveySending}
+                    className="flex-1 bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  >
+                    {surveySending ? "…" : t.surveyLowSubmit}
+                  </button>
+                </div>
+              </div>
+            ) : status === "surveyHappy" ? (
+              <div className="survey-fade text-center py-2">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                  <StarIcon className="w-7 h-7 text-amber-500" filled />
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream mb-1">
+                  {t.surveyHappyTitle}
+                </h3>
+                <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-5">
+                  {t.surveyHappyDesc}
+                </p>
+                <a
+                  href={GOOGLE_REVIEW_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={openGoogleReview}
+                  className="block w-full bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans font-semibold py-3 rounded-xl text-sm tracking-wide text-center"
+                >
+                  {t.surveyHappyBtn}
+                </a>
+                <button
+                  onClick={fadeToCooldown}
+                  className="mt-2 w-full font-sans text-[13px] text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey py-2"
+                >
+                  {t.surveyHappySkip}
+                </button>
+              </div>
+            ) : status === "surveyDone" ? (
+              <div className="text-center py-4 survey-fade">
+                <div className="order-sent-check w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream">
+                  {t.surveyThanks}
+                </h3>
               </div>
             ) : (
               <>
@@ -584,6 +742,25 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   </div>
                 </div>
 
+                {/* Pedir ya / La cuenta */}
+                <div className="grid grid-cols-2 gap-2 mt-3 mb-4">
+                  {(["order", "bill"] as RequestType[]).map((rt) => (
+                    <button
+                      key={rt}
+                      type="button"
+                      onClick={() => setRequestType(rt)}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-sans font-semibold transition-all border ${
+                        requestType === rt
+                          ? "bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso border-brand-espresso dark:border-brand-honey"
+                          : "border-brand-stone dark:border-brand-roast text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey"
+                      }`}
+                    >
+                      {rt === "order" ? <ServiceBellIcon className="w-4 h-4" /> : <ReceiptIcon className="w-4 h-4" />}
+                      {rt === "order" ? t.orderButton : t.billButton}
+                    </button>
+                  ))}
+                </div>
+
                 {testFormOpen && geo.state !== "test" && (
                   <form onSubmit={unlockTestMode} className="mt-2 mb-3 flex gap-2">
                     <input
@@ -608,7 +785,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   <p className="-mt-1 mb-3 font-sans text-xs text-red-600">{testError}</p>
                 )}
                 <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/50 mb-5">
-                  {t.modalDesc}
+                  {requestType === "bill" ? t.billModalDesc : t.modalDesc}
                 </p>
 
                 <div className="flex items-center justify-center gap-4 mb-5">
@@ -671,7 +848,9 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   disabled={status === "sending" || (geo.state !== "ok" && geo.state !== "test")}
                   className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-white font-sans font-semibold py-3 rounded-xl text-sm tracking-wide transition-colors"
                 >
-                  {status === "sending" ? t.confirmBtnSending : t.confirmBtn}
+                  {status === "sending"
+                    ? (requestType === "bill" ? t.confirmBillBtnSending : t.confirmBtnSending)
+                    : (requestType === "bill" ? t.confirmBillBtn : t.confirmBtn)}
                 </button>
               </>
             )}

@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   title: "Plenty. — Carta",
   description: "Brunch & Café · Platja d'Aro, Costa Brava",
   themeColor: "#1C0D04",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Plenty.",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +42,8 @@ export default function RootLayout({
       <head>
         {/* Anti-flash: apply dark class before paint */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('plenty-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
+        {/* App instalable: registra el service worker mínimo (ver public/sw.js) */}
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
       </head>
       <body>{children}</body>
     </html>

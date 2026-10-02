@@ -264,9 +264,12 @@ export async function deleteProduct(id: number): Promise<boolean> {
   return (rowCount ?? 0) > 0;
 }
 
+export type TableCallType = "order" | "bill";
+
 export interface TableCall {
   id: number;
   tableNumber: number;
+  type: TableCallType;
   createdAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
@@ -277,26 +280,28 @@ function mapTableCall(row: any): TableCall {
   return {
     id: row.id,
     tableNumber: row.table_number,
+    type: row.type === "bill" ? "bill" : "order",
     createdAt: row.created_at,
     resolvedAt: row.resolved_at,
     resolvedBy: row.resolved_by ?? null,
   };
 }
 
-export async function createTableCall(tableNumber: number): Promise<TableCall> {
+export async function createTableCall(tableNumber: number, type: TableCallType = "order"): Promise<TableCall> {
   const { rows } = await pool.query(
-    "INSERT INTO table_calls (table_number) VALUES ($1) RETURNING *",
-    [tableNumber]
+    "INSERT INTO table_calls (table_number, type) VALUES ($1, $2) RETURNING *",
+    [tableNumber, type]
   );
   return mapTableCall(rows[0]);
 }
 
 // Si varios móviles de la misma mesa avisan a la vez, solo debe llegar un
-// aviso al personal — esto detecta si ya hay uno sin atender para esa mesa.
-export async function getPendingCallForTable(tableNumber: number): Promise<TableCall | null> {
+// aviso al personal — esto detecta si ya hay uno sin atender para esa mesa y
+// tipo (pedir y pedir la cuenta son independientes entre sí).
+export async function getPendingCallForTable(tableNumber: number, type: TableCallType = "order"): Promise<TableCall | null> {
   const { rows } = await pool.query(
-    "SELECT * FROM table_calls WHERE table_number = $1 AND resolved_at IS NULL ORDER BY created_at DESC LIMIT 1",
-    [tableNumber]
+    "SELECT * FROM table_calls WHERE table_number = $1 AND type = $2 AND resolved_at IS NULL ORDER BY created_at DESC LIMIT 1",
+    [tableNumber, type]
   );
   return rows[0] ? mapTableCall(rows[0]) : null;
 }
@@ -327,4 +332,43 @@ export async function resolveTableCall(id: number, resolvedBy: string): Promise<
     [resolvedBy, id]
   );
   return rows[0] ? mapTableCall(rows[0]) : null;
+}
+
+/* ─────────────────────────────────────────────
+   Feedback — encuesta rápida al pedir la cuenta
+───────────────────────────────────────────── */
+export interface Feedback {
+  id: number;
+  tableNumber: number;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapFeedback(row: any): Feedback {
+  return {
+    id: row.id,
+    tableNumber: row.table_number,
+    rating: row.rating,
+    comment: row.comment ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+export async function createFeedback(tableNumber: number, rating: number, comment: string | null): Promise<Feedback> {
+  const { rows } = await pool.query(
+    "INSERT INTO feedback (table_number, rating, comment) VALUES ($1, $2, $3) RETURNING *",
+    [tableNumber, rating, comment]
+  );
+  return mapFeedback(rows[0]);
+}
+
+export async function getRecentFeedback(): Promise<Feedback[]> {
+  const { rows } = await pool.query("SELECT * FROM feedback ORDER BY created_at DESC LIMIT 200");
+  return rows.map(mapFeedback);
+}
+
+export async function resetFeedback(): Promise<void> {
+  await pool.query("DELETE FROM feedback");
 }

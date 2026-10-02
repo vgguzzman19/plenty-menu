@@ -7,7 +7,7 @@ import { gsap } from "gsap";
 import { Category, Product, TableCall } from "@/lib/storage";
 import { ALLERGENS } from "@/lib/allergens";
 import { ImageCropModal } from "@/components/ImageCropModal";
-import { AllergenIcon } from "@/components/icons";
+import { AllergenIcon, ReceiptIcon, StarIcon } from "@/components/icons";
 import {
   DndContext, DragEndEvent, PointerSensor, TouchSensor,
   useSensor, useSensors, closestCenter,
@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type Tab = "orders" | "products" | "categories" | "analytics" | "qr" | "users";
+type Tab = "orders" | "products" | "categories" | "analytics" | "qr" | "users" | "feedback";
 type Role = "admin" | "employee";
 
 interface ProductForm {
@@ -104,6 +104,9 @@ function IconUsers() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
     </svg>
   );
+}
+function IconStar() {
+  return <StarIcon className="w-4 h-4" filled />;
 }
 function IconCheck() {
   return (
@@ -263,9 +266,146 @@ const TABS: { id: Tab; label: string; Icon: () => JSX.Element; adminOnly?: boole
   { id: "products",   label: "Carta",       Icon: IconMenu,  adminOnly: true },
   { id: "categories", label: "Categorías",  Icon: IconGrid,  adminOnly: true },
   { id: "analytics",  label: "Analytics",   Icon: IconChart, adminOnly: true },
+  { id: "feedback",   label: "Opiniones",   Icon: IconStar,  adminOnly: true },
   { id: "qr",         label: "Código QR",   Icon: IconQr,    adminOnly: true },
   { id: "users",      label: "Usuarios",    Icon: IconUsers, adminOnly: true },
 ];
+
+/* ─────────────────────────────────────────────
+   Feedback Tab — opiniones de la encuesta al pedir la cuenta
+───────────────────────────────────────────── */
+interface FeedbackEntry { id: number; tableNumber: number; rating: number; comment: string | null; createdAt: string }
+
+function FeedbackTab() {
+  const [entries, setEntries] = useState<FeedbackEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const fetchFeedback = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/feedback");
+    if (res.ok) setEntries(await res.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchFeedback(); }, [fetchFeedback]);
+
+  // Realtime: las opiniones nuevas aparecen al instante, sin recargar
+  useEffect(() => {
+    const source = new EventSource("/api/events");
+    source.addEventListener("feedback_created", (e) => {
+      const entry = JSON.parse(e.data) as FeedbackEntry;
+      setEntries((prev) => [entry, ...prev]);
+    });
+    source.addEventListener("feedback_reset", () => setEntries([]));
+    return () => source.close();
+  }, []);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.from(Array.from(containerRef.current.children), {
+        opacity: 0, y: 18, duration: 0.45, ease: "power2.out", stagger: 0.1, clearProps: "all",
+      });
+    }
+  }, [loading]); // eslint-disable-line
+
+  async function handleReset() {
+    setResetting(true);
+    await fetch("/api/feedback/reset", { method: "POST" });
+    setEntries([]);
+    setConfirmingReset(false);
+    setResetting(false);
+  }
+
+  const avg = entries.length > 0 ? entries.reduce((s, e) => s + e.rating, 0) / entries.length : 0;
+  const low = entries.filter((e) => e.rating <= 3);
+
+  function formatTime(iso: string) {
+    return new Date(iso).toLocaleString("es-ES", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="font-serif text-xl font-semibold text-brand-espresso">Opiniones</h2>
+          <p className="font-sans text-xs text-brand-muted mt-0.5">
+            Encuesta rápida que se muestra al pedir la cuenta.
+          </p>
+        </div>
+        {entries.length > 0 && (
+          confirmingReset ? (
+            <span className="flex items-center gap-1.5 flex-none">
+              <span className="font-sans text-[11px] text-brand-muted/60">¿Borrar todas?</span>
+              <button onClick={handleReset} disabled={resetting} className="font-sans text-[11px] font-semibold text-red-600 hover:text-red-700 disabled:opacity-50">
+                {resetting ? "…" : "Sí"}
+              </button>
+              <button onClick={() => setConfirmingReset(false)} disabled={resetting} className="font-sans text-[11px] text-brand-muted/50 hover:text-brand-muted">
+                No
+              </button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmingReset(true)} className="flex-none font-sans text-[11px] text-brand-muted/50 hover:text-red-500 transition-colors">
+              Vaciar opiniones
+            </button>
+          )
+        )}
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-brand-stone/40 rounded-xl animate-pulse" />)}
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="py-16 text-center bg-white rounded-2xl border border-brand-stone">
+          <p className="font-sans text-sm text-brand-muted/50">Todavía no hay opiniones.</p>
+          <p className="font-sans text-xs text-brand-muted/35 mt-1">
+            Aparecerán aquí cuando un cliente valore su experiencia al pedir la cuenta.
+          </p>
+        </div>
+      ) : (
+        <div ref={containerRef} className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-2xl border border-brand-stone p-4">
+              <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Valoración media</p>
+              <p className="font-serif text-3xl font-semibold text-brand-espresso flex items-center gap-1.5">
+                {avg.toFixed(1)}
+                <StarIcon className="w-5 h-5 text-amber-400" filled />
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl border border-brand-stone p-4">
+              <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Opiniones bajas</p>
+              <p className="font-serif text-3xl font-semibold text-brand-espresso">{low.length}</p>
+              <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {entries.length} en total</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {entries.map((e) => (
+              <div key={e.id} className={`bg-white rounded-xl border p-4 ${e.rating <= 3 ? "border-amber-200" : "border-brand-stone"}`}>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <StarIcon key={n} className={`w-3.5 h-3.5 ${n <= e.rating ? "text-amber-400" : "text-brand-stone"}`} filled={n <= e.rating} />
+                    ))}
+                  </div>
+                  <span className="font-sans text-[11px] text-brand-muted/50 flex-none tabular-nums">
+                    Mesa {e.tableNumber} · {formatTime(e.createdAt)}
+                  </span>
+                </div>
+                {e.comment && (
+                  <p className="font-sans text-sm text-brand-espresso/90 mt-1.5">{e.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────────
    Orders Tab — avisos de "listo para pedir" en tiempo real
@@ -381,11 +521,18 @@ function OrdersTab({ calls, log, isAdmin, clockOffsetMs }: { calls: TableCall[];
               ref={el => { itemRefs.current[c.id] = el; }}
               className={`flex items-center gap-4 bg-white rounded-2xl border p-4 ${urgent ? "border-red-300" : "border-emerald-200"}`}
             >
-              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-none font-serif font-bold text-lg ${urgent ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-none font-serif font-bold text-lg ${urgent ? "bg-red-50 text-red-600" : c.type === "bill" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
                 {c.tableNumber}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-sans font-semibold text-brand-espresso text-sm">Mesa {c.tableNumber}</p>
+                <p className="font-sans font-semibold text-brand-espresso text-sm flex items-center gap-1.5">
+                  Mesa {c.tableNumber}
+                  {c.type === "bill" && (
+                    <span className="inline-flex items-center gap-1 font-sans text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                      <ReceiptIcon className="w-3 h-3" /> Cuenta
+                    </span>
+                  )}
+                </p>
                 <p className={`font-sans text-xs mt-0.5 ${urgent ? "text-red-500 font-medium" : "text-brand-muted/60"}`}>
                   {elapsed(c.createdAt)}
                 </p>
@@ -393,7 +540,7 @@ function OrdersTab({ calls, log, isAdmin, clockOffsetMs }: { calls: TableCall[];
               <button
                 onClick={() => resolve(c.id)}
                 disabled={resolvingIds.has(c.id)}
-                className="flex-none bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-sans text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors"
+                className={`flex-none disabled:opacity-50 text-white font-sans text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors ${c.type === "bill" ? "bg-amber-500 hover:bg-amber-400" : "bg-emerald-500 hover:bg-emerald-400"}`}
               >
                 Atendido
               </button>
@@ -440,7 +587,8 @@ function OrdersTab({ calls, log, isAdmin, clockOffsetMs }: { calls: TableCall[];
                   <span className="font-serif font-semibold text-brand-espresso/70 text-sm w-6 text-center flex-none">
                     {c.tableNumber}
                   </span>
-                  <span className="flex-1 font-sans text-xs text-brand-muted truncate">
+                  <span className="flex-1 font-sans text-xs text-brand-muted truncate flex items-center gap-1.5">
+                    {c.type === "bill" && <ReceiptIcon className="w-3 h-3 text-amber-600 flex-none" />}
                     Atendido por <span className="font-semibold text-brand-espresso">{c.resolvedBy ?? "—"}</span>
                   </span>
                   <span className="font-sans text-[11px] text-brand-muted/50 flex-none tabular-nums">
@@ -1632,6 +1780,9 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ── FEEDBACK TAB ── */}
+        {tab === "feedback" && <FeedbackTab />}
 
         {/* ── USERS TAB ── */}
         {tab === "users" && <UsersTab />}

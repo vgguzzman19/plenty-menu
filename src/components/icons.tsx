@@ -372,3 +372,43 @@ export function LocationPinIcon({ className }: IconProps) {
     </Svg>
   );
 }
+
+/* ── Recibo (pedir la cuenta) ── */
+
+export function ReceiptIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M6 3h12v18l-2.2-1.5L14 21l-2-1.5L10 21l-1.8-1.5L6 21Z" />
+      <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5" />
+    </Svg>
+  );
+}
+
+/* ── Estrella (valoración en la encuesta de satisfacción) ── */
+
+export function StarIcon({ className, filled }: IconProps & { filled?: boolean }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3.5l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.8Z" />
+    </svg>
+  );
+}
+
+/* ── Embudo de filtro (filtrar la carta por alérgenos) ── */
+
+export function FilterIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M4 5h16l-6 7.5V19l-4 2v-8.5Z" />
+    </Svg>
+  );
+}
