@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Lang, LANGS, ui } from "@/lib/i18n";
-import { ServiceBellIcon } from "./icons";
+import { LocationPinIcon, ServiceBellIcon } from "./icons";
+import { GeoReading, isNearVenue } from "@/lib/venue";
 
 const TABLE_KEY = "plenty-table-number";
 const COOLDOWN_MS = 90_000;
@@ -51,7 +52,13 @@ function playConfirmSound() {
   }
 }
 
-type Status = "idle" | "modal" | "sending" | "sent" | "cooldown";
+type Status = "idle" | "geoAsk" | "modal" | "sending" | "sent" | "cooldown";
+
+// Estado de la comprobación "¿estás en Plenty?" que se hace al abrir el modal
+type GeoState =
+  | { state: "checking" }
+  | { state: "ok"; reading: GeoReading }
+  | { state: "denied" | "far" | "unavailable" };
 
 interface Props {
   lang: Lang;
@@ -65,6 +72,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [tableNumber, setTableNumber] = useState(1);
   const [error, setError] = useState("");
+  const [geo, setGeo] = useState<GeoState>({ state: "checking" });
   const [hintVisible, setHintVisible] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
@@ -77,6 +85,8 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   const waveRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const langPanelRef = useRef<HTMLDivElement>(null);
+  const geoAskBackdropRef = useRef<HTMLDivElement>(null);
+  const geoAskCardRef = useRef<HTMLDivElement>(null);
 
   // Recuerda la última mesa usada, para no tener que repetirla
   useEffect(() => {
@@ -149,6 +159,30 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   }
 
   // Entrada animada del modal de selección de mesa (solo al abrir)
+  // Entrada del aviso de ubicación: fundido suave del fondo, la tarjeta sube
+  // y crece con una curva larga, el pin "cae" y sus ondas laten despacio.
+  useEffect(() => {
+    if (status !== "geoAsk") return;
+    const ctx = gsap.context(() => {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+      tl.fromTo(geoAskBackdropRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: "power2.out" });
+      if (reduced) {
+        tl.fromTo(geoAskCardRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, "<");
+        return;
+      }
+      tl.fromTo(geoAskCardRef.current,
+          { autoAlpha: 0, y: 24, scale: 0.94 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.9 }, "-=0.25")
+        .fromTo(".geo-ask-pin", { y: -14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: "bounce.out" }, "-=0.6")
+        .fromTo(".geo-ask-line", { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.07 }, "-=0.55")
+        .fromTo(".geo-ask-ring",
+          { scale: 0.6, autoAlpha: 0.5 },
+          { scale: 1.9, autoAlpha: 0, duration: 2.2, ease: "power1.out", repeat: -1, stagger: 1.1 }, "-=0.4");
+    }, geoAskBackdropRef);
+    return () => ctx.revert();
+  }, [status]);
+
   useEffect(() => {
     if (status !== "modal") return;
     const tl = gsap.timeline();
@@ -192,10 +226,55 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
     }
   }
 
-  function openModal() {
+  // Pide la ubicación al abrir el modal (no al confirmar): así, cuando el
+  // cliente pulsa "Avisar al camarero" ya está comprobada y el sonido de
+  // confirmación sigue sonando dentro del gesto, como exige Safari.
+  function locate() {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setGeo({ state: "unavailable" });
+      return;
+    }
+    setGeo({ state: "checking" });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const reading = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+        setGeo(isNearVenue(reading) ? { state: "ok", reading } : { state: "far" });
+      },
+      (err) => setGeo({ state: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" }),
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
+    );
+  }
+
+  // Si el permiso de ubicación ya está concedido, vamos directos al modal de
+  // mesa. Si no, primero un aviso propio explicando para qué la usamos: la
+  // petición del navegador sola, sin contexto, se rechaza mucho más.
+  async function openModal() {
     if (status !== "idle") return;
     setError("");
-    setStatus("modal");
+    let granted = false;
+    try {
+      const perm = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+      granted = perm?.state === "granted";
+    } catch { /* navegadores sin Permissions API: mostramos el aviso */ }
+    if (granted) {
+      setStatus("modal");
+      locate();
+    } else {
+      setStatus("geoAsk");
+    }
+  }
+
+  function closeGeoAsk(next: () => void) {
+    const tl = gsap.timeline({ onComplete: next });
+    tl.to(geoAskCardRef.current, { autoAlpha: 0, y: 12, scale: 0.97, duration: 0.28, ease: "power2.in" })
+      .to(geoAskBackdropRef.current, { autoAlpha: 0, duration: 0.25, ease: "power2.in" }, "-=0.12");
+  }
+
+  // La petición del navegador se lanza aquí, dentro del toque del cliente
+  // (iOS la ignora si no viene de un gesto).
+  function allowLocation() {
+    locate();
+    closeGeoAsk(() => setStatus("modal"));
   }
 
   function closeModal() {
@@ -205,6 +284,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   }
 
   async function confirmCall() {
+    if (geo.state !== "ok") return;
     vibrate(15);
     playConfirmSound();
     setStatus("sending");
@@ -214,9 +294,14 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
       const res = await fetch("/api/table-calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tableNumber }),
+        body: JSON.stringify({ tableNumber, ...geo.reading }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        if (d.code === "too_far") { setGeo({ state: "far" }); setStatus("modal"); return; }
+        if (d.code === "location_required") { setGeo({ state: "unavailable" }); setStatus("modal"); return; }
+        throw new Error();
+      }
       setStatus("sent");
       setTimeout(() => {
         const tl = gsap.timeline({ onComplete: () => setStatus("cooldown") });
@@ -336,6 +421,61 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
         </div>
       )}
 
+      {/* Aviso previo de ubicación — pequeño, centrado y discreto */}
+      {status === "geoAsk" && (
+        <div
+          ref={geoAskBackdropRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-brand-espresso/40 dark:bg-black/60 backdrop-blur-[6px] px-6"
+          style={{ opacity: 0 }}
+          onClick={(e) => e.target === e.currentTarget && closeGeoAsk(() => setStatus("idle"))}
+        >
+          <div
+            ref={geoAskCardRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="geo-ask-title"
+            className="relative w-full max-w-[320px] bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-[#170b03] rounded-[28px] shadow-elevated ring-1 ring-brand-stone/60 dark:ring-brand-roast px-7 pt-8 pb-6 text-center"
+            style={{ opacity: 0 }}
+          >
+            {/* Pin con ondas suaves */}
+            <div className="relative mx-auto mb-5 w-16 h-16 flex items-center justify-center">
+              <span className="geo-ask-ring absolute inset-0 rounded-full bg-brand-caramel/20 dark:bg-brand-honey/15" />
+              <span className="geo-ask-ring absolute inset-0 rounded-full bg-brand-caramel/20 dark:bg-brand-honey/15" />
+              <span className="relative w-14 h-14 rounded-full bg-gradient-to-br from-white to-brand-sand dark:from-brand-roast dark:to-brand-espresso ring-1 ring-brand-stone dark:ring-brand-roast shadow-card-pop-mobile dark:shadow-none flex items-center justify-center">
+                <LocationPinIcon className="geo-ask-pin w-7 h-7 text-brand-caramel dark:text-brand-honey" />
+              </span>
+            </div>
+
+            <h3 id="geo-ask-title" className="geo-ask-line font-serif text-[22px] leading-tight font-semibold text-brand-espresso dark:text-brand-cream">
+              {t.geoAskTitle}
+            </h3>
+            <p className="geo-ask-line mt-2 font-sans text-[14px] leading-relaxed text-brand-muted dark:text-brand-honey/60">
+              {t.geoAskDesc}
+            </p>
+            <p className="geo-ask-line mt-3 inline-flex items-center gap-1.5 font-sans text-[11px] text-brand-muted/80 dark:text-brand-honey/45">
+              <svg className="w-3 h-3 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={2} />
+                <path strokeLinecap="round" strokeWidth={2} d="M8 11V7a4 4 0 018 0v4" />
+              </svg>
+              {t.geoAskPrivacy}
+            </p>
+
+            <button
+              onClick={allowLocation}
+              className="geo-ask-line mt-6 w-full bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans text-sm font-semibold py-3.5 rounded-2xl shadow-[0_8px_20px_-8px_rgba(28,13,4,0.5)] active:scale-[0.98]"
+            >
+              {t.geoAskAllow}
+            </button>
+            <button
+              onClick={() => closeGeoAsk(() => setStatus("idle"))}
+              className="geo-ask-line mt-2 w-full font-sans text-[13px] text-brand-muted dark:text-brand-honey/50 hover:text-brand-espresso dark:hover:text-brand-honey py-2"
+            >
+              {t.geoAskLater}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal de selección de mesa */}
       {(status === "modal" || status === "sending" || status === "sent") && (
         <div
@@ -403,6 +543,25 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   ⚠️ {t.tableWarning}
                 </p>
 
+                {/* Comprobación de ubicación: solo se puede avisar desde el local */}
+                {geo.state === "checking" && (
+                  <div className="flex items-center justify-center gap-2 font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-4">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    {t.geoChecking}
+                  </div>
+                )}
+                {(geo.state === "denied" || geo.state === "far" || geo.state === "unavailable") && (
+                  <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 font-sans text-sm px-4 py-3 rounded-xl mb-4">
+                    <p>{geo.state === "denied" ? t.geoDenied : geo.state === "far" ? t.geoFar : t.geoUnavailable}</p>
+                    <button onClick={locate} className="mt-2 font-semibold underline underline-offset-2">
+                      {t.geoRetry}
+                    </button>
+                  </div>
+                )}
+
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 font-sans text-sm px-4 py-2.5 rounded-xl mb-4">
                     {error}
@@ -411,7 +570,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
                 <button
                   onClick={confirmCall}
-                  disabled={status === "sending"}
+                  disabled={status === "sending" || geo.state !== "ok"}
                   className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-white font-sans font-semibold py-3 rounded-xl text-sm tracking-wide transition-colors"
                 >
                   {status === "sending" ? t.confirmBtnSending : t.confirmBtn}

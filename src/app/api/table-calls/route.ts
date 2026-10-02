@@ -3,16 +3,27 @@ import { cookies } from "next/headers";
 import { createTableCall, getPendingTableCalls, getPendingCallForTable, getUserById } from "@/lib/storage";
 import { verifyToken } from "@/lib/auth";
 import { publish } from "@/lib/events";
+import { isNearVenue } from "@/lib/venue";
 
-// Público — cualquier cliente de la carta puede avisar que está listo para pedir.
+// Público — cualquier cliente de la carta puede avisar que está listo para pedir,
+// pero solo desde el local: el móvil manda su ubicación y aquí se vuelve a
+// comprobar (no basta con la comprobación de la web, que se puede saltar).
 // Si varias personas de la misma mesa avisan por separado, solo se crea un
 // aviso: el resto recibe el mismo que ya está pendiente, sin duplicar en el
 // panel del personal.
 export async function POST(req: NextRequest) {
-  const { tableNumber } = await req.json();
+  const { tableNumber, lat, lng, accuracy } = await req.json();
   const n = Number(tableNumber);
   if (!Number.isInteger(n) || n <= 0) {
     return NextResponse.json({ error: "Número de mesa inválido" }, { status: 400 });
+  }
+
+  const reading = { lat: Number(lat), lng: Number(lng), accuracy: Number(accuracy) };
+  if (!Number.isFinite(reading.lat) || !Number.isFinite(reading.lng)) {
+    return NextResponse.json({ error: "Ubicación requerida", code: "location_required" }, { status: 400 });
+  }
+  if (!isNearVenue(reading)) {
+    return NextResponse.json({ error: "Fuera del local", code: "too_far" }, { status: 403 });
   }
 
   const existing = await getPendingCallForTable(n);

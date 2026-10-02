@@ -69,6 +69,18 @@ interface UiText {
   hintTitle: string;
   hintDesc: string;
   hintButton: string;
+  // Comprobación de que el cliente está en el local antes de avisar
+  geoChecking: string;
+  geoDenied: string;
+  geoFar: string;
+  geoUnavailable: string;
+  geoRetry: string;
+  // Aviso previo a la petición de ubicación del navegador
+  geoAskTitle: string;
+  geoAskDesc: string;
+  geoAskPrivacy: string;
+  geoAskAllow: string;
+  geoAskLater: string;
 }
 
 export const ui: Record<Lang, UiText> = {
@@ -96,6 +108,16 @@ export const ui: Record<Lang, UiText> = {
     hintTitle: "¿Ya sabes qué vas a pedir?",
     hintDesc: "Toca el botón verde cuando estés listo y avisamos al camarero al instante.",
     hintButton: "¡Entendido!",
+    geoChecking: "Comprobando que estás en Plenty…",
+    geoDenied: "Activa la ubicación para avisar al camarero. Solo la usamos para comprobar que estás en el local.",
+    geoFar: "Parece que no estás en Plenty. El aviso al camarero solo funciona desde el local.",
+    geoUnavailable: "No hemos podido obtener tu ubicación. Revisa que esté activada e inténtalo de nuevo.",
+    geoRetry: "Reintentar",
+    geoAskTitle: "Activa tu ubicación",
+    geoAskDesc: "Para avisar al camarero comprobamos que estás en Plenty.",
+    geoAskPrivacy: "Solo la usamos para esto y no la guardamos.",
+    geoAskAllow: "Permitir ubicación",
+    geoAskLater: "Ahora no",
   },
   ca: {
     unavailable: "No disponible",
@@ -121,6 +143,16 @@ export const ui: Record<Lang, UiText> = {
     hintTitle: "Ja saps què demanaràs?",
     hintDesc: "Toca el botó verd quan estiguis a punt i avisem el cambrer a l'instant.",
     hintButton: "Entesos!",
+    geoChecking: "Comprovant que ets a Plenty…",
+    geoDenied: "Activa la ubicació per avisar el cambrer. Només la fem servir per comprovar que ets al local.",
+    geoFar: "Sembla que no ets a Plenty. L'avís al cambrer només funciona des del local.",
+    geoUnavailable: "No hem pogut obtenir la teva ubicació. Comprova que estigui activada i torna-ho a provar.",
+    geoRetry: "Tornar a provar",
+    geoAskTitle: "Activa la teva ubicació",
+    geoAskDesc: "Per avisar el cambrer comprovem que ets a Plenty.",
+    geoAskPrivacy: "Només la fem servir per a això i no la guardem.",
+    geoAskAllow: "Permetre ubicació",
+    geoAskLater: "Ara no",
   },
   en: {
     unavailable: "Not available",
@@ -146,6 +178,16 @@ export const ui: Record<Lang, UiText> = {
     hintTitle: "Already know what you'll order?",
     hintDesc: "Tap the green button when you're ready and we'll notify the waiter instantly.",
     hintButton: "Got it!",
+    geoChecking: "Checking you're at Plenty…",
+    geoDenied: "Turn on location to call the waiter. We only use it to check you're in the restaurant.",
+    geoFar: "It looks like you're not at Plenty. Calling the waiter only works from inside the restaurant.",
+    geoUnavailable: "We couldn't get your location. Make sure it's turned on and try again.",
+    geoRetry: "Try again",
+    geoAskTitle: "Turn on your location",
+    geoAskDesc: "To call the waiter, we check that you're at Plenty.",
+    geoAskPrivacy: "We only use it for this and never store it.",
+    geoAskAllow: "Allow location",
+    geoAskLater: "Not now",
   },
   fr: {
     unavailable: "Non disponible",
@@ -171,5 +213,15 @@ export const ui: Record<Lang, UiText> = {
     hintTitle: "Vous savez déjà quoi commander ?",
     hintDesc: "Appuyez sur le bouton vert quand vous êtes prêt, on prévient le serveur aussitôt.",
     hintButton: "Compris !",
+    geoChecking: "Vérification que vous êtes chez Plenty…",
+    geoDenied: "Activez la localisation pour appeler le serveur. Nous l'utilisons uniquement pour vérifier que vous êtes sur place.",
+    geoFar: "Il semble que vous ne soyez pas chez Plenty. L'appel au serveur ne fonctionne que sur place.",
+    geoUnavailable: "Impossible d'obtenir votre position. Vérifiez qu'elle est activée et réessayez.",
+    geoRetry: "Réessayer",
+    geoAskTitle: "Activez votre position",
+    geoAskDesc: "Pour appeler le serveur, nous vérifions que vous êtes chez Plenty.",
+    geoAskPrivacy: "Nous l'utilisons uniquement pour cela et ne la conservons pas.",
+    geoAskAllow: "Autoriser la position",
+    geoAskLater: "Plus tard",
   },
 };
