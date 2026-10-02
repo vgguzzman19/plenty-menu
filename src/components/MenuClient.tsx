@@ -34,6 +34,17 @@ export function MenuClient({ categories: initialCategories, products: initialPro
   const [searchQuery, setSearchQuery] = useState("");
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  // Instalar como app (PWA): icono propio junto a Instagram/Google — el
+  // "Añadir a inicio" nativo del navegador está escondido en un menú y casi
+  // nadie lo encuentra solo.
+  const [installEligible, setInstallEligible] = useState(false);
+  const [installIOSOpen, setInstallIOSOpen] = useState(false);
+  const deferredInstallRef = useRef<Event & { prompt?: () => void; userChoice?: Promise<{ outcome: string }> } | null>(null);
+  const isIOSRef = useRef(false);
+  const installIconRef = useRef<HTMLButtonElement>(null);
+  const installRingRef = useRef<HTMLSpanElement>(null);
+  const installIOSCardRef = useRef<HTMLDivElement>(null);
+  const installIOSBackdropRef = useRef<HTMLDivElement>(null);
   // Filtro: oculta platos que lleven alguno de estos alérgenos
   const [excludedAllergens, setExcludedAllergens] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -168,6 +179,93 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       document.removeEventListener("keydown", handleKey);
     };
   }, [filterOpen]); // eslint-disable-line
+
+  // Elegibilidad de instalación: el navegador avisa con beforeinstallprompt
+  // (Android/escritorio); en iOS Safari ese evento no existe nunca, así que
+  // detectamos el dispositivo y mostramos instrucciones manuales.
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (standalone) return;
+
+    let dismissed = false;
+    try { dismissed = localStorage.getItem("plenty-pwa-dismissed") === "1"; } catch {}
+    if (dismissed) return;
+
+    isIOSRef.current = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      deferredInstallRef.current = e as typeof deferredInstallRef.current;
+      setInstallEligible(true);
+    };
+    const onInstalled = () => setInstallEligible(false);
+
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+
+    // iOS nunca dispara beforeinstallprompt: se ofrece directo con instrucciones
+    if (isIOSRef.current) setInstallEligible(true);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  // Entrada suave del icono + un par de pulsos para que se note la primera vez
+  useEffect(() => {
+    if (!installEligible) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(installIconRef.current,
+        { autoAlpha: 0, scale: 0.6 },
+        { autoAlpha: 1, scale: 1, duration: 0.45, ease: "back.out(2.2)" }
+      );
+      gsap.fromTo(installRingRef.current,
+        { scale: 1, autoAlpha: 0.55 },
+        { scale: 1.9, autoAlpha: 0, duration: 1.3, ease: "power1.out", repeat: 2, delay: 0.3 }
+      );
+    });
+    return () => ctx.revert();
+  }, [installEligible]);
+
+  function dismissInstall() {
+    setInstallEligible(false);
+    try { localStorage.setItem("plenty-pwa-dismissed", "1"); } catch {}
+  }
+
+  async function handleInstallClick() {
+    const deferred = deferredInstallRef.current;
+    if (deferred?.prompt) {
+      deferred.prompt();
+      try { await deferred.userChoice; } catch {}
+      deferredInstallRef.current = null;
+      dismissInstall();
+    } else if (isIOSRef.current) {
+      setInstallIOSOpen(true);
+    }
+  }
+
+  function closeInstallIOS() {
+    const tl = gsap.timeline({ onComplete: dismissInstall });
+    tl.to(installIOSCardRef.current, { autoAlpha: 0, y: 12, scale: 0.97, duration: 0.25, ease: "power2.in" })
+      .to(installIOSBackdropRef.current, { autoAlpha: 0, duration: 0.2, ease: "power2.in" }, "-=0.1");
+    setInstallIOSOpen(false);
+  }
+
+  // Entrada del popup de instrucciones iOS
+  useEffect(() => {
+    if (!installIOSOpen) return;
+    const tl = gsap.timeline();
+    tl.fromTo(installIOSBackdropRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power2.out" })
+      .fromTo(installIOSCardRef.current,
+        { autoAlpha: 0, y: 20, scale: 0.95 },
+        { autoAlpha: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.3)" },
+        "-=0.15"
+      );
+    return () => { tl.kill(); };
+  }, [installIOSOpen]);
 
   const changeLang = (l: Lang) => {
     setLang(l);
@@ -432,6 +530,24 @@ export function MenuClient({ categories: initialCategories, products: initialPro
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
             </svg>
           </a>
+
+          {/* Instalar como app — solo aparece si el navegador lo permite */}
+          {installEligible && (
+            <button
+              ref={installIconRef}
+              onClick={handleInstallClick}
+              title={ui[lang].installButton}
+              aria-label={ui[lang].installButton}
+              className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              style={{ opacity: 0 }}
+            >
+              <span ref={installRingRef} className="absolute inset-0 rounded-full bg-brand-honey/40" style={{ opacity: 0 }} />
+              <svg className="relative w-4 h-4 text-brand-honey/70" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2a1 1 0 011 1v9.59l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42l2.3 2.3V3a1 1 0 011-1z" />
+                <path d="M5 18a1 1 0 011-1h12a1 1 0 110 2H6a1 1 0 01-1-1z" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Language switcher — top right: icono de traducción + desplegable animado */}
@@ -791,6 +907,55 @@ export function MenuClient({ categories: initialCategories, products: initialPro
       )}
 
       <OrderReadyButton lang={lang} onChangeLang={changeLang} />
+
+      {/* ── INSTALAR APP: instrucciones para iOS (Safari no permite instalar con un toque) ── */}
+      {installIOSOpen && (
+        <div
+          ref={installIOSBackdropRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-brand-espresso/40 dark:bg-black/60 backdrop-blur-[6px] px-6"
+          style={{ opacity: 0 }}
+          onClick={(e) => e.target === e.currentTarget && closeInstallIOS()}
+        >
+          <div
+            ref={installIOSCardRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-ios-title"
+            className="relative w-full max-w-[320px] bg-gradient-to-b from-white to-brand-parchment dark:from-brand-espresso dark:to-[#170b03] rounded-[28px] shadow-elevated ring-1 ring-brand-stone/60 dark:ring-brand-roast px-7 pt-8 pb-6 text-center"
+            style={{ opacity: 0 }}
+          >
+            <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-gradient-to-br from-white to-brand-sand dark:from-brand-roast dark:to-brand-espresso ring-1 ring-brand-stone dark:ring-brand-roast shadow-card-pop-mobile dark:shadow-none flex items-center justify-center">
+              <svg className="w-7 h-7 text-brand-caramel dark:text-brand-honey" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v11" />
+                <path d="M8.5 6.5L12 3l3.5 3.5" />
+                <rect x="5" y="9.5" width="14" height="11" rx="2.5" />
+              </svg>
+            </div>
+
+            <h3 id="install-ios-title" className="font-serif text-[21px] leading-tight font-semibold text-brand-espresso dark:text-brand-cream">
+              {ui[lang].installIOSTitle}
+            </h3>
+
+            <div className="mt-5 space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <span className="flex-none w-6 h-6 rounded-full bg-brand-caramel/15 dark:bg-brand-honey/15 text-brand-caramel dark:text-brand-honey font-sans text-[12px] font-bold flex items-center justify-center">1</span>
+                <p className="font-sans text-[14px] text-brand-espresso dark:text-brand-cream leading-snug pt-0.5">{ui[lang].installIOSStep1}</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex-none w-6 h-6 rounded-full bg-brand-caramel/15 dark:bg-brand-honey/15 text-brand-caramel dark:text-brand-honey font-sans text-[12px] font-bold flex items-center justify-center">2</span>
+                <p className="font-sans text-[14px] text-brand-espresso dark:text-brand-cream leading-snug pt-0.5">{ui[lang].installIOSStep2}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={closeInstallIOS}
+              className="mt-7 w-full bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans text-sm font-semibold py-3.5 rounded-2xl shadow-[0_8px_20px_-8px_rgba(28,13,4,0.5)] active:scale-[0.98]"
+            >
+              {ui[lang].installIOSGotIt}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── FOOTER ── */}
       <footer className="menu-footer relative grain overflow-hidden bg-brand-espresso">

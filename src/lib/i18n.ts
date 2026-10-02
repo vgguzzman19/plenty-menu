@@ -106,6 +106,17 @@ interface UiText {
   filterTitle: string;
   filterClear: string;
   filterNoResults: string;
+  // Boton para instalar la PWA + instrucciones manuales en iOS
+  installButton: string;
+  installIOSTitle: string;
+  installIOSStep1: string;
+  installIOSStep2: string;
+  installIOSGotIt: string;
+  // Pasos para reactivar la ubicacion a mano cuando el sistema la ha bloqueado
+  geoDeniedStepIOS1: string;
+  geoDeniedStepIOS2: string;
+  geoDeniedStepAndroid1: string;
+  geoDeniedStepAndroid2: string;
 }
 
 export const ui: Record<Lang, UiText> = {
@@ -165,6 +176,15 @@ export const ui: Record<Lang, UiText> = {
     filterTitle: "Ocultar platos con",
     filterClear: "Quitar filtros",
     filterNoResults: "Ningún plato cumple estos filtros.",
+    installButton: "Instalar app",
+    installIOSTitle: "Añade Plenty a tu pantalla de inicio",
+    installIOSStep1: "Toca el icono de compartir de Safari",
+    installIOSStep2: "Elige «Añadir a pantalla de inicio»",
+    installIOSGotIt: "Entendido",
+    geoDeniedStepIOS1: "Toca el icono «Aa» de la barra de direcciones y elige «Ajustes de la página web»",
+    geoDeniedStepIOS2: "En Ubicación, elige «Permitir»",
+    geoDeniedStepAndroid1: "Toca el candado junto a la dirección web y elige «Permisos del sitio»",
+    geoDeniedStepAndroid2: "En Ubicación, elige «Permitir»",
   },
   ca: {
     unavailable: "No disponible",
@@ -222,6 +242,15 @@ export const ui: Record<Lang, UiText> = {
     filterTitle: "Amagar plats amb",
     filterClear: "Treure filtres",
     filterNoResults: "Cap plat compleix aquests filtres.",
+    installButton: "Instal·la l'app",
+    installIOSTitle: "Afegeix Plenty a la teva pantalla d'inici",
+    installIOSStep1: "Toca la icona de compartir de Safari",
+    installIOSStep2: "Tria «Afegeix a la pantalla d'inici»",
+    installIOSGotIt: "Entesos",
+    geoDeniedStepIOS1: "Toca la icona «Aa» de la barra d'adreces i tria «Ajustos de la pàgina web»",
+    geoDeniedStepIOS2: "A Ubicació, tria «Permetre»",
+    geoDeniedStepAndroid1: "Toca el cadenat del costat de l'adreça web i tria «Permisos del lloc»",
+    geoDeniedStepAndroid2: "A Ubicació, tria «Permetre»",
   },
   en: {
     unavailable: "Not available",
@@ -279,6 +308,15 @@ export const ui: Record<Lang, UiText> = {
     filterTitle: "Hide dishes with",
     filterClear: "Clear filters",
     filterNoResults: "No dishes match these filters.",
+    installButton: "Install app",
+    installIOSTitle: "Add Plenty to your home screen",
+    installIOSStep1: "Tap the Share icon in Safari",
+    installIOSStep2: "Choose “Add to Home Screen”",
+    installIOSGotIt: "Got it",
+    geoDeniedStepIOS1: "Tap the “Aa” icon in the address bar and choose “Website Settings”",
+    geoDeniedStepIOS2: "Under Location, choose “Allow”",
+    geoDeniedStepAndroid1: "Tap the lock icon next to the web address and choose “Permissions”",
+    geoDeniedStepAndroid2: "Under Location, choose “Allow”",
   },
   fr: {
     unavailable: "Non disponible",
@@ -336,5 +374,14 @@ export const ui: Record<Lang, UiText> = {
     filterTitle: "Masquer les plats avec",
     filterClear: "Effacer les filtres",
     filterNoResults: "Aucun plat ne correspond à ces filtres.",
+    installButton: "Installer l'app",
+    installIOSTitle: "Ajoutez Plenty à votre écran d'accueil",
+    installIOSStep1: "Appuyez sur l'icône Partager de Safari",
+    installIOSStep2: "Choisissez « Sur l'écran d'accueil »",
+    installIOSGotIt: "Compris",
+    geoDeniedStepIOS1: "Appuyez sur l'icône « Aa » de la barre d'adresse et choisissez « Réglages du site »",
+    geoDeniedStepIOS2: "Sous Position, choisissez « Autoriser »",
+    geoDeniedStepAndroid1: "Appuyez sur le cadenas à côté de l'adresse et choisissez « Autorisations »",
+    geoDeniedStepAndroid2: "Sous Position, choisissez « Autoriser »",
   },
 };

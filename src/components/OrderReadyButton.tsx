@@ -83,6 +83,8 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   const [surveyComment, setSurveyComment] = useState("");
   const [surveySending, setSurveySending] = useState(false);
   const [geo, setGeo] = useState<GeoState>({ state: "checking" });
+  const isIOSRef = useRef(false);
+  useEffect(() => { isIOSRef.current = /iphone|ipad|ipod/i.test(navigator.userAgent); }, []);
   // Modo prueba (solo para el dueño): con la contraseña del servidor se puede
   // avisar sin estar en el local. Se recuerda durante la sesión del navegador.
   const [testPassword, setTestPassword] = useState<string | null>(null);
@@ -831,7 +833,27 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                 {(geo.state === "denied" || geo.state === "far" || geo.state === "unavailable") && (
                   <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 font-sans text-sm px-4 py-3 rounded-xl mb-4">
                     <p>{geo.state === "denied" ? t.geoDenied : geo.state === "far" ? t.geoFar : t.geoUnavailable}</p>
-                    <button onClick={locate} className="mt-2 font-semibold underline underline-offset-2">
+
+                    {/* El móvil ya ha bloqueado el permiso: "Reintentar" no sirve de
+                        nada hasta que se reactive a mano, así que explicamos cómo. */}
+                    {geo.state === "denied" && (
+                      <div className="mt-3 space-y-2">
+                        {[1, 2].map((n) => (
+                          <div key={n} className="flex items-start gap-2.5">
+                            <span className="flex-none w-5 h-5 rounded-full bg-amber-200/70 dark:bg-amber-400/20 text-amber-900 dark:text-amber-200 font-sans text-[11px] font-bold flex items-center justify-center">
+                              {n}
+                            </span>
+                            <p className="text-[13px] leading-snug pt-0.5">
+                              {isIOSRef.current
+                                ? (n === 1 ? t.geoDeniedStepIOS1 : t.geoDeniedStepIOS2)
+                                : (n === 1 ? t.geoDeniedStepAndroid1 : t.geoDeniedStepAndroid2)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <button onClick={locate} className="mt-3 font-semibold underline underline-offset-2">
                       {t.geoRetry}
                     </button>
                   </div>
