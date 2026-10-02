@@ -7,6 +7,7 @@ import { LocationPinIcon, ServiceBellIcon } from "./icons";
 import { GeoReading, isNearVenue } from "@/lib/venue";
 
 const TABLE_KEY = "plenty-table-number";
+const TEST_KEY = "plenty-test-call";
 const COOLDOWN_MS = 90_000;
 const HINT_DELAY_MS = 4500;
 
@@ -58,6 +59,7 @@ type Status = "idle" | "geoAsk" | "modal" | "sending" | "sent" | "cooldown";
 type GeoState =
   | { state: "checking" }
   | { state: "ok"; reading: GeoReading }
+  | { state: "test" }
   | { state: "denied" | "far" | "unavailable" };
 
 interface Props {
@@ -73,6 +75,20 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   const [tableNumber, setTableNumber] = useState(1);
   const [error, setError] = useState("");
   const [geo, setGeo] = useState<GeoState>({ state: "checking" });
+  // Modo prueba (solo para el dueño): con la contraseña del servidor se puede
+  // avisar sin estar en el local. Se recuerda durante la sesión del navegador.
+  const [testPassword, setTestPassword] = useState<string | null>(null);
+  const [testFormOpen, setTestFormOpen] = useState(false);
+  const [testInput, setTestInput] = useState("");
+  const [testError, setTestError] = useState("");
+  const [testChecking, setTestChecking] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(TEST_KEY);
+      if (saved) setTestPassword(saved);
+    } catch {}
+  }, []);
   const [hintVisible, setHintVisible] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
@@ -238,9 +254,10 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const reading = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-        setGeo(isNearVenue(reading) ? { state: "ok", reading } : { state: "far" });
+        // Si mientras tanto se activó el modo prueba, no lo pisamos
+        setGeo((prev) => prev.state === "test" ? prev : isNearVenue(reading) ? { state: "ok", reading } : { state: "far" });
       },
-      (err) => setGeo({ state: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" }),
+      (err) => setGeo((prev) => prev.state === "test" ? prev : { state: err.code === err.PERMISSION_DENIED ? "denied" : "unavailable" }),
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
     );
   }
@@ -251,6 +268,11 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   async function openModal() {
     if (status !== "idle") return;
     setError("");
+    if (testPassword) {
+      setGeo({ state: "test" });
+      setStatus("modal");
+      return;
+    }
     let granted = false;
     try {
       const perm = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
@@ -277,6 +299,39 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
     closeGeoAsk(() => setStatus("modal"));
   }
 
+  async function unlockTestMode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!testInput) return;
+    setTestChecking(true);
+    setTestError("");
+    try {
+      const res = await fetch("/api/table-calls/test-unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: testInput }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setTestPassword(testInput);
+        try { sessionStorage.setItem(TEST_KEY, testInput); } catch {}
+        setGeo({ state: "test" });
+        setTestFormOpen(false);
+        setTestInput("");
+      } else {
+        setTestError(d.error || "Contraseña incorrecta");
+      }
+    } catch {
+      setTestError("No se pudo comprobar. Inténtalo de nuevo.");
+    }
+    setTestChecking(false);
+  }
+
+  function exitTestMode() {
+    setTestPassword(null);
+    try { sessionStorage.removeItem(TEST_KEY); } catch {}
+    locate();
+  }
+
   function closeModal() {
     const tl = gsap.timeline({ onComplete: () => setStatus("idle") });
     tl.to(modalCardRef.current, { autoAlpha: 0, y: 32, scale: 0.96, duration: 0.22, ease: "power2.in" })
@@ -284,7 +339,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
   }
 
   async function confirmCall() {
-    if (geo.state !== "ok") return;
+    if (geo.state !== "ok" && geo.state !== "test") return;
     vibrate(15);
     playConfirmSound();
     setStatus("sending");
@@ -294,7 +349,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
       const res = await fetch("/api/table-calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tableNumber, ...geo.reading }),
+        body: JSON.stringify(geo.state === "test" ? { tableNumber, testPassword } : { tableNumber, ...geo.reading }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -509,12 +564,49 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                   <h3 className="font-serif text-lg font-semibold text-brand-espresso dark:text-brand-cream">
                     {t.modalTitle}
                   </h3>
-                  <button onClick={closeModal} className="p-1.5 rounded-lg text-brand-muted hover:text-brand-espresso dark:hover:text-brand-honey" aria-label="Cerrar">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-0.5">
+                    {/* Acceso discreto al modo prueba (solo para el dueño) */}
+                    <button
+                      onClick={() => { setTestFormOpen((v) => !v); setTestError(""); }}
+                      className="p-1.5 rounded-lg text-brand-muted/30 hover:text-brand-muted dark:text-brand-honey/20 dark:hover:text-brand-honey/60"
+                      aria-label="Modo prueba"
+                      title="Modo prueba"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 7a2 2 0 012 2m4 0a6 6 0 11-12 0 6 6 0 0112 0zM3 21l7.5-7.5" />
+                      </svg>
+                    </button>
+                    <button onClick={closeModal} className="p-1.5 rounded-lg text-brand-muted hover:text-brand-espresso dark:hover:text-brand-honey" aria-label="Cerrar">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+
+                {testFormOpen && geo.state !== "test" && (
+                  <form onSubmit={unlockTestMode} className="mt-2 mb-3 flex gap-2">
+                    <input
+                      type="password"
+                      value={testInput}
+                      onChange={(e) => setTestInput(e.target.value)}
+                      placeholder="Contraseña de prueba"
+                      autoComplete="off"
+                      autoFocus
+                      className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-brand-stone dark:border-brand-roast bg-white dark:bg-brand-espresso text-brand-espresso dark:text-brand-cream font-sans text-[16px] placeholder:text-brand-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-caramel/25"
+                    />
+                    <button
+                      type="submit"
+                      disabled={testChecking || !testInput}
+                      className="flex-none px-3 py-2 rounded-xl bg-brand-espresso dark:bg-brand-honey text-brand-cream dark:text-brand-espresso font-sans text-xs font-semibold disabled:opacity-50"
+                    >
+                      {testChecking ? "…" : "Activar"}
+                    </button>
+                  </form>
+                )}
+                {testFormOpen && testError && geo.state !== "test" && (
+                  <p className="-mt-1 mb-3 font-sans text-xs text-red-600">{testError}</p>
+                )}
                 <p className="font-sans text-sm text-brand-muted dark:text-brand-honey/50 mb-5">
                   {t.modalDesc}
                 </p>
@@ -544,6 +636,12 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
                 </p>
 
                 {/* Comprobación de ubicación: solo se puede avisar desde el local */}
+                {geo.state === "test" && (
+                  <div className="flex items-center justify-between gap-2 bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 text-sky-800 dark:text-sky-300 font-sans text-xs px-3 py-2 rounded-xl mb-4">
+                    <span>Modo prueba: sin comprobar ubicación</span>
+                    <button onClick={exitTestMode} className="font-semibold underline underline-offset-2">Salir</button>
+                  </div>
+                )}
                 {geo.state === "checking" && (
                   <div className="flex items-center justify-center gap-2 font-sans text-sm text-brand-muted dark:text-brand-honey/60 mb-4">
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -570,7 +668,7 @@ export function OrderReadyButton({ lang, onChangeLang }: Props) {
 
                 <button
                   onClick={confirmCall}
-                  disabled={status === "sending" || geo.state !== "ok"}
+                  disabled={status === "sending" || (geo.state !== "ok" && geo.state !== "test")}
                   className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-white font-sans font-semibold py-3 rounded-xl text-sm tracking-wide transition-colors"
                 >
                   {status === "sending" ? t.confirmBtnSending : t.confirmBtn}
