@@ -368,14 +368,14 @@ function FeedbackTab() {
       ) : (
         <div ref={containerRef} className="space-y-5">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl border border-brand-stone p-4">
+            <div className="bg-gradient-to-br from-white to-brand-sand rounded-2xl border border-brand-stone/70 shadow-card p-4">
               <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Valoración media</p>
               <p className="font-serif text-3xl font-semibold text-brand-espresso flex items-center gap-1.5">
                 {avg.toFixed(1)}
                 <StarIcon className="w-5 h-5 text-amber-400" filled />
               </p>
             </div>
-            <div className="bg-white rounded-2xl border border-brand-stone p-4">
+            <div className="bg-gradient-to-br from-white to-brand-sand rounded-2xl border border-brand-stone/70 shadow-card p-4">
               <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Opiniones bajas</p>
               <p className="font-serif text-3xl font-semibold text-brand-espresso">{low.length}</p>
               <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {entries.length} en total</p>
@@ -766,7 +766,7 @@ function UsersTab() {
         </div>
         <button
           onClick={openModal}
-          className="flex-none flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
+          className="flex-none flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -880,7 +880,7 @@ function UsersTab() {
                 </div>
                 <div className="px-6 pb-6">
                   <button onClick={closeModal}
-                    className="w-full bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium">
+                    className="w-full bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white font-sans py-2.5 rounded-xl text-sm font-medium">
                     Listo
                   </button>
                 </div>
@@ -915,7 +915,7 @@ function UsersTab() {
                     Cancelar
                   </button>
                   <button onClick={saveUser} disabled={saving}
-                    className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                    className="flex-1 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
                     {saving ? "Creando..." : "Crear"}
                   </button>
                 </div>
@@ -1054,13 +1054,13 @@ function AnalyticsTab({
     <div ref={containerRef} className="space-y-6">
       {/* Resumen */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border border-brand-stone p-4">
+        <div className="bg-gradient-to-br from-white to-brand-sand rounded-2xl border border-brand-stone/70 shadow-card p-4">
           <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Total vistas</p>
           <p className="font-serif text-3xl font-semibold text-brand-espresso">
             <span ref={totalRef}>{totalViews}</span>
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-brand-stone p-4">
+        <div className="bg-gradient-to-br from-white to-brand-sand rounded-2xl border border-brand-stone/70 shadow-card p-4">
           <p className="font-sans text-[10px] font-bold text-brand-muted/60 tracking-widest uppercase mb-1">Productos vistos</p>
           <p className="font-serif text-3xl font-semibold text-brand-espresso">{top.length}</p>
           <p className="font-sans text-[11px] text-brand-muted/50 mt-0.5">de {products.length} en carta</p>
@@ -1476,30 +1476,34 @@ export default function AdminPage() {
   const labelCls = "block text-[11px] font-semibold text-brand-brown tracking-widest uppercase mb-1.5 font-sans";
 
   return (
-    <div className="min-h-screen bg-brand-parchment">
+    <div className="admin-surface min-h-screen">
 
       {/* ── TOP BAR ── */}
-      <header className="sticky top-0 z-20 bg-white border-b border-brand-stone shadow-[0_1px_6px_rgba(28,13,4,0.06)]">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-gradient-to-b from-white to-brand-sand/40 border-b border-brand-stone shadow-[0_1px_6px_rgba(28,13,4,0.06)]">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-serif text-xl font-semibold text-brand-espresso">Plenty.</span>
-            <div className="hidden sm:block h-4 w-px bg-brand-stone" />
-            <span className="hidden sm:block text-xs text-brand-muted font-sans">
-              Panel de administración
+            <span className="flex-none w-9 h-9 rounded-xl bg-gradient-to-br from-brand-espresso to-brand-roast shadow-[0_2px_6px_-1px_rgba(28,13,4,0.35)] flex items-center justify-center">
+              <span className="font-serif text-lg font-semibold text-brand-honey leading-none">P.</span>
             </span>
+            <div>
+              <span className="block font-serif text-lg leading-tight font-semibold text-brand-espresso">Plenty.</span>
+              <span className="hidden sm:block text-[10px] leading-tight text-brand-muted font-sans tracking-[0.18em] uppercase">
+                Panel de administración
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <a
               href="/"
               target="_blank"
-              className="hidden sm:flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-espresso font-sans"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-brand-muted hover:text-brand-espresso font-sans px-3 py-1.5 rounded-lg hover:bg-white/70 transition-colors"
             >
               Ver carta
               <IconExternalLink />
             </a>
             <button
               onClick={logout}
-              className="text-xs font-sans bg-brand-parchment hover:bg-brand-stone/60 text-brand-brown border border-brand-stone px-3 py-1.5 rounded-lg"
+              className="text-xs font-sans font-medium bg-white hover:bg-brand-stone/40 text-brand-brown border border-brand-stone/80 shadow-card px-3.5 py-2 rounded-lg transition-all"
             >
               Cerrar sesión
             </button>
@@ -1508,25 +1512,32 @@ export default function AdminPage() {
       </header>
 
       {/* ── TAB BAR ── */}
-      <div className="bg-white border-b border-brand-stone">
-        <div className="max-w-3xl mx-auto px-4 flex">
+      <div className="bg-white/70 backdrop-blur-sm border-b border-brand-stone/70">
+        <div className="max-w-5xl mx-auto px-3 py-2.5 flex gap-1.5 overflow-x-auto no-scrollbar">
           {visibleTabs.map(({ id, label, Icon }) => {
             const isOrders = id === "orders";
             const pending = tableCalls.length;
+            const urgentOrders = isOrders && pending > 0;
             return (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-sans font-medium border-b-2 transition-colors ${
+                className={`relative flex-none flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-sans font-medium transition-all ${
                   tab === id
-                    ? isOrders && pending > 0 ? "border-red-500 text-red-600" : "border-brand-caramel text-brand-caramel"
-                    : isOrders && pending > 0 ? "border-transparent text-red-500" : "border-transparent text-brand-muted hover:text-brand-espresso"
+                    ? urgentOrders
+                      ? "bg-red-500 text-white shadow-[0_2px_8px_-2px_rgba(239,68,68,0.5)]"
+                      : "bg-brand-espresso text-brand-cream shadow-[0_2px_8px_-2px_rgba(28,13,4,0.35)]"
+                    : urgentOrders
+                      ? "text-red-600 bg-red-50 hover:bg-red-100"
+                      : "text-brand-muted hover:text-brand-espresso hover:bg-brand-parchment"
                 }`}
               >
                 <Icon />
                 <span className="hidden xs:inline sm:inline">{label}</span>
-                {isOrders && pending > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold animate-pulse">
+                {urgentOrders && (
+                  <span className={`min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold animate-pulse ${
+                    tab === id ? "bg-white/25 text-white" : "bg-red-500 text-white"
+                  }`}>
                     {pending}
                   </span>
                 )}
@@ -1579,7 +1590,7 @@ export default function AdminPage() {
               </h2>
               <button
                 onClick={openAddProduct}
-                className="flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
+                className="flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1662,7 +1673,7 @@ export default function AdminPage() {
               <h2 className="font-serif text-xl font-semibold text-brand-espresso">Categorías</h2>
               <button
                 onClick={openAddCategory}
-                className="flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
+                className="flex items-center gap-1.5 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white px-4 py-2 rounded-xl text-sm font-sans font-medium"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1773,7 +1784,7 @@ export default function AdminPage() {
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white py-2.5 rounded-xl text-sm font-sans font-medium"
+                className="flex-1 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white py-2.5 rounded-xl text-sm font-sans font-medium"
               >
                 Descargar QR
               </button>
@@ -1897,7 +1908,7 @@ export default function AdminPage() {
                     type="button"
                     onClick={autoTranslate}
                     disabled={translating || !productForm.name}
-                    className="flex items-center gap-1.5 text-xs font-sans font-medium bg-brand-caramel hover:bg-brand-brown disabled:opacity-40 text-white px-3 py-1.5 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-sans font-medium bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] disabled:opacity-40 text-white px-3 py-1.5 rounded-lg transition-colors"
                   >
                     {translating ? (
                       <>
@@ -2030,7 +2041,7 @@ export default function AdminPage() {
                 Cancelar
               </button>
               <button onClick={saveProduct} disabled={productSaving}
-                className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                className="flex-1 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
                 {productSaving ? "Guardando..." : "Guardar"}
               </button>
             </div>
@@ -2098,7 +2109,7 @@ export default function AdminPage() {
                 Cancelar
               </button>
               <button onClick={saveCategory} disabled={categorySaving}
-                className="flex-1 bg-brand-caramel hover:bg-brand-brown text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                className="flex-1 bg-brand-caramel hover:bg-brand-brown shadow-[0_2px_8px_-2px_rgba(184,114,42,0.45)] hover:shadow-[0_4px_14px_-2px_rgba(184,114,42,0.5)] text-white font-sans py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
                 {categorySaving ? "Guardando..." : "Guardar"}
               </button>
             </div>
